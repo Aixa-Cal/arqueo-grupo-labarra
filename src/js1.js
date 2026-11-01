@@ -41,6 +41,7 @@ function isAdmin(){return role()==="admin"}
 function prodById(id){for(var i=0;i<S.productos.length;i++)if(S.productos[i].id===id)return S.productos[i];return null}
 
 /* ---------- servidor ---------- */
+var API_URL="https://script.google.com/macros/s/AKfycbxusdGnNAF7tFw4qg71-CTZv14msgxn8otbbia31SgXbwKyj7ot2ipN1m3E-X1-vUZeQw/exec";
 function api(a,p){
   return new Promise(function(res,rej){
     var ok=function(s){
@@ -50,8 +51,14 @@ function api(a,p){
       rej({code:r.error,msg:r.msg});
     };
     var bad=function(){rej({code:"net",msg:"No hay conexión con el servidor. Revisa tu señal e intenta de nuevo."})};
-    try{google.script.run.withSuccessHandler(ok).withFailureHandler(bad).api(JSON.stringify({a:a,p:p||{},t:S.tok||""}))}
-    catch(e){bad()}
+    var body=JSON.stringify({a:a,p:p||{},t:S.tok||""});
+    if(window.google&&google.script&&google.script.run){
+      try{google.script.run.withSuccessHandler(ok).withFailureHandler(bad).api(body)}catch(e){bad()}
+    }else{
+      /* pantalla alojada fuera de Google: POST de texto plano (sin preflight) al servidor de Apps Script */
+      fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:body,redirect:"follow"})
+        .then(function(r){return r.text()}).then(ok,bad);
+    }
   });
 }
 function errMsg(e){return (e&&e.msg)||"Algo salió mal. Intenta de nuevo."}

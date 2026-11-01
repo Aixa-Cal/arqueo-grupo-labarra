@@ -238,6 +238,11 @@ function doGet() {
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
+/* Entrada para la pantalla alojada fuera de Google (GitHub Pages): mismo api(), por POST de texto plano. */
+function doPost(e) {
+  var body = (e && e.postData && e.postData.contents) || '{}';
+  return ContentService.createTextOutput(api(body)).setMimeType(ContentService.MimeType.TEXT);
+}
 function api(json) {
   var out;
   try {

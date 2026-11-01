@@ -24,6 +24,7 @@ function makeEnv(opts){
     MailApp:{sendEmail:m=>mails.push(m),getRemainingDailyQuota:()=>100-mails.length},
     Session:{getEffectiveUser:()=>({getEmail:()=>'dueno@gmail.com'})},
     ScriptApp:{getService:()=>({getUrl:()=>'https://script.google.com/macros/s/X/exec'}),getProjectTriggers:()=>triggers,deleteTrigger(){},newTrigger:()=>({timeBased:()=>({everyHours:()=>({create(){triggers.push({getHandlerFunction:()=>'revisarPendientes'})}})})})},
+    ContentService:{MimeType:{TEXT:"TEXT"},createTextOutput:(t)=>({setMimeType(){return this},getContent:()=>t})},
     HtmlService:{createHtmlOutputFromFile:()=>({setTitle(){return this},addMetaTag(){return this},setXFrameOptionsMode(){return this}}),XFrameOptionsMode:{ALLOWALL:1}},
     Logger:{log(){}},
     Utilities:{

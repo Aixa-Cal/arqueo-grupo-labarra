@@ -11,4 +11,5 @@ import re
 h=open('dist/Index.html').read()
 open('test/app.js','w').write(re.search(r'<script>(.*)</script>',h,re.S).group(1))
 P
+mkdir -p docs && cp dist/Index.html docs/index.html && touch docs/.nojekyll
 node --check test/app.js && echo "Build OK"

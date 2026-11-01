@@ -5,6 +5,7 @@ Sistema de conteo de inventario y arqueo contra ventas del POS (Google Apps Scri
 ## Estructura
 - `src/` código fuente (servidor `Code.template.gs`, pantalla en `js*.js`/`css*`, esqueleto HTML)
 - `data/` catálogo semilla de productos
+- `docs/` la pantalla publicada con GitHub Pages (`index.html`, copia de `dist/Index.html`)
 - `dist/` archivos listos para pegar en Apps Script: `Code.gs` y `Index.html`
 - `test/` pruebas (`node test/t1.js`, `node test/t2.js`; las e2e usan Playwright)
 - `build.sh` regenera `dist/` desde `src/`
@@ -16,3 +17,8 @@ Sistema de conteo de inventario y arqueo contra ventas del POS (Google Apps Scri
 4. Implementar → Gestionar implementaciones → lápiz → Versión nueva.
 
 Versión actual: v7 (mermas y traspasos entre negocios).
+
+## Publicación de la pantalla (GitHub Pages)
+La pantalla se sirve desde GitHub Pages (Settings → Pages → rama `main`, carpeta `/docs`) y habla con Apps Script por POST (`doPost`).
+Apps Script solo hace falta para el servidor: pegar `dist/Code.gs` y publicar versión nueva (acceso «Cualquiera»).
+`Index.html` ya no se pega en Apps Script (se puede dejar o borrar).
