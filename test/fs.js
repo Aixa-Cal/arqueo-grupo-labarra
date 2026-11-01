@@ -29,7 +29,7 @@ const shot=(p,n)=>p.screenshot({path:'shots/'+n+'.png'});
   const ana=await newUser(b);await login(ana,'ana@gmail.com','Ana Pérez');await ana.waitForSelector('text=Solicitud enviada');
   // approve through api for speed
   const tok=await adm.evaluate(()=>localStorage.getItem('arq-tok'));
-  console.log(JSON.parse(env.ctx.api(JSON.stringify({a:'setUser',p:{email:'ana@gmail.com',rol:'lider',estado:'aprobado',negocios:['Food Shop','Zona Presidente']},t:tok}))).ok);
+  console.log(JSON.parse(env.ctx.api(JSON.stringify({a:'setUser',p:{email:'ana@gmail.com',rol:'colaborador',estado:'aprobado',negocios:['Food Shop','Zona Presidente']},t:tok}))).ok);
   await ana.click('[data-act=check-pending]');await ana.waitForSelector('text=¿Qué vas a contar?');
   await ana.click('[data-act=go][data-v=contar]');
   await ana.click('[data-act=neg]');await ana.click('[data-act=turno][data-v="0"]');await ana.click('#startBtn');await ana.waitForSelector('#saveBtn');
@@ -41,5 +41,8 @@ const shot=(p,n)=>p.screenshot({path:'shots/'+n+'.png'});
   const vis=await ana.$$eval('.pcard',e=>e.filter(c=>!c.hidden).length);
   console.log('total',tot,'visibles en Cervezas',vis);
   await shot(ana,'51-fs-cervezas');
+  const vv=await ana.$$eval('.pcard',e=>e.filter(c=>c.offsetParent!==null).length);console.log('visibles de verdad',vv);
+  await ana.fill('#q','corona');const v2=await ana.$$eval('.pcard',e=>e.filter(c=>c.offsetParent!==null).length);console.log('busqueda corona',v2);
+  await ana.fill('#q','');await ana.click('[data-act=fmode][data-v=cero]');const v3=await ana.$$eval('.pcard',e=>e.filter(c=>c.offsetParent!==null).length);console.log('en 0 (esperado 0)',v3);
   console.log('errores',errors);await b.close();
 })();
