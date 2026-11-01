@@ -32,9 +32,11 @@ const shot=(p,n)=>p.screenshot({path:'shots/'+n+'.png'});
   console.log(JSON.parse(env.ctx.api(JSON.stringify({a:'setUser',p:{email:'ana@gmail.com',rol:'lider',estado:'aprobado',negocios:['Food Shop','Zona Presidente']},t:tok}))).ok);
   await ana.click('[data-act=check-pending]');await ana.waitForSelector('text=¿Qué vas a contar?');
   await ana.waitForTimeout(500);console.log('ERR',errors);await shot(ana,'dbg');console.log((await ana.innerText('body')).slice(0,300));
+  await shot(ana,'40-lider-contar');
   // --- Movimientos
   await ana.click('[data-act=go][data-v=recibir]');
   await ana.click('[data-act=rneg][data-v="0"]'); // Food Shop
+  await ana.fill('#rq','Red Bull');await ana.click('[data-act=rec-add]');await ana.fill('[data-rq]','24');await shot(ana,'41-entrada');await ana.click('[data-act=rec-del]');
   await ana.click('[data-act=rmodo][data-v=merma]');
   await ana.fill('#rq','Red Bull');await ana.click('[data-act=rec-add]');await ana.fill('[data-rq]','2');
   console.log('btn dis sin motivo',await ana.$eval('#rbtn',e=>e.disabled),await ana.$eval('#rmsg',e=>e.textContent));
