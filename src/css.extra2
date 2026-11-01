@@ -1,0 +1,19 @@
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.fchips{display:flex;gap:6px;overflow-x:auto;padding:6px 0 2px;-webkit-overflow-scrolling:touch}
+.tchip.sm{min-height:36px;padding:4px 12px;font-size:.84rem;white-space:nowrap;flex:0 0 auto}
+.tchip.sm small{opacity:.75;font-weight:500;margin-left:2px}
+.fbox{display:flex;flex-direction:column;gap:6px;margin:4px 0 10px}
+.fchips{margin:0 -2px;padding-left:2px;padding-right:2px}
+.bar .back{white-space:nowrap;flex:0 0 auto}
+.bar .bar-row .sub{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .chip{flex:0 0 auto}
+/* espaciado entre bloques de cada pantalla */
+main#view{display:flex;flex-direction:column;gap:14px}
+main#view>*{min-width:0}
+.fbox{margin:0}
+.tw{margin:0}
+.panel>.tw{margin:4px 0 0}
+.stat{gap:12px}
+.pitem{padding:14px 16px}
+.hoyrow{padding:10px 0}
+.savemsg{min-height:1.2em}

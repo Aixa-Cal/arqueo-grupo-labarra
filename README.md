@@ -1,0 +1,18 @@
+# Arqueo Grupo La Barra
+
+Sistema de conteo de inventario y arqueo contra ventas del POS (Google Apps Script + Google Sheets).
+
+## Estructura
+- `src/` código fuente (servidor `Code.template.gs`, pantalla en `js*.js`/`css*`, esqueleto HTML)
+- `data/` catálogo semilla de productos
+- `dist/` archivos listos para pegar en Apps Script: `Code.gs` y `Index.html`
+- `test/` pruebas (`node test/t1.js`, `node test/t2.js`; las e2e usan Playwright)
+- `build.sh` regenera `dist/` desde `src/`
+
+## Flujo de cambios
+1. Editar `src/`, correr `./build.sh` y las pruebas.
+2. Subir a GitHub (`dist/` incluido).
+3. En el editor de Apps Script: pegar `dist/Code.gs` en `Código.gs` y `dist/Index.html` en `Index.html`, guardar.
+4. Implementar → Gestionar implementaciones → lápiz → Versión nueva.
+
+Versión actual: v7 (mermas y traspasos entre negocios).
