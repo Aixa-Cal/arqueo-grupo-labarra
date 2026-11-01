@@ -316,9 +316,9 @@ async function openNotif(id){
   var ref=String(n.ref||"").split("|");
   if(isAdmin()&&n.tipo==="acceso"){S.view="eq";S.eq.users=null;render();return}
   if(ref[0]==="conteo"){
-    if(isAdmin()&&n.tipo==="pendiente"){openVentas(ref[1]);return}
-    if(role()!=="lider"){openDetalle(ref[1]);return}
+    if(canVentas()&&n.tipo==="pendiente"){openVentas(ref[1]);return}
+    if(role()!=="colaborador"){openDetalle(ref[1]);return}
   }
-  if(n.tipo==="falta"||n.tipo==="ventas-tarde"){S.view=isAdmin()?"pend":(role()==="gerencia"?"panel":"mios");render();return}
+  if(n.tipo==="falta"||n.tipo==="ventas-tarde"){S.view=canVentas()?"pend":(role()==="gerencia"?"panel":"mios");render();return}
   render();
 }

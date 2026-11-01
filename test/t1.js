@@ -21,7 +21,7 @@ r=E.call('sync',{},TA);assert(!r.ok);
 // admin sees notification
 r=E.call('sync',{},T);assert(r.ok,JSON.stringify(r));console.log('notifs',r.data.notifs.map(n=>n.titulo),'prods',r.data.productos.length);
 // approve Ana as lider Food Shop
-r=E.call('setUser',{email:'ana@gmail.com',rol:'lider',estado:'aprobado',negocios:['Food Shop']},T);assert(r.ok,JSON.stringify(r));
+r=E.call('setUser',{email:'ana@gmail.com',rol:'colaborador',estado:'aprobado',negocios:['Food Shop']},T);assert(r.ok,JSON.stringify(r));
 assert(E.mails.some(m=>m.to==='ana@gmail.com'&&/acceso/i.test(m.subject)));
 r=E.call('sync',{},TA);assert(r.ok);assert.equal(r.data.config.negocios.join(),'Food Shop');
 const fsProds=r.data.productos.filter(p=>p.negocios.includes('Food Shop'));console.log('fs prods',fsProds.length);
@@ -36,7 +36,7 @@ const items=[{pid:'fs-032',ini:10,ent:24,fin:20,src:'c_prev0001'},{pid:'fs-033',
 r=E.call('saveConteo',{id:'c_test0001',fecha:'2026-11-02',negocio:'Food Shop',turno:'Turno 1 (7AM-3PM)',items},TA);assert(r.ok,JSON.stringify(r));
 r=E.call('saveConteo',{id:'c_test0001',fecha:'2026-11-02',negocio:'Food Shop',turno:'Turno 1 (7AM-3PM)',items},TA);assert(r.ok&&r.data.repetido);
 r=E.call('saveConteo',{id:'c_test0002',fecha:'2026-11-02',negocio:'Food Shop',turno:'Turno 1 (7AM-3PM)',items},TA);assert(!r.ok&&r.error==='duplicado');
-// leader can't save ventas
+// colaborador can't save ventas
 r=E.call('saveVentas',{id:'c_test0001',ventas:{}},TA);assert(!r.ok&&r.error==='permiso');
 // admin: pending
 r=E.call('sync',{},T);assert.equal(r.data.pendientes,1);
@@ -65,4 +65,21 @@ console.log('mail subjects',E.mails.map(m=>m.subject).slice(-4));
 r=E.call('markRead',{todos:true},T);assert(r.ok);r=E.call('sync',{},T);assert(r.data.notifs.every(n=>n.leido));
 // token tamper
 r=E.call('sync',{},T+'x');assert(!r.ok&&r.error==='sesion');
+// ---- lider del Food Shop: revisa y completa ventas solo de su negocio
+r=E.call('reqCode',{email:'rosa@gmail.com'});let cd=E.mails[E.mails.length-1].body.match(/\d{6}/)[0];
+r=E.call('verifyCode',{email:'rosa@gmail.com',code:cd,nombre:'Rosa Lider'});const TR=r.data.token;
+r=E.call('setUser',{email:'rosa@gmail.com',rol:'lider',estado:'aprobado',negocios:['Food Shop']},T);assert(r.ok,JSON.stringify(r));
+r=E.call('sync',{},TR);assert(r.ok);assert.equal(r.data.config.negocios.join(),'Food Shop');
+r=E.call('startCount',{negocio:'La Barra 1'},TR);assert(!r.ok&&r.error==='permiso');
+r=E.call('getConteo',{id:'c_test0001'},TR);assert(r.ok&&r.data.res,'lider ve resultados de su negocio');
+r=E.call('getConteo',{id:'c_test0001'},TA);assert(r.ok&&!r.data.res,'colaborador no ve resultados');
+r=E.call('saveVentas',{id:'c_test0001',ventas:{'fs-032':14,'fs-033':2}},TR);assert(r.ok,JSON.stringify(r));
+r=E.call('rectificar',{id:'c_test0001',cambios:{}},TR);assert(!r.ok&&r.error==='permiso');
+r=E.call('dash',{},TR);assert(!r.ok);
+// lider de otro negocio no toca el Food Shop
+r=E.call('reqCode',{email:'luis@gmail.com'});cd=E.mails[E.mails.length-1].body.match(/\d{6}/)[0];
+r=E.call('verifyCode',{email:'luis@gmail.com',code:cd,nombre:'Luis'});const TL=r.data.token;
+r=E.call('setUser',{email:'luis@gmail.com',rol:'lider',estado:'aprobado',negocios:['La Barra 1']},T);assert(r.ok);
+r=E.call('saveVentas',{id:'c_test0001',ventas:{}},TL);assert(!r.ok&&r.error==='permiso');
+r=E.call('getConteo',{id:'c_test0001'},TL);assert(!r.ok);
 console.log('ALL OK');

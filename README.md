@@ -22,3 +22,9 @@ Versión actual: v7 (mermas y traspasos entre negocios).
 La pantalla se sirve desde GitHub Pages (Settings → Pages → rama `main`, carpeta `/docs`) y habla con Apps Script por POST (`doPost`).
 Apps Script solo hace falta para el servidor: pegar `dist/Code.gs` y publicar versión nueva (acceso «Cualquiera»).
 `Index.html` ya no se pega en Apps Script (se puede dejar o borrar).
+
+## Roles
+- **colaborador**: cuenta y registra entradas, mermas y traspasos de sus negocios.
+- **lider**: lo mismo, más ver resultados y registrar/completar ventas (arqueo) solo de sus negocios. No rectifica ni anula.
+- **admin**: todo. **gerencia**: panel y resultados de todos los negocios.
+Los usuarios nuevos entran como colaborador hasta que administración les asigna rol y negocios en Equipo.

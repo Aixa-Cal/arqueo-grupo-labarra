@@ -44,7 +44,7 @@ const shot=(p,n)=>p.screenshot({path:'shots/'+n+'.png'});
   await ana.click('[data-act=go][data-v=contar]');
   await ana.click('[data-act=neg]');await ana.click('[data-act=turno][data-v="0"]');await ana.click('#startBtn');await ana.waitForSelector('#saveBtn');
   const total=await ana.$$eval('.pcard',e=>e.length);
-  const cats=await ana.$$eval('#fcats [data-act=fcat]',e=>e.map(x=>x.textContent.trim()));
+  const cats=await ana.$$eval('#fcat-sel option',e=>e.map(x=>x.textContent.trim()));
   console.log('tarjetas',total,'categorias',cats.length,cats.slice(0,4));
   // llenar 3: dos en 0
   await ana.evaluate(()=>{const c=[...document.querySelectorAll('.pcard')].slice(0,3);c.forEach((card,i)=>{const id=card.id.replace('card-','');const set=(f,v)=>{const e=document.getElementById('i-'+id+'-'+f);e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}))};set('ini','10');set('fin',i<2?'0':'4')})});
@@ -58,14 +58,14 @@ const shot=(p,n)=>p.screenshot({path:'shots/'+n+'.png'});
   const vp=await ana.$$eval('.pcard',e=>e.filter(c=>!c.hidden).length);console.log('sin contar (esperado',total-3,'):',vp);
   await ana.click('[data-act=fmode][data-v=pend]');
   // categoria
-  await ana.click('#fcats [data-act=fcat][data-v="1"]');
+  await ana.selectOption('#fcat-sel',{index:1});
   const vc=await ana.$$eval('.pcard',e=>{const v=e.filter(c=>!c.hidden);return {n:v.length,cats:[...new Set(v.map(c=>c.dataset.c))]}});console.log('categoria 1',JSON.stringify(vc));
   const heads=await ana.$$eval('.plist .cat',e=>e.filter(h=>!h.hidden).length);console.log('encabezados visibles (1):',heads);
   await shot(ana,'30-filtros');
   console.log('overflowX',await ana.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth));
   await ana.evaluate(()=>window.scrollTo(0,600));await shot(ana,'31-scroll');
   // categoria + en 0 + busqueda
-  await ana.click('#fcats [data-act=fcat][data-v="-1"]');
+  await ana.selectOption('#fcat-sel',{index:0});
   await ana.fill('#q','zzzz');
   console.log('vacio visible:',await ana.$eval('#fempty',e=>!e.hidden));
   await ana.fill('#q','');

@@ -1,7 +1,7 @@
 
 (function(){
 "use strict";
-var ROL={lider:"Líder",admin:"Administración",gerencia:"Gerencia"};
+var ROL={colaborador:"Colaborador",lider:"Líder",admin:"Administración",gerencia:"Gerencia"};
 var DIAS=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"],DIAS_L=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
 var S={
   tok:null,auth:"load",me:null,loginEmail:"",loginNuevo:false,loginName:"",loginCode:"",loginBusy:false,
@@ -39,6 +39,7 @@ function hora(ts){try{return new Date(ts).toLocaleTimeString("es-DO",{hour:"2-di
 function normClave(s){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim()}
 function role(){return S.me?S.me.rol:""}
 function isAdmin(){return role()==="admin"}
+function canVentas(){return role()==="admin"||role()==="lider"}
 function prodById(id){for(var i=0;i<S.productos.length;i++)if(S.productos[i].id===id)return S.productos[i];return null}
 
 /* ---------- servidor ---------- */
@@ -82,7 +83,7 @@ async function enter(data){
   startPoll();
 }
 function defaultView(){
-  if(role()==="admin")return "pend";
+  if(role()==="admin"||role()==="lider")return "pend";
   if(role()==="gerencia")return "panel";
   return "contar";
 }
@@ -98,7 +99,7 @@ function startPoll(){
     if(document.hidden)return;
     if(S.auth==="pending"){checkPending();return}
     /* los líderes solo se actualizan al abrir/volver a la app; administración y gerencia cada minuto */
-    if(S.auth==="app"&&role()!=="lider"&&Date.now()-S.lastSync>55000)refresh(false);
+    if(S.auth==="app"&&role()!=="colaborador"&&Date.now()-S.lastSync>55000)refresh(false);
   },20000);
 }
 async function checkPending(){
@@ -154,7 +155,8 @@ function render(){
 }
 function navItems(){
   var r=role();
-  if(r==="lider"||(r==="admin"&&S.campo))return [["contar","Contar",ICO.contar],["recibir","Movimientos",ICO.recibir,movPend()],["mios","Mis conteos",ICO.res]];
+  if(r==="lider")return [["pend","Pendientes",ICO.ventas,S.pend],["contar","Contar",ICO.contar],["recibir","Movimientos",ICO.recibir,movPend()],["res","Resultados",ICO.res]];
+  if(r==="colaborador"||(r==="admin"&&S.campo))return [["contar","Contar",ICO.contar],["recibir","Movimientos",ICO.recibir,movPend()],["mios","Mis conteos",ICO.res]];
   if(r==="admin")return [["pend","Pendientes",ICO.ventas,S.pend],["res","Resultados",ICO.res],["panel","Panel",ICO.panel],["cat","Catálogo",ICO.cat],["eq","Equipo",ICO.eq]];
   return [["panel","Panel",ICO.panel],["res","Resultados",ICO.res],["avisos","Avisos",ICO.bell]];
 }
@@ -580,9 +582,9 @@ function catsOf(list){var o=[],seen={};list.forEach(function(p){var c=p.cat||"";
 function filtroHTML(list){
   var d=S.draft,cs=catsOf(list),chips="";
   if(cs.length>1){
-    chips+='<div class="fchips" id="fcats"><button type="button" class="tchip sm'+(d.fcat==null?" on":"")+'" data-act="fcat" data-v="-1">Todas</button>';
-    cs.forEach(function(c,i){chips+='<button type="button" class="tchip sm'+(d.fcat===c?" on":"")+'" data-act="fcat" data-v="'+i+'" data-c="'+esc(c)+'">'+esc(c||"Otros")+' <small id="fc-'+i+'"></small></button>'});
-    chips+='</div>';
+    chips+='<div class="field"><label class="lbl" for="fcat-sel">Categoría</label><select id="fcat-sel"><option value="-1">Todas las categorías</option>';
+    cs.forEach(function(c,i){chips+='<option value="'+i+'" data-c="'+esc(c)+'"'+(d.fcat===c?" selected":"")+'>'+esc(c||"Otros")+'</option>'});
+    chips+='</select></div>';
   }
   chips+='<div class="fchips" id="fmodes">'+
     '<button type="button" class="tchip sm'+(d.fmode==="pend"?" on":"")+'" data-act="fmode" data-v="pend">Sin contar <small id="fm-pend"></small></button>'+
@@ -593,7 +595,7 @@ function updateFiltroCounts(){
   if(!S.draft||S.step!=="contar")return;
   var d=S.draft,list=negProducts(),cs=catsOf(list),st={},z=0,pe=0;
   list.forEach(function(p){var c=p.cat||"",e=st[c]||(st[c]={t:0,d:0}),v=d.vals[p.id]||{};e.t++;if(usage(v))e.d++;else pe++;if(isZero(v))z++});
-  cs.forEach(function(c,i){var n=document.getElementById("fc-"+i);if(n)n.textContent=st[c].d+"/"+st[c].t});
+  var sel=document.getElementById("fcat-sel");if(sel)cs.forEach(function(c,i){var o=sel.options[i+1];if(o)o.textContent=(c||"Otros")+" ("+st[c].d+"/"+st[c].t+")"});
   var a=document.getElementById("fm-pend"),b=document.getElementById("fm-cero");
   if(a)a.textContent="("+pe+")";if(b)b.textContent="("+z+")";
 }
@@ -614,8 +616,8 @@ function applyFilter(){
   var e=document.getElementById("fempty");
   var any=Object.keys(vis).length>0;
   if(e)e.hidden=any;
-  document.querySelectorAll("#fcats [data-act],#fmodes [data-act]").forEach(function(b){
-    var on=b.dataset.act==="fcat"?(b.dataset.v==="-1"?d.fcat==null:d.fcat===b.dataset.c):d.fmode===b.dataset.v;
+  document.querySelectorAll("#fmodes [data-act]").forEach(function(b){
+    var on=d.fmode===b.dataset.v;
     b.classList.toggle("on",!!on);
   });
   updateFiltroCounts();
@@ -938,10 +940,10 @@ async function openNotif(id){
   var ref=String(n.ref||"").split("|");
   if(isAdmin()&&n.tipo==="acceso"){S.view="eq";S.eq.users=null;render();return}
   if(ref[0]==="conteo"){
-    if(isAdmin()&&n.tipo==="pendiente"){openVentas(ref[1]);return}
-    if(role()!=="lider"){openDetalle(ref[1]);return}
+    if(canVentas()&&n.tipo==="pendiente"){openVentas(ref[1]);return}
+    if(role()!=="colaborador"){openDetalle(ref[1]);return}
   }
-  if(n.tipo==="falta"||n.tipo==="ventas-tarde"){S.view=isAdmin()?"pend":(role()==="gerencia"?"panel":"mios");render();return}
+  if(n.tipo==="falta"||n.tipo==="ventas-tarde"){S.view=canVentas()?"pend":(role()==="gerencia"?"panel":"mios");render();return}
   render();
 }
 
@@ -979,7 +981,7 @@ function panelHTML(){
   var trend=d.diario.length>1?'<div class="panel"><h3>Faltante por día</h3><div class="bars">'+d.diario.map(function(x){return '<i class="'+(x.faltante?"":"z")+'" title="'+fmtFecha(x.fecha)+': '+money(x.faltante)+'" style="height:'+(max?Math.max(3,x.faltante/max*100):3)+'%"></i>'}).join("")+'</div><div class="barlbl">'+d.diario.map(function(x){return '<span>'+x.fecha.slice(8)+'</span>'}).join("")+'</div></div>':"";
   var falta=d.faltan.length?'<div class="panel"><h3>Conteos que no se hicieron</h3>'+d.faltan.slice().reverse().slice(0,12).map(function(x){return '<div class="hoyrow"><span><b>'+esc(x.negocio)+'</b> · '+esc(x.turno)+'</span><span class="st late">'+fmtFecha(x.fecha)+'</span></div>'}).join("")+'</div>':"";
   var pend=d.pendientes.length?'<div class="panel"><h3>Esperando ventas</h3>'+d.pendientes.map(function(x){
-    return '<div class="hoyrow"><span><b>'+esc(x.negocio)+'</b> · '+esc(x.turno)+' · '+fmtFecha(x.fecha)+'</span>'+(isAdmin()?'<button class="btn small" data-act="vs-open" data-id="'+esc(x.id)+'">Registrar</button>':'<span class="st pend">'+x.horas+' h</span>')+'</div>'}).join("")+'</div>':"";
+    return '<div class="hoyrow"><span><b>'+esc(x.negocio)+'</b> · '+esc(x.turno)+' · '+fmtFecha(x.fecha)+'</span>'+(canVentas()?'<button class="btn small" data-act="vs-open" data-id="'+esc(x.id)+'">Registrar</button>':'<span class="st pend">'+x.horas+' h</span>')+'</div>'}).join("")+'</div>':"";
   var sinCosto=!S.productos.some(function(x){return x.costo>0});
   if(sinCosto)kp+='<div class="banner">El faltante en RD$ sale en cero porque los productos no tienen costo. Agrégalo en Catálogo para ver el valor de las pérdidas.</div>';
   var mm=d.mermas,mer='';
@@ -1065,8 +1067,8 @@ function equipoHTML(){
     var chips=S.cfg.todosNegocios.map(function(n,i){var on=f.negocios.indexOf(n)>-1;return '<button type="button" class="tchip'+(on?" on":"")+'" data-act="eq-neg" data-v="'+i+'">'+esc(n)+'</button>'}).join("");
     var seg=function(k,vals){return '<div class="seg">'+vals.map(function(v){return '<button class="'+(f[k]===v[0]?"on":"")+'" data-act="eq-set" data-k="'+k+'" data-v="'+v[0]+'">'+v[1]+'</button>'}).join("")+'</div>'};
     form='<div class="panel"><h2>'+esc(f.nombre)+'</h2><p class="sub">'+esc(f.email)+'</p>'+
-      '<div class="lbl">Rol</div>'+seg("rol",[["lider","Líder"],["admin","Administración"],["gerencia","Gerencia"]])+
-      (f.rol==="lider"?'<div><div class="lbl">Negocios que puede contar</div><div class="chips" style="margin-top:8px">'+chips+'</div></div>':"")+
+      '<div class="lbl">Rol</div>'+seg("rol",[["colaborador","Colaborador"],["lider","Líder"],["admin","Administración"],["gerencia","Gerencia"]])+
+      ((f.rol==="lider"||f.rol==="colaborador")?'<div><div class="lbl">Negocios asignados</div><div class="chips" style="margin-top:8px">'+chips+'</div></div>':"")+
       '<div class="lbl">Estado</div>'+seg("estado",[["aprobado","Con acceso"],["pendiente","Pendiente"],["bloqueado","Bloqueado"]])+
       '<div class="btnrow"><button class="btn" data-act="eq-save">Guardar</button><button class="btn ghost" data-act="eq-cancel">Cancelar</button></div></div>';
   }
@@ -1125,7 +1127,8 @@ document.addEventListener("keydown",function(ev){
 });
 document.addEventListener("change",function(ev){
   var t=ev.target,ds=t.dataset||{};
-  if(t.id==="f-neg"){S.fNeg=t.value;render()}
+  if(t.id==="fcat-sel"&&S.draft){var op=t.options[t.selectedIndex];S.draft.fcat=(+t.value<0)?null:op.dataset.c;persistDraft();applyFilter()}
+  else if(t.id==="f-neg"){S.fNeg=t.value;render()}
   else if(t.id==="f-rango"){S.fRango=t.value;render()}
   else if(t.id==="f-est"){S.fEstado=t.value;render()}
   else if(t.id==="p-neg"){S.panel.negocio=t.value;S.panel.data=null;render()}
@@ -1264,9 +1267,9 @@ document.addEventListener("click",function(ev){
     "eq-cancel":function(){S.eq.form=null;S.eq.editing=false;render()},
     "eq-save":function(){
       var f=S.eq.form;
-      if(f.rol==="lider"&&f.estado==="aprobado"&&!f.negocios.length)return toast("Asigna al menos un negocio al líder.");
+      if((f.rol==="lider"||f.rol==="colaborador")&&f.estado==="aprobado"&&!f.negocios.length)return toast("Asigna al menos un negocio.");
       guarded(async function(){
-        await api("setUser",{email:f.email,rol:f.rol,estado:f.estado,negocios:f.rol==="lider"?f.negocios:[]});
+        await api("setUser",{email:f.email,rol:f.rol,estado:f.estado,negocios:(f.rol==="lider"||f.rol==="colaborador")?f.negocios:[]});
         S.eq.form=null;S.eq.editing=false;toast("Guardado");S.eq.users=await api("listUsers");render();
       });
     }

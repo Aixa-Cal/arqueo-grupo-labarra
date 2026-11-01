@@ -336,9 +336,9 @@ function catsOf(list){var o=[],seen={};list.forEach(function(p){var c=p.cat||"";
 function filtroHTML(list){
   var d=S.draft,cs=catsOf(list),chips="";
   if(cs.length>1){
-    chips+='<div class="fchips" id="fcats"><button type="button" class="tchip sm'+(d.fcat==null?" on":"")+'" data-act="fcat" data-v="-1">Todas</button>';
-    cs.forEach(function(c,i){chips+='<button type="button" class="tchip sm'+(d.fcat===c?" on":"")+'" data-act="fcat" data-v="'+i+'" data-c="'+esc(c)+'">'+esc(c||"Otros")+' <small id="fc-'+i+'"></small></button>'});
-    chips+='</div>';
+    chips+='<div class="field"><label class="lbl" for="fcat-sel">Categoría</label><select id="fcat-sel"><option value="-1">Todas las categorías</option>';
+    cs.forEach(function(c,i){chips+='<option value="'+i+'" data-c="'+esc(c)+'"'+(d.fcat===c?" selected":"")+'>'+esc(c||"Otros")+'</option>'});
+    chips+='</select></div>';
   }
   chips+='<div class="fchips" id="fmodes">'+
     '<button type="button" class="tchip sm'+(d.fmode==="pend"?" on":"")+'" data-act="fmode" data-v="pend">Sin contar <small id="fm-pend"></small></button>'+
@@ -349,7 +349,7 @@ function updateFiltroCounts(){
   if(!S.draft||S.step!=="contar")return;
   var d=S.draft,list=negProducts(),cs=catsOf(list),st={},z=0,pe=0;
   list.forEach(function(p){var c=p.cat||"",e=st[c]||(st[c]={t:0,d:0}),v=d.vals[p.id]||{};e.t++;if(usage(v))e.d++;else pe++;if(isZero(v))z++});
-  cs.forEach(function(c,i){var n=document.getElementById("fc-"+i);if(n)n.textContent=st[c].d+"/"+st[c].t});
+  var sel=document.getElementById("fcat-sel");if(sel)cs.forEach(function(c,i){var o=sel.options[i+1];if(o)o.textContent=(c||"Otros")+" ("+st[c].d+"/"+st[c].t+")"});
   var a=document.getElementById("fm-pend"),b=document.getElementById("fm-cero");
   if(a)a.textContent="("+pe+")";if(b)b.textContent="("+z+")";
 }
@@ -370,8 +370,8 @@ function applyFilter(){
   var e=document.getElementById("fempty");
   var any=Object.keys(vis).length>0;
   if(e)e.hidden=any;
-  document.querySelectorAll("#fcats [data-act],#fmodes [data-act]").forEach(function(b){
-    var on=b.dataset.act==="fcat"?(b.dataset.v==="-1"?d.fcat==null:d.fcat===b.dataset.c):d.fmode===b.dataset.v;
+  document.querySelectorAll("#fmodes [data-act]").forEach(function(b){
+    var on=d.fmode===b.dataset.v;
     b.classList.toggle("on",!!on);
   });
   updateFiltroCounts();

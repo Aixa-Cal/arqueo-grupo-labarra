@@ -44,7 +44,8 @@ document.addEventListener("keydown",function(ev){
 });
 document.addEventListener("change",function(ev){
   var t=ev.target,ds=t.dataset||{};
-  if(t.id==="f-neg"){S.fNeg=t.value;render()}
+  if(t.id==="fcat-sel"&&S.draft){var op=t.options[t.selectedIndex];S.draft.fcat=(+t.value<0)?null:op.dataset.c;persistDraft();applyFilter()}
+  else if(t.id==="f-neg"){S.fNeg=t.value;render()}
   else if(t.id==="f-rango"){S.fRango=t.value;render()}
   else if(t.id==="f-est"){S.fEstado=t.value;render()}
   else if(t.id==="p-neg"){S.panel.negocio=t.value;S.panel.data=null;render()}
@@ -183,9 +184,9 @@ document.addEventListener("click",function(ev){
     "eq-cancel":function(){S.eq.form=null;S.eq.editing=false;render()},
     "eq-save":function(){
       var f=S.eq.form;
-      if(f.rol==="lider"&&f.estado==="aprobado"&&!f.negocios.length)return toast("Asigna al menos un negocio al líder.");
+      if((f.rol==="lider"||f.rol==="colaborador")&&f.estado==="aprobado"&&!f.negocios.length)return toast("Asigna al menos un negocio.");
       guarded(async function(){
-        await api("setUser",{email:f.email,rol:f.rol,estado:f.estado,negocios:f.rol==="lider"?f.negocios:[]});
+        await api("setUser",{email:f.email,rol:f.rol,estado:f.estado,negocios:(f.rol==="lider"||f.rol==="colaborador")?f.negocios:[]});
         S.eq.form=null;S.eq.editing=false;toast("Guardado");S.eq.users=await api("listUsers");render();
       });
     }

@@ -316,7 +316,7 @@ function verifyCode(p) {
       if (nombre.length < 2) fail('nombre', 'Escribe tu nombre para pedir acceso.');
       cache.remove('cd_' + email);
       var owner = props().getProperty('OWNER');
-      u = { email: email, nombre: nombre, rol: email === owner ? 'admin' : 'lider', estado: email === owner ? 'aprobado' : 'pendiente', negocios: [], creado: now(), aprobadoPor: '', ultimoAcceso: now() };
+      u = { email: email, nombre: nombre, rol: email === owner ? 'admin' : 'colaborador', estado: email === owner ? 'aprobado' : 'pendiente', negocios: [], creado: now(), aprobadoPor: '', ultimoAcceso: now() };
       appendObj('Usuarios', u);
       cacheDrop();
       if (u.estado === 'pendiente') {
@@ -343,6 +343,8 @@ function need(me, roles) {
   if (me.estado !== 'aprobado') fail('permiso', 'Tu acceso aún no está aprobado.');
   if (roles.indexOf(me.rol) < 0) fail('permiso', 'No tienes permiso para esto.');
 }
+/* Roles: admin, gerencia, lider (cuenta + revisa/registra ventas de SUS negocios), colaborador (solo cuenta y registra movimientos de SUS negocios) */
+function scoped(me) { return me.rol === 'lider' || me.rol === 'colaborador'; }
 function negOk(me, neg) {
   if (me.rol === 'admin' || me.rol === 'gerencia') return true;
   return (me.negocios || []).indexOf(neg) > -1;
@@ -367,7 +369,7 @@ function dispatch(a, p, t) {
     case 'recibirTraspaso': return recibirTraspaso(me, p);
     case 'anularMov': need(me, ['admin']); return anularMov(me, p);
     case 'getConteo': return getConteo(me, p);
-    case 'saveVentas': need(me, ['admin']); return saveVentas(me, p);
+    case 'saveVentas': need(me, ['admin', 'lider']); return saveVentas(me, p);
     case 'rectificar': need(me, ['admin']); return rectificar(me, p);
     case 'anular': need(me, ['admin']); return anular(me, p);
     case 'saveProducto': need(me, ['admin']); return saveProducto(me, p);
@@ -375,8 +377,8 @@ function dispatch(a, p, t) {
     case 'saveConfig': need(me, ['admin']); return saveConfig(me, p);
     case 'listUsers': need(me, ['admin']); return listUsers();
     case 'setUser': need(me, ['admin']); return setUser(me, p);
-    case 'aliases': need(me, ['admin']); return getAliases();
-    case 'saveAliases': need(me, ['admin']); return saveAliases(me, p);
+    case 'aliases': need(me, ['admin', 'lider']); return getAliases();
+    case 'saveAliases': need(me, ['admin', 'lider']); return saveAliases(me, p);
     case 'dash': need(me, ['admin', 'gerencia']); return dash(p);
     case 'markRead': return markRead(me, p);
   }
@@ -388,7 +390,7 @@ function productoOut(r) {
   return { id: r.id, nombre: r.nombre, cat: r.cat, unidad: r.unidad, factor: r.factor, tol: r.tol, costo: r.costo, critico: !!r.critico, negocios: r.negocios || [], orden: r.orden };
 }
 function visibleNegocios(me, cfg) {
-  return (me.rol === 'lider') ? cfg.negocios.filter(function (n) { return (me.negocios || []).indexOf(n) > -1; }) : cfg.negocios;
+  return scoped(me) ? cfg.negocios.filter(function (n) { return (me.negocios || []).indexOf(n) > -1; }) : cfg.negocios;
 }
 function readRecentConteos(dias) {
   var s = sheet('Conteos'), last = s.getLastRow();
@@ -426,7 +428,7 @@ function notifsFor(me) {
   vals.forEach(function (r) {
     var o = fromRow('Notificaciones', r), toks = String(o.para).split(',');
     var mine = toks.indexOf(me.rol) > -1 || toks.indexOf('u:' + me.email) > -1 || toks.indexOf('todos') > -1;
-    if (!mine && me.rol === 'lider') (me.negocios || []).forEach(function (ng) { if (toks.indexOf('n:' + ng) > -1) mine = true; });
+    if (!mine && scoped(me)) (me.negocios || []).forEach(function (ng) { if (toks.indexOf('n:' + ng) > -1 || (me.rol === 'lider' && toks.indexOf('nl:' + ng) > -1)) mine = true; });
     if (mine) out.push({ id: o.id, ts: o.ts, tipo: o.tipo, titulo: o.titulo, texto: o.texto, negocio: o.negocio, ref: o.ref, leido: (o.leidoPor || []).indexOf(me.email) > -1 });
   });
   out.sort(function (a, b) { return b.ts - a.ts; });
@@ -435,19 +437,19 @@ function notifsFor(me) {
 function sync(me) {
   var cfg = getConfig(), negs = visibleNegocios(me, cfg);
   var prods = getProductos().filter(function (r) { return r.activo; }).map(productoOut);
-  if (me.rol === 'lider') {
+  if (scoped(me)) {
     prods = prods.filter(function (p) { return !p.negocios.length || p.negocios.some(function (n) { return negs.indexOf(n) > -1; }); });
   }
-  var conteos = readRecentConteos(me.rol === 'lider' ? 14 : 45);
-  if (me.rol === 'lider') conteos = conteos.filter(function (c) { return negs.indexOf(c.negocio) > -1; });
+  var conteos = readRecentConteos(scoped(me) ? 14 : 45);
+  if (scoped(me)) conteos = conteos.filter(function (c) { return negs.indexOf(c.negocio) > -1; });
   var entradas = readRecentEntradas(14);
-  if (me.rol === 'lider') entradas = entradas.filter(function (e) { return negs.indexOf(e.negocio) > -1; });
+  if (scoped(me)) entradas = entradas.filter(function (e) { return negs.indexOf(e.negocio) > -1; });
   var pend = [];
-  if (me.rol !== 'lider') {
+  if (me.rol !== 'colaborador') {
     pend = conteos.filter(function (c) { return c.estado === 'contado'; });
   }
   var movs = readMovs(14).filter(function (m) { return !m.anulada; });
-  if (me.rol === 'lider') movs = movs.filter(function (m) { return negs.indexOf(m.negocio) > -1 || negs.indexOf(m.destino) > -1; });
+  if (scoped(me)) movs = movs.filter(function (m) { return negs.indexOf(m.negocio) > -1 || negs.indexOf(m.destino) > -1; });
   movs = movs.map(function (m) { return { id: m.id, fecha: m.fecha, tipo: m.tipo, negocio: m.negocio, destino: m.destino, motivo: m.motivo, detalle: m.detalle, resp: m.resp, ts: m.ts, items: m.items, estado: m.estado, recPor: m.recPor, recTs: m.recTs, recItems: m.recItems }; });
   return {
     me: publicMe(me), hoy: hoy(), ahora: now(),
@@ -497,7 +499,7 @@ function startCount(me, p) {
 }
 
 function saveConteo(me, p) {
-  need(me, ['admin', 'lider']);
+  need(me, ['admin', 'lider', 'colaborador']);
   var neg = String(p.negocio || ''), turno = String(p.turno || ''), fecha = String(p.fecha || '');
   var cfg = getConfig();
   if (cfg.negocios.indexOf(neg) < 0) fail('datos', 'Negocio desconocido.');
@@ -505,7 +507,7 @@ function saveConteo(me, p) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) fail('datos', 'Fecha inválida.');
   var h = hoy();
   if (fecha > fechaMas(h, 1)) fail('datos', 'La fecha no puede ser futura.');
-  if (me.rol === 'lider' && fecha < fechaMas(h, -2)) fail('datos', 'Solo puedes guardar conteos de hoy. Pide ayuda a administración.');
+  if (scoped(me) && fecha < fechaMas(h, -2)) fail('datos', 'Solo puedes guardar conteos de hoy. Pide ayuda a administración.');
   var id = String(p.id || '');
   if (!/^c_[A-Za-z0-9]{6,40}$/.test(id)) fail('datos', 'Identificador inválido.');
   if (!turno) fail('datos', 'Falta el turno.');
@@ -527,7 +529,7 @@ function saveConteo(me, p) {
     };
     appendObj('Conteos', o);
     if (inicial) return { id: id, inicial: true };
-    notify('pendiente', 'Conteo listo para registrar ventas', neg + ' · ' + turno + ' · ' + fecha + ' (contó ' + me.nombre + '). Falta registrar las ventas.', { para: 'admin', negocio: neg, ref: 'conteo|' + id, email: true });
+    notify('pendiente', 'Conteo listo para registrar ventas', neg + ' · ' + turno + ' · ' + fecha + ' (contó ' + me.nombre + '). Falta registrar las ventas.', { para: 'admin,nl:' + neg, negocio: neg, ref: 'conteo|' + id, email: true });
     return { id: id };
   });
 }
@@ -560,8 +562,8 @@ function getConteo(me, p) {
     id: c.id, fecha: c.fecha, negocio: c.negocio, turno: c.turno, resp: c.resp, ts: c.ts, estado: c.estado, nota: c.nota, rect: c.rect, sin: c.sin,
     items: expandItems(c.items, pm), srcInfo: srcInfo, ventasPor: c.ventasPor, ventasTs: c.ventasTs
   };
-  if (me.rol !== 'lider') { var sm = salidasDe(c), so2 = {}; Object.keys(sm).forEach(function (k) { so2[k] = { q: r2(sm[k].q, 3), det: sm[k].det.join(', ') }; }); out.sal = so2; }
-  if (me.rol !== 'lider') { out.ventas = c.ventas; out.res = c.res; out.resumen = c.resumen; }
+  if (me.rol !== 'colaborador') { var sm = salidasDe(c), so2 = {}; Object.keys(sm).forEach(function (k) { so2[k] = { q: r2(sm[k].q, 3), det: sm[k].det.join(', ') }; }); out.sal = so2; }
+  if (me.rol !== 'colaborador') { out.ventas = c.ventas; out.res = c.res; out.resumen = c.resumen; }
   else if (c.estado === 'arqueado') { out.resumen = { ok: c.resumen.ok, rev: c.resumen.rev, crit: c.resumen.crit }; }
   return out;
 }
@@ -602,6 +604,7 @@ function saveVentas(me, p) {
     var row = findRowById('Conteos', p.id);
     if (!row) fail('datos', 'No encontré ese conteo.');
     var c = readRowObj('Conteos', row);
+    if (!negOk(me, c.negocio)) fail('permiso', 'No tienes acceso a ese negocio.');
     if (c.estado === 'anulado') fail('datos', 'Ese conteo está anulado.');
     var ventas = {};
     Object.keys(p.ventas || {}).forEach(function (k) {
@@ -688,7 +691,7 @@ function itemsTexto(items) {
   return (items || []).map(function (i) { return (pm[i.pid] ? pm[i.pid].nombre : i.pid) + ' ' + i.qty; }).join(', ');
 }
 function movBase(me, p, tipo) {
-  need(me, ['admin', 'lider']);
+  need(me, ['admin', 'lider', 'colaborador']);
   var neg = String(p.negocio || ''), cfg = getConfig();
   if (cfg.negocios.indexOf(neg) < 0) fail('datos', 'Negocio desconocido.');
   if (!negOk(me, neg)) fail('permiso', 'Ese negocio no está asignado a tu usuario.');
@@ -743,7 +746,7 @@ function addTraspaso(me, p) {
   });
 }
 function recibirTraspaso(me, p) {
-  need(me, ['admin', 'lider']);
+  need(me, ['admin', 'lider', 'colaborador']);
   return withLock(function () {
     var row = findRowById('Movimientos', p.id);
     if (!row) fail('datos', 'No encontré ese traspaso.');
@@ -815,7 +818,7 @@ function salidasDe(c) {
 
 /* ============================ entradas ============================ */
 function addEntrada(me, p) {
-  need(me, ['admin', 'lider']);
+  need(me, ['admin', 'lider', 'colaborador']);
   var neg = String(p.negocio || '');
   if (getConfig().negocios.indexOf(neg) < 0) fail('datos', 'Negocio desconocido.');
   if (!negOk(me, neg)) fail('permiso', 'Ese negocio no está asignado a tu usuario.');
@@ -918,7 +921,7 @@ function setUser(me, p) {
     if (!u) fail('datos', 'No existe ese usuario.');
     var owner = props().getProperty('OWNER');
     if (email === owner && (p.rol !== 'admin' || p.estado !== 'aprobado')) fail('datos', 'El dueño de la app siempre es administrador.');
-    if (['lider', 'admin', 'gerencia'].indexOf(p.rol) < 0) fail('datos', 'Rol inválido.');
+    if (['colaborador', 'lider', 'admin', 'gerencia'].indexOf(p.rol) < 0) fail('datos', 'Rol inválido.');
     if (['aprobado', 'pendiente', 'bloqueado'].indexOf(p.estado) < 0) fail('datos', 'Estado inválido.');
     var nuevo = u.estado !== 'aprobado' && p.estado === 'aprobado';
     u.rol = p.rol; u.estado = p.estado; u.negocios = (p.negocios || []).map(String);
@@ -944,7 +947,7 @@ function recipients(para) {
   var users = readAll('Usuarios').filter(function (u) { return u.estado === 'aprobado'; });
   users.forEach(function (u) {
     var hit = toks.indexOf(u.rol) > -1 || toks.indexOf('u:' + u.email) > -1 || toks.indexOf('todos') > -1;
-    if (!hit && u.rol === 'lider') (u.negocios || []).forEach(function (n) { if (toks.indexOf('n:' + n) > -1) hit = true; });
+    if (!hit && (u.rol === 'lider' || u.rol === 'colaborador')) (u.negocios || []).forEach(function (n) { if (toks.indexOf('n:' + n) > -1 || (u.rol === 'lider' && toks.indexOf('nl:' + n) > -1)) hit = true; });
     if (hit) out[u.email] = 1;
   });
   return Object.keys(out);
@@ -1038,7 +1041,7 @@ function revisarPendientes() {
     if (c.estado === 'contado' && now() - c.ts > 12 * 3600000) {
       var ref = 'ventas|' + c.id;
       if (!yaAvisado(ref, 'ventas-tarde')) {
-        notify('ventas-tarde', 'Ventas sin registrar', c.negocio + ' · ' + c.turno + ' · ' + c.fecha + ' lleva más de 12 horas esperando las ventas.', { para: 'admin,gerencia', negocio: c.negocio, ref: ref, email: false });
+        notify('ventas-tarde', 'Ventas sin registrar', c.negocio + ' · ' + c.turno + ' · ' + c.fecha + ' lleva más de 12 horas esperando las ventas.', { para: 'admin,gerencia,nl:' + c.negocio, negocio: c.negocio, ref: ref, email: false });
       }
     }
   });

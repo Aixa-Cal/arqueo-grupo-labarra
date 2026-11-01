@@ -33,7 +33,7 @@ function panelHTML(){
   var trend=d.diario.length>1?'<div class="panel"><h3>Faltante por día</h3><div class="bars">'+d.diario.map(function(x){return '<i class="'+(x.faltante?"":"z")+'" title="'+fmtFecha(x.fecha)+': '+money(x.faltante)+'" style="height:'+(max?Math.max(3,x.faltante/max*100):3)+'%"></i>'}).join("")+'</div><div class="barlbl">'+d.diario.map(function(x){return '<span>'+x.fecha.slice(8)+'</span>'}).join("")+'</div></div>':"";
   var falta=d.faltan.length?'<div class="panel"><h3>Conteos que no se hicieron</h3>'+d.faltan.slice().reverse().slice(0,12).map(function(x){return '<div class="hoyrow"><span><b>'+esc(x.negocio)+'</b> · '+esc(x.turno)+'</span><span class="st late">'+fmtFecha(x.fecha)+'</span></div>'}).join("")+'</div>':"";
   var pend=d.pendientes.length?'<div class="panel"><h3>Esperando ventas</h3>'+d.pendientes.map(function(x){
-    return '<div class="hoyrow"><span><b>'+esc(x.negocio)+'</b> · '+esc(x.turno)+' · '+fmtFecha(x.fecha)+'</span>'+(isAdmin()?'<button class="btn small" data-act="vs-open" data-id="'+esc(x.id)+'">Registrar</button>':'<span class="st pend">'+x.horas+' h</span>')+'</div>'}).join("")+'</div>':"";
+    return '<div class="hoyrow"><span><b>'+esc(x.negocio)+'</b> · '+esc(x.turno)+' · '+fmtFecha(x.fecha)+'</span>'+(canVentas()?'<button class="btn small" data-act="vs-open" data-id="'+esc(x.id)+'">Registrar</button>':'<span class="st pend">'+x.horas+' h</span>')+'</div>'}).join("")+'</div>':"";
   var sinCosto=!S.productos.some(function(x){return x.costo>0});
   if(sinCosto)kp+='<div class="banner">El faltante en RD$ sale en cero porque los productos no tienen costo. Agrégalo en Catálogo para ver el valor de las pérdidas.</div>';
   var mm=d.mermas,mer='';
@@ -119,8 +119,8 @@ function equipoHTML(){
     var chips=S.cfg.todosNegocios.map(function(n,i){var on=f.negocios.indexOf(n)>-1;return '<button type="button" class="tchip'+(on?" on":"")+'" data-act="eq-neg" data-v="'+i+'">'+esc(n)+'</button>'}).join("");
     var seg=function(k,vals){return '<div class="seg">'+vals.map(function(v){return '<button class="'+(f[k]===v[0]?"on":"")+'" data-act="eq-set" data-k="'+k+'" data-v="'+v[0]+'">'+v[1]+'</button>'}).join("")+'</div>'};
     form='<div class="panel"><h2>'+esc(f.nombre)+'</h2><p class="sub">'+esc(f.email)+'</p>'+
-      '<div class="lbl">Rol</div>'+seg("rol",[["lider","Líder"],["admin","Administración"],["gerencia","Gerencia"]])+
-      (f.rol==="lider"?'<div><div class="lbl">Negocios que puede contar</div><div class="chips" style="margin-top:8px">'+chips+'</div></div>':"")+
+      '<div class="lbl">Rol</div>'+seg("rol",[["colaborador","Colaborador"],["lider","Líder"],["admin","Administración"],["gerencia","Gerencia"]])+
+      ((f.rol==="lider"||f.rol==="colaborador")?'<div><div class="lbl">Negocios asignados</div><div class="chips" style="margin-top:8px">'+chips+'</div></div>':"")+
       '<div class="lbl">Estado</div>'+seg("estado",[["aprobado","Con acceso"],["pendiente","Pendiente"],["bloqueado","Bloqueado"]])+
       '<div class="btnrow"><button class="btn" data-act="eq-save">Guardar</button><button class="btn ghost" data-act="eq-cancel">Cancelar</button></div></div>';
   }
