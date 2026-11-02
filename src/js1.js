@@ -2,7 +2,7 @@
 "use strict";
 var DOBLE=["Zona Presidente"];
 var INSUMOS=["Car Wash"];
-var ROL={colaborador:"Colaborador",lider:"Líder",admin:"Administración",gerencia:"Gerencia"};
+var ROL={colaborador:"Colaborador",lider:"Líder",supervisor:"Supervisor",admin:"Administración",gerencia:"Gerencia"};
 var DIAS=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"],DIAS_L=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
 var S={
   tok:null,auth:"load",me:null,loginEmail:"",loginNuevo:false,loginName:"",loginCode:"",loginBusy:false,
@@ -40,7 +40,8 @@ function hora(ts){try{return new Date(ts).toLocaleTimeString("es-DO",{hour:"2-di
 function normClave(s){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim()}
 function role(){return S.me?S.me.rol:""}
 function isAdmin(){return role()==="admin"}
-function canVentas(){return role()==="admin"||role()==="lider"}
+function canVentas(){return role()==="admin"||role()==="lider"||role()==="supervisor"}
+function canRect(){return role()==="admin"||role()==="supervisor"}
 function prodById(id){for(var i=0;i<S.productos.length;i++)if(S.productos[i].id===id)return S.productos[i];return null}
 
 /* ---------- servidor ---------- */
@@ -84,7 +85,7 @@ async function enter(data){
   startPoll();
 }
 function defaultView(){
-  if(role()==="admin"||role()==="lider")return "pend";
+  if(role()==="admin"||role()==="lider"||role()==="supervisor")return "pend";
   if(role()==="gerencia")return "panel";
   return "contar";
 }
@@ -121,6 +122,7 @@ async function refresh(force){
   try{
     var d=await api("sync");
     S.me=d.me;S.hoy=d.hoy;S.cfg=d.config;S.productos=d.productos;S.conteos=d.conteos;S.entradas=d.entradas;S.movs=d.movs||[];S.motivos=d.motivos||[];S.notifs=d.notifs;S.pend=d.pendientes;S.ready=true;S.err="";S.lastSync=Date.now();
+    if(!S.contactos&&(role()==="admin"||role()==="supervisor")&&S.me.estado==="aprobado")api("contactos").then(function(c){S.contactos=c;if(S.view==="pend"&&!quiet())render()}).catch(function(){});
     if(S.me.estado!=="aprobado"){S.auth=S.me.estado==="bloqueado"?"blocked":"pending";render();return}
     if(!force&&quiet()){updateChrome()}else render();
   }catch(e){
@@ -156,6 +158,7 @@ function render(){
 }
 function navItems(){
   var r=role();
+  if(r==="supervisor")return [["pend","Pendientes",ICO.ventas,S.pend],["contar","Contar",ICO.contar],["recibir","Movimientos",ICO.recibir,movPend()],["res","Resultados",ICO.res],["avisos","Avisos",ICO.bell]];
   if(r==="lider")return [["pend","Pendientes",ICO.ventas,S.pend],["contar","Contar",ICO.contar],["recibir","Movimientos",ICO.recibir,movPend()],["res","Resultados",ICO.res]];
   if(r==="colaborador"||(r==="admin"&&S.campo))return [["contar","Contar",ICO.contar],["recibir","Movimientos",ICO.recibir,movPend()],["mios","Mis conteos",ICO.res]];
   if(r==="admin")return [["pend","Pendientes",ICO.ventas,S.pend],["res","Resultados",ICO.res],["panel","Panel",ICO.panel],["cat","Catálogo",ICO.cat],["eq","Equipo",ICO.eq]];

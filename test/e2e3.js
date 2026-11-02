@@ -71,7 +71,7 @@ const shot=(p,n)=>p.screenshot({path:'shots/'+n+'.png'});
   await ana.fill('#q','');
   // seguir llenando todo y guardar
   await ana.evaluate(()=>{document.querySelectorAll('[data-f=ini]').forEach(e=>{if(!e.value){e.value='50';e.dispatchEvent(new Event('input',{bubbles:true}))}});document.querySelectorAll('[data-f=fin]').forEach(e=>{if(!e.value){e.value='40';e.dispatchEvent(new Event('input',{bubbles:true}))}})});
-  for(let i=0;i<6;i++)await ana.click('[data-act=ck][data-v="'+i+'"]');await ana.click('[data-act=nov][data-v=no]');
+  for(let i=0;i<6;i++)await ana.click('[data-act=ck][data-v="'+i+'"]');await ana.click('[data-act=caf][data-k=rell][data-v=si]').catch(()=>{});await ana.click('[data-act=caf][data-k=func][data-v=si]').catch(()=>{});await ana.click('[data-act=nov][data-v=no]');
   await ana.click('#saveBtn');await ana.waitForSelector('text=Conteo guardado');console.log('guardado ok');
   console.log('ERRORS',JSON.stringify(errors));
   await b.close();

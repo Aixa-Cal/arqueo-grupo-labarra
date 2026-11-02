@@ -7,7 +7,7 @@ var TZ = 'America/Santo_Domingo';
 var TOKEN_DIAS = 60;
 
 var H = {
-  Usuarios: ['email', 'nombre', 'rol', 'estado', 'negocios', 'creado', 'aprobadoPor', 'ultimoAcceso'],
+  Usuarios: ['email', 'nombre', 'rol', 'estado', 'negocios', 'creado', 'aprobadoPor', 'ultimoAcceso', 'telefono'],
   Productos: ['id', 'nombre', 'cat', 'unidad', 'factor', 'tol', 'costo', 'critico', 'negocios', 'orden', 'activo'],
   Conteos: ['id', 'fecha', 'negocio', 'turno', 'resp', 'email', 'ts', 'estado', 'items', 'ventas', 'res', 'resumen', 'sin', 'ventasPor', 'ventasTs', 'rect', 'nota', 'cierre'],
   Entradas: ['id', 'fecha', 'negocio', 'resp', 'email', 'ts', 'nota', 'items', 'anulada', 'origen'],
@@ -364,10 +364,11 @@ function need(me, roles) {
   if (me.estado !== 'aprobado') fail('permiso', 'Tu acceso aún no está aprobado.');
   if (roles.indexOf(me.rol) < 0) fail('permiso', 'No tienes permiso para esto.');
 }
-/* Roles: admin, gerencia, lider (cuenta + revisa/registra ventas de SUS negocios), colaborador (solo cuenta y registra movimientos de SUS negocios) */
+/* Roles: admin, supervisor (sub-administración: valida/completa conteos de todos los negocios y todo queda en la bitácora), gerencia, lider (cuenta + revisa/registra ventas de SUS negocios), colaborador (solo cuenta y registra movimientos de SUS negocios) */
+function conCafe(neg) { return /^La Barra/.test(neg) || neg === 'Food Shop'; }
 function scoped(me) { return me.rol === 'lider' || me.rol === 'colaborador'; }
 function negOk(me, neg) {
-  if (me.rol === 'admin' || me.rol === 'gerencia') return true;
+  if (me.rol === 'admin' || me.rol === 'gerencia' || me.rol === 'supervisor') return true;
   return (me.negocios || []).indexOf(neg) > -1;
 }
 
@@ -390,17 +391,18 @@ function dispatch(a, p, t) {
     case 'recibirTraspaso': return recibirTraspaso(me, p);
     case 'anularMov': need(me, ['admin']); return anularMov(me, p);
     case 'getConteo': return getConteo(me, p);
-    case 'saveVentas': need(me, ['admin', 'lider']); return saveVentas(me, p);
-    case 'rectificar': need(me, ['admin']); return rectificar(me, p);
+    case 'saveVentas': need(me, ['admin', 'supervisor', 'lider']); return saveVentas(me, p);
+    case 'rectificar': need(me, ['admin', 'supervisor']); return rectificar(me, p);
     case 'anular': need(me, ['admin']); return anular(me, p);
     case 'saveProducto': need(me, ['admin']); return saveProducto(me, p);
     case 'delProducto': need(me, ['admin']); return delProducto(me, p);
     case 'saveConfig': need(me, ['admin']); return saveConfig(me, p);
     case 'listUsers': need(me, ['admin']); return listUsers();
     case 'setUser': need(me, ['admin']); return setUser(me, p);
-    case 'aliases': need(me, ['admin', 'lider']); return getAliases();
-    case 'saveAliases': need(me, ['admin', 'lider']); return saveAliases(me, p);
+    case 'aliases': need(me, ['admin', 'supervisor', 'lider']); return getAliases();
+    case 'saveAliases': need(me, ['admin', 'supervisor', 'lider']); return saveAliases(me, p);
     case 'dash': need(me, ['admin', 'gerencia']); return dash(p);
+    case 'contactos': need(me, ['admin', 'supervisor']); return contactos();
     case 'markRead': return markRead(me, p);
   }
   fail('accion', 'Acción desconocida');
@@ -448,7 +450,7 @@ function notifsFor(me) {
   var vals = s.getRange(from, 1, n, H.Notificaciones.length).getValues(), out = [];
   vals.forEach(function (r) {
     var o = fromRow('Notificaciones', r), toks = String(o.para).split(',');
-    var mine = toks.indexOf(me.rol) > -1 || toks.indexOf('u:' + me.email) > -1 || toks.indexOf('todos') > -1;
+    var mine = toks.indexOf(me.rol) > -1 || toks.indexOf('u:' + me.email) > -1 || toks.indexOf('todos') > -1 || (me.rol === 'supervisor' && toks.indexOf('admin') > -1 && o.tipo !== 'acceso');
     if (!mine && scoped(me)) (me.negocios || []).forEach(function (ng) { if (toks.indexOf('n:' + ng) > -1 || (me.rol === 'lider' && toks.indexOf('nl:' + ng) > -1)) mine = true; });
     if (mine) out.push({ id: o.id, ts: o.ts, tipo: o.tipo, titulo: o.titulo, texto: o.texto, negocio: o.negocio, ref: o.ref, leido: (o.leidoPor || []).indexOf(me.email) > -1 });
   });
@@ -521,7 +523,7 @@ function startCount(me, p) {
 }
 
 function saveConteo(me, p) {
-  need(me, ['admin', 'lider', 'colaborador']);
+  need(me, ['admin', 'supervisor', 'lider', 'colaborador']);
   var neg = String(p.negocio || ''), turno = String(p.turno || ''), fecha = String(p.fecha || '');
   var cfg = getConfig();
   if (cfg.negocios.indexOf(neg) < 0) fail('datos', 'Negocio desconocido.');
@@ -574,13 +576,21 @@ function saveConteo(me, p) {
       var ctxt = String(ck.txt || '').trim().slice(0, 400);
       if (ck.nov === 'si' && ctxt.length < 3) fail('datos', 'Cuenta qué novedad hubo.');
       o.cierre = { ok: 1, nov: ck.nov, txt: ck.nov === 'si' ? ctxt : '' };
+      if (conCafe(neg)) {
+        var cf = ck.cafe || {};
+        if (['si', 'no'].indexOf(cf.rell) < 0 || ['si', 'no'].indexOf(cf.func) < 0) fail('datos', 'Responde lo de las máquinas de café.');
+        var cft = String(cf.txt || '').trim().slice(0, 300);
+        if ((cf.rell === 'no' || cf.func === 'no') && cft.length < 3) fail('datos', 'Cuenta qué pasó con las máquinas de café.');
+        o.cierre.cafe = { rell: cf.rell, func: cf.func, txt: (cf.rell === 'no' || cf.func === 'no') ? cft : '' };
+      }
     }
-    var hs = sheet('Conteos'), hc = hs.getRange(1, H.Conteos.length, 1, 1); if (!hc.getValues()[0][0]) hc.setValues([['cierre']]).setFontWeight('bold');
+    ensureHeaders('Conteos');
     if (!inicial && INSUMOS.indexOf(neg) > -1) {
       var cons = consumoDe(o, productMap());
       o.res = cons.res; o.resumen = cons.resumen; o.ventasPor = 'Sin ventas (consumo)'; o.ventasTs = now();
     }
     appendObj('Conteos', o);
+    if (o.cierre && o.cierre.cafe && (o.cierre.cafe.rell === 'no' || o.cierre.cafe.func === 'no')) notify('cafetera', 'Máquinas de café: ' + neg, me.nombre + ' · ' + turno + ': ' + (o.cierre.cafe.rell === 'no' ? 'NO rellenadas. ' : '') + (o.cierre.cafe.func === 'no' ? 'NO funcionan bien. ' : '') + o.cierre.cafe.txt, { para: 'admin,gerencia', negocio: neg, ref: 'conteo|' + id, email: true });
     if (o.cierre && o.cierre.nov === 'si') notify('novedad', 'Novedad en el cierre: ' + neg, me.nombre + ' · ' + turno + ': ' + o.cierre.txt, { para: 'admin,gerencia', negocio: neg, ref: 'conteo|' + id, email: true });
     if (inicial) return { id: id, inicial: true };
     if (INSUMOS.indexOf(neg) > -1) {
@@ -621,6 +631,7 @@ function getConteo(me, p) {
     items: expandItems(c.items, pm), srcInfo: srcInfo, ventasPor: c.ventasPor, ventasTs: c.ventasTs
   };
   if (me.rol !== 'colaborador') { var sm = salidasDe(c), so2 = {}; Object.keys(sm).forEach(function (k) { so2[k] = { q: r2(sm[k].q, 3), det: sm[k].det.join(', ') }; }); out.sal = so2; }
+  if (me.rol !== 'colaborador') out.hist = histDe(c.id);
   if (me.rol !== 'colaborador') { out.ventas = c.ventas; out.res = c.res; out.resumen = c.resumen; }
   else if (c.estado === 'arqueado') { out.resumen = { ok: c.resumen.ok, rev: c.resumen.rev, crit: c.resumen.crit }; }
   return out;
@@ -699,15 +710,30 @@ function saveVentas(me, p) {
       if (v == null || v < 0) fail('datos', 'Hay ventas con valores inválidos.');
       ventas[k] = r2(v, 3);
     });
+    var antesV = c.ventas || {}, difV = [];
+    Object.keys(ventas).forEach(function (k) { if (Object.keys(antesV).length && num(antesV[k]) !== ventas[k]) difV.push(k + ':' + (antesV[k] == null ? '-' : antesV[k]) + '→' + ventas[k]); });
     c.ventas = ventas;
     var pm = productMap(), r = computeArqueo(c, pm);
     var primera = c.estado !== 'arqueado';
     c.res = r.res; c.resumen = r.resumen; c.estado = 'arqueado'; c.ventasPor = me.nombre; c.ventasTs = now();
     writeRow('Conteos', row, c);
-    bit(me.email, 'ventas', c.id + ' ' + c.negocio + ' ' + c.turno + ' ' + c.fecha);
+    bit(me.email, difV.length ? 'ventas-cambio' : 'ventas', c.id + ' ' + c.negocio + ' ' + c.turno + ' ' + c.fecha + (difV.length ? ' · cambios: ' + difV.slice(0, 40).join('; ') : ''));
     if (primera) avisarArqueo(c, r.resumen);
     return { resumen: r.resumen };
   });
+}
+/* Historial de cambios de un conteo (quién, cuándo y qué) leído de la bitácora */
+function histDe(id) {
+  var s = sheet('Bitacora'), last = s.getLastRow();
+  if (last < 2) return [];
+  var from = Math.max(2, last - 799), vals = s.getRange(from, 1, last - from + 1, 4).getValues(), nm = {}, out = [];
+  readAll('Usuarios').forEach(function (u) { nm[u.email] = u.nombre + ' (' + u.rol + ')'; });
+  vals.forEach(function (r) {
+    var d = String(r[3]);
+    if (d.indexOf(id) === 0 && ['ventas', 'ventas-cambio', 'rectificar', 'anular'].indexOf(String(r[2])) > -1)
+      out.push({ ts: Number(r[0]) || 0, quien: nm[String(r[1])] || String(r[1]), accion: String(r[2]), detalle: d.slice(id.length + 1) });
+  });
+  return out.reverse().slice(0, 30);
 }
 function rectificar(me, p) {
   return withLock(function () {
@@ -999,7 +1025,17 @@ function saveAliases(me, p) {
 
 /* ============================ equipo ============================ */
 function listUsers() {
-  return readAll('Usuarios').map(function (u) { return { email: u.email, nombre: u.nombre, rol: u.rol, estado: u.estado, negocios: u.negocios || [], creado: u.creado, ultimoAcceso: u.ultimoAcceso }; });
+  return readAll('Usuarios').map(function (u) { return { email: u.email, nombre: u.nombre, rol: u.rol, estado: u.estado, negocios: u.negocios || [], creado: u.creado, ultimoAcceso: u.ultimoAcceso, telefono: u.telefono || '' }; });
+}
+/* Personas con acceso y su teléfono, para recordatorios por WhatsApp */
+function contactos() {
+  return readAll('Usuarios').filter(function (u) { return u.estado === 'aprobado' && u.telefono; }).map(function (u) { return { nombre: u.nombre, rol: u.rol, negocios: u.negocios || [], telefono: String(u.telefono) }; });
+}
+/* Agrega al encabezado las columnas nuevas de versiones posteriores */
+function ensureHeaders(name) {
+  var s = sheet(name), h = H[name], r = s.getRange(1, 1, 1, h.length), cur = r.getValues()[0], ch = false;
+  for (var i = 0; i < h.length; i++) if (!cur[i]) { cur[i] = h[i]; ch = true; }
+  if (ch) r.setValues([cur]).setFontWeight('bold');
 }
 function setUser(me, p) {
   var email = normEmail(p.email);
@@ -1008,11 +1044,13 @@ function setUser(me, p) {
     if (!u) fail('datos', 'No existe ese usuario.');
     var owner = props().getProperty('OWNER');
     if (email === owner && (p.rol !== 'admin' || p.estado !== 'aprobado')) fail('datos', 'El dueño de la app siempre es administrador.');
-    if (['colaborador', 'lider', 'admin', 'gerencia'].indexOf(p.rol) < 0) fail('datos', 'Rol inválido.');
+    if (['colaborador', 'lider', 'supervisor', 'admin', 'gerencia'].indexOf(p.rol) < 0) fail('datos', 'Rol inválido.');
     if (['aprobado', 'pendiente', 'bloqueado'].indexOf(p.estado) < 0) fail('datos', 'Estado inválido.');
     var nuevo = u.estado !== 'aprobado' && p.estado === 'aprobado';
     u.rol = p.rol; u.estado = p.estado; u.negocios = (p.negocios || []).map(String);
     if (p.nombre) u.nombre = String(p.nombre).trim().slice(0, 60);
+    if (p.telefono !== undefined) u.telefono = String(p.telefono || '').replace(/\D/g, '').slice(0, 15);
+    ensureHeaders('Usuarios');
     if (nuevo) u.aprobadoPor = me.email;
     writeRow('Usuarios', u._row, u);
     cacheDrop();
@@ -1029,11 +1067,11 @@ function setUser(me, p) {
 }
 
 /* ============================ avisos ============================ */
-function recipients(para) {
+function recipients(para, tipo) {
   var toks = String(para).split(','), out = {};
   var users = readAll('Usuarios').filter(function (u) { return u.estado === 'aprobado'; });
   users.forEach(function (u) {
-    var hit = toks.indexOf(u.rol) > -1 || toks.indexOf('u:' + u.email) > -1 || toks.indexOf('todos') > -1;
+    var hit = toks.indexOf(u.rol) > -1 || toks.indexOf('u:' + u.email) > -1 || toks.indexOf('todos') > -1 || (u.rol === 'supervisor' && toks.indexOf('admin') > -1 && tipo !== 'acceso');
     if (!hit && (u.rol === 'lider' || u.rol === 'colaborador')) (u.negocios || []).forEach(function (n) { if (toks.indexOf('n:' + n) > -1 || (u.rol === 'lider' && toks.indexOf('nl:' + n) > -1)) hit = true; });
     if (hit) out[u.email] = 1;
   });
@@ -1047,7 +1085,7 @@ function notify(tipo, titulo, texto, o) {
     try {
       var cfg = getConfig(), flag = ({ acceso: 'acceso', pendiente: 'pendiente', critico: 'critico', falta: 'falta' })[tipo];
       if (flag && cfg.avisos && cfg.avisos[flag] === false) return;
-      var to = recipients(o.para || 'admin');
+      var to = recipients(o.para || 'admin', tipo);
       if (!to.length || MailApp.getRemainingDailyQuota() < 5) return;
       MailApp.sendEmail({ to: to.join(','), name: 'Arqueo La Barra', subject: titulo, body: texto + '\n\nAbrir la app: ' + appUrl() });
     } catch (e) { }

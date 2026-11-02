@@ -24,6 +24,8 @@ async function contar(p,turnoIdx,opts){
     assert(await p.$eval('#saveBtn',b=>b.disabled),'guardar debe estar bloqueado sin cierre');
     for(let i=0;i<6;i++)await p.click('[data-act=ck][data-v="'+i+'"]');
     assert(await p.$eval('#saveBtn',b=>b.disabled),'sigue bloqueado sin novedad');
+    const cafe=await p.$('[data-act=caf]');
+    if(cafe){assert(await p.$eval('#saveBtn',b=>b.disabled));await p.click('[data-act=caf][data-k=rell][data-v=si]');await p.click('[data-act=caf][data-k=func][data-v=no]');await p.fill('#ccaf','Gotea y no calienta');}
     await p.click('[data-act=nov][data-v=si]');assert(await p.$eval('#saveBtn',b=>b.disabled),'novedad sí exige texto');
     await p.fill('#cnov','Se dañó una nevera');assert(!(await p.$eval('#saveBtn',b=>b.disabled)),'listo con texto');
     if(opts.novNo){await p.click('[data-act=nov][data-v=no]');assert(!(await p.$eval('#saveBtn',b=>b.disabled)))}
@@ -52,7 +54,7 @@ async function contar(p,turnoIdx,opts){
     if(lb){const fa=info.names.filter(n=>/funda abierta/i.test(n)).length;assert(info.ent===info.cards-fa&&fa>0,t+' fundas abiertas sin Entró (ent '+info.ent+', cards '+info.cards+', fa '+fa+')');assert(info.cats.some(c=>/Cervezas/.test(c)),t+' lunes: cervezas sí '+JSON.stringify(info.cats))}
     const row0=ok('sync',{},TA).conteos.find(c=>c.negocio===t);const row=row0&&Object.assign({},row0,ok('getConteo',{id:row0.id},TA));
     rep.push([t,'tarjetas',info.cards,'Entró',info.ent,'Había',info.ini,'cierre',!!(row&&row.cierre&&row.cierre.ok)||cw,'estado',row&&row.estado]);
-    if(!cw){assert(row&&row.cierre&&row.cierre.ok,t+' cierre no guardado')}
+    if(!cw){assert(row&&row.cierre&&row.cierre.ok,t+' cierre no guardado');if(/La Barra|Food Shop/.test(t)){assert(row.cierre.cafe&&row.cierre.cafe.func==='no'&&row.cierre.cafe.rell==='si',t+' cafe')}else{assert(!row.cierre.cafe,t+' sin cafe')}}
     await p.close();
   }
   // Food Shop turno 2 por pantalla (usa el conteo del turno 1 como inicio)
@@ -82,7 +84,7 @@ async function contar(p,turnoIdx,opts){
     const items=prods.map(p=>{const pi=(full.items||[]).find(i=>i.pid===p.id);return {pid:p.id,ini:dbl?(pi?pi.fin:20):(pi?pi.fin:8),ent:0,fin:(pi?pi.fin:8)-2,src:pi?prev.id:''}}).filter(i=>i.src||dbl);
     if(!items.length){rep.push([t,'martes: sin productos que contar (esperado según calendario)']);continue}
     const cid='c_all'+t.replace(/\W/g,'');
-    const r=call('saveConteo',{id:cid,fecha:'2026-11-03',negocio:t,turno:t==='Zona Presidente'?'Turno único (3PM-11PM)':(cw?'Semanal':'Día completo'),items,cierre:cw?null:{chk:[true,true,true,true,true,true],nov:'no',txt:''}},T);
+    const r=call('saveConteo',{id:cid,fecha:'2026-11-03',negocio:t,turno:t==='Zona Presidente'?'Turno único (3PM-11PM)':(cw?'Semanal':'Día completo'),items,cierre:cw?null:{chk:[true,true,true,true,true,true],nov:'no',txt:'',cafe:{rell:'si',func:'si',txt:''}}},T);
     if(!r.ok){rep.push([t,'martes error',r.msg]);assert(false,t+' '+JSON.stringify(r))}
     if(!cw){const v={};items.forEach(i=>v[i.pid]=2);const rv=call('saveVentas',{id:cid,ventas:v,ventasPor:'POS'},TA);assert(rv.ok,t+' ventas '+JSON.stringify(rv));
       const d=ok('getConteo',{id:cid},TA);assert(d.res&&d.res.length,t+' sin resultados');rep.push([t,'martes arqueo',JSON.stringify(d.resumen)])}

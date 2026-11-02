@@ -225,6 +225,9 @@ input.ro{background:var(--line);color:var(--muted);border-style:dashed}
 .chk{display:flex;align-items:center;gap:10px;width:100%;min-height:46px;padding:8px 12px;margin:6px 0;border-radius:12px;border:2px solid var(--line);background:var(--surface);font-size:.95rem;text-align:left}
 .chk .bx{flex:none;width:24px;height:24px;border-radius:7px;border:2px solid var(--line);display:grid;place-items:center;font-weight:800}
 .chk.on{border-color:var(--brand)}.chk.on .bx{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.upill.supervisor{background:#e8e4ff;color:#4b3bb5}
+.wabox{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.btn.wa{background:#1f9d55;color:#fff;border-color:#1f9d55;text-decoration:none;display:inline-flex;align-items:center}
 </style>
 </head>
 <body>
@@ -240,7 +243,7 @@ input.ro{background:var(--line);color:var(--muted);border-style:dashed}
 "use strict";
 var DOBLE=["Zona Presidente"];
 var INSUMOS=["Car Wash"];
-var ROL={colaborador:"Colaborador",lider:"Líder",admin:"Administración",gerencia:"Gerencia"};
+var ROL={colaborador:"Colaborador",lider:"Líder",supervisor:"Supervisor",admin:"Administración",gerencia:"Gerencia"};
 var DIAS=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"],DIAS_L=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
 var S={
   tok:null,auth:"load",me:null,loginEmail:"",loginNuevo:false,loginName:"",loginCode:"",loginBusy:false,
@@ -278,7 +281,8 @@ function hora(ts){try{return new Date(ts).toLocaleTimeString("es-DO",{hour:"2-di
 function normClave(s){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim()}
 function role(){return S.me?S.me.rol:""}
 function isAdmin(){return role()==="admin"}
-function canVentas(){return role()==="admin"||role()==="lider"}
+function canVentas(){return role()==="admin"||role()==="lider"||role()==="supervisor"}
+function canRect(){return role()==="admin"||role()==="supervisor"}
 function prodById(id){for(var i=0;i<S.productos.length;i++)if(S.productos[i].id===id)return S.productos[i];return null}
 
 /* ---------- servidor ---------- */
@@ -322,7 +326,7 @@ async function enter(data){
   startPoll();
 }
 function defaultView(){
-  if(role()==="admin"||role()==="lider")return "pend";
+  if(role()==="admin"||role()==="lider"||role()==="supervisor")return "pend";
   if(role()==="gerencia")return "panel";
   return "contar";
 }
@@ -359,6 +363,7 @@ async function refresh(force){
   try{
     var d=await api("sync");
     S.me=d.me;S.hoy=d.hoy;S.cfg=d.config;S.productos=d.productos;S.conteos=d.conteos;S.entradas=d.entradas;S.movs=d.movs||[];S.motivos=d.motivos||[];S.notifs=d.notifs;S.pend=d.pendientes;S.ready=true;S.err="";S.lastSync=Date.now();
+    if(!S.contactos&&(role()==="admin"||role()==="supervisor")&&S.me.estado==="aprobado")api("contactos").then(function(c){S.contactos=c;if(S.view==="pend"&&!quiet())render()}).catch(function(){});
     if(S.me.estado!=="aprobado"){S.auth=S.me.estado==="bloqueado"?"blocked":"pending";render();return}
     if(!force&&quiet()){updateChrome()}else render();
   }catch(e){
@@ -394,6 +399,7 @@ function render(){
 }
 function navItems(){
   var r=role();
+  if(r==="supervisor")return [["pend","Pendientes",ICO.ventas,S.pend],["contar","Contar",ICO.contar],["recibir","Movimientos",ICO.recibir,movPend()],["res","Resultados",ICO.res],["avisos","Avisos",ICO.bell]];
   if(r==="lider")return [["pend","Pendientes",ICO.ventas,S.pend],["contar","Contar",ICO.contar],["recibir","Movimientos",ICO.recibir,movPend()],["res","Resultados",ICO.res]];
   if(r==="colaborador"||(r==="admin"&&S.campo))return [["contar","Contar",ICO.contar],["recibir","Movimientos",ICO.recibir,movPend()],["mios","Mis conteos",ICO.res]];
   if(r==="admin")return [["pend","Pendientes",ICO.ventas,S.pend],["res","Resultados",ICO.res],["panel","Panel",ICO.panel],["cat","Catálogo",ICO.cat],["eq","Equipo",ICO.eq]];
@@ -499,18 +505,25 @@ function prodsFor(neg){
 function newDraft(){return {negocio:"",turno:"",fecha:today(),vals:{},base:null,id:null,fcat:null,fmode:""}}
 var CIERRE=["Revisé las áreas","Rellené lo necesario","El turno completó sus limpiezas","Dejé los equipos cargando y en orden","Cerré el sistema e hice el cierre de caja","Dejé los baños limpios y los safacones listos"];
 function conCierre(neg){return !!neg&&INSUMOS.indexOf(neg)<0}
-function cierreDe(d){return d.cierre||(d.cierre={chk:[],nov:"",txt:""})}
+function conCafe(neg){return esLB(neg)||neg==="Food Shop"}
+function cierreDe(d){var c=d.cierre||(d.cierre={chk:[],nov:"",txt:""});if(!c.cafe)c.cafe={rell:"",func:"",txt:""};return c}
 function cierreOk(d){
   if(!conCierre(d.negocio))return true;
   var c=cierreDe(d);
   for(var i=0;i<CIERRE.length;i++)if(!c.chk[i])return false;
+  if(conCafe(d.negocio)){var f=c.cafe;if(!f.rell||!f.func)return false;if((f.rell==="no"||f.func==="no")&&f.txt.trim().length<3)return false}
   return c.nov==="no"||(c.nov==="si"&&c.txt.trim().length>=3);
+}
+function cafeHTML(c){
+  var f=c.cafe;function q(k,t){return '<div class="lbl" style="margin-top:12px">'+t+'</div><div class="seg"><button type="button" class="'+(f[k]==="si"?'on':'')+'" data-act="caf" data-k="'+k+'" data-v="si">Sí</button><button type="button" class="'+(f[k]==="no"?'on':'')+'" data-act="caf" data-k="'+k+'" data-v="no">No</button></div>'}
+  return q("rell","¿Las máquinas de café fueron rellenadas?")+q("func","¿Las máquinas de café funcionan bien?")+
+    ((f.rell==="no"||f.func==="no")?'<div class="field"><label class="lbl" for="ccaf">¿Qué pasó con las máquinas?</label><textarea id="ccaf" rows="2" maxlength="300" placeholder="Cuéntalo brevemente">'+esc(f.txt)+'</textarea></div>':'');
 }
 function cierreHTML(){
   var d=S.draft,c=cierreDe(d);
   return '<div class="panel" id="cierre"><h2>Cierre del turno</h2><p class="sub">Confirma antes de guardar.</p>'+
     CIERRE.map(function(t,i){return '<button type="button" class="chk'+(c.chk[i]?' on':'')+'" data-act="ck" data-v="'+i+'" aria-pressed="'+(c.chk[i]?'true':'false')+'"><span class="bx">'+(c.chk[i]?'✓':'')+'</span>'+esc(t)+'</button>'}).join('')+
-    '<div class="lbl" style="margin-top:12px">¿Hubo alguna novedad?</div><div class="seg"><button type="button" class="'+(c.nov==="si"?'on':'')+'" data-act="nov" data-v="si">Sí</button><button type="button" class="'+(c.nov==="no"?'on':'')+'" data-act="nov" data-v="no">No</button></div>'+
+    (conCafe(d.negocio)?cafeHTML(c):'')+'<div class="lbl" style="margin-top:12px">¿Hubo alguna novedad?</div><div class="seg"><button type="button" class="'+(c.nov==="si"?'on':'')+'" data-act="nov" data-v="si">Sí</button><button type="button" class="'+(c.nov==="no"?'on':'')+'" data-act="nov" data-v="no">No</button></div>'+
     (c.nov==="si"?'<div class="field"><label class="lbl" for="cnov">¿Qué pasó? ¿Se dañó algo?</label><textarea id="cnov" rows="3" maxlength="400" placeholder="Cuéntalo brevemente">'+esc(c.txt)+'</textarea></div>':'')+'</div>';
 }
 function esLB(neg){return /^La Barra/.test(neg||"")}
@@ -687,7 +700,7 @@ async function guardar(){
   if(!items.length)return;
   S.saving=true;updateProgress();
   try{
-    await api("saveConteo",{id:d.id,fecha:d.fecha,negocio:d.negocio,turno:d.turno,items:items,sin:sin,nota:(d.nota||"").trim(),cierre:conCierre(d.negocio)?{chk:CIERRE.map(function(t,i){return !!cierreDe(d).chk[i]}),nov:cierreDe(d).nov,txt:cierreDe(d).nov==='si'?cierreDe(d).txt.trim():''}:null});
+    await api("saveConteo",{id:d.id,fecha:d.fecha,negocio:d.negocio,turno:d.turno,items:items,sin:sin,nota:(d.nota||"").trim(),cierre:conCierre(d.negocio)?{chk:CIERRE.map(function(t,i){return !!cierreDe(d).chk[i]}),nov:cierreDe(d).nov,txt:cierreDe(d).nov==='si'?cierreDe(d).txt.trim():'',cafe:conCafe(d.negocio)?cierreDe(d).cafe:undefined}:null});
     S.saved={negocio:d.negocio,turno:d.turno,fecha:d.fecha,n:items.length,sin:sin.length,ini:items.every(function(i){return !i.src})};
     S.step="listo";clearDraft();S.saving=false;render();window.scrollTo(0,0);refresh(true);
   }catch(e){
@@ -937,6 +950,17 @@ function porCompletar(){
   rows.sort(function(a,b){return (ord[a.k]-ord[b.k])||(a.fe<b.fe?1:a.fe>b.fe?-1:0)});
   return rows;
 }
+/* Recordatorio por WhatsApp: abre el chat con el mensaje ya escrito (no envía solo) */
+function waNum(t){var d=String(t||"").replace(/\D/g,"");return d.length===10?"1"+d:d}
+function waBtns(r){
+  if(!(role()==="admin"||role()==="supervisor"))return "";
+  var gente=(S.contactos||[]).filter(function(c){return (c.rol==="lider"||c.rol==="colaborador")&&(c.negocios||[]).indexOf(r.n)>-1});
+  if(!gente.length)return isAdmin()?'<small class="hint">Sin teléfonos de '+esc(r.n)+'. Agrégalos en Equipo para avisar por WhatsApp.</small>':"";
+  var url=location.origin+location.pathname;
+  return '<div class="wabox">'+gente.map(function(c){
+    var msg="Hola "+c.nombre.split(" ")[0]+", aún no aparece el conteo de "+r.n+" · "+r.t+" de hoy"+(r.lim?" (límite "+r.lim+")":"")+". Por favor cuéntalo y confirma el cierre del turno en: "+url;
+    return '<a class="btn small wa" target="_blank" rel="noopener" href="https://wa.me/'+waNum(c.telefono)+'?text='+encodeURIComponent(msg)+'">WhatsApp · '+esc(c.nombre.split(" ")[0])+'</a>'}).join("")+'</div>';
+}
 function pendHTML(){
   var rows=porCompletar(),h=today();
   var nSin=0,nVen=0,nOk=0;
@@ -956,8 +980,8 @@ function pendHTML(){
     if(r.k==="ini"){
       return '<div class="pitem"><div>'+title+'<small><span class="st ok">✓ Conteo inicial</span>'+dia+' · no necesita ventas</small></div></div>';
     }
-    if(r.k==="atraso")return '<div class="pitem"><div>'+title+'<small><span class="st late">Atrasado: sin contar</span>'+dia+(r.lim&&!r.past?' · límite '+r.lim:"")+'</small></div></div>';
-    return '<div class="pitem"><div>'+title+'<small><span class="st wait">Sin contar · hasta '+(r.lim||"fin del día")+'</span></small></div></div>';
+    if(r.k==="atraso")return '<div class="pitem"><div>'+title+'<small><span class="st late">Atrasado: sin contar</span>'+dia+(r.lim&&!r.past?' · límite '+r.lim:"")+'</small>'+waBtns(r)+'</div></div>';
+    return '<div class="pitem"><div>'+title+'<small><span class="st wait">Sin contar · hasta '+(r.lim||"fin del día")+'</span></small>'+waBtns(r)+'</div></div>';
   }).join("");
   if(!rows.length)html='<div class="panel center"><div class="big">✓</div><h3>Todo al día</h3><p class="sub">No hay turnos configurados con conteo hoy.</p></div>';
   return '<div><h1>Por completar</h1><p class="sub">Cada conteo se arquea con sus propias ventas: no espera a los demás. Aquí ves qué falta por contar y qué falta por arquear.</p></div>'+
@@ -1164,7 +1188,7 @@ async function openDetalle(id){
 function detalleHTML(){
   var d=S.detail;
   if(d.loading)return '<div class="loading">Cargando…</div>';
-  var c=d.c,adm=isAdmin();
+  var c=d.c,adm=canRect(),admX=isAdmin();
   var head='<div class="bar"><div class="bar-row"><button class="back" data-act="det-back">← Volver</button><span class="sub">'+fmtFecha(c.fecha)+'</span></div></div>'+
     '<div><h1>'+esc(c.negocio)+'</h1><p class="sub">'+esc(c.turno)+' · contó '+esc(c.resp)+' · '+hora(c.ts)+(c.rect?' · rectificado':'')+'</p></div>';
   var rs=c.resumen||{};
@@ -1193,10 +1217,11 @@ function detalleHTML(){
   var acts="";
   if(adm&&!d.edit&&c.estado!=="anulado"&&c.estado!=="inicial"&&!rs.consumo){
     acts='<div class="btnrow"><button class="btn" data-act="vs-open" data-id="'+esc(c.id)+'">'+(c.estado==="arqueado"?"Cambiar ventas":"Registrar ventas")+'</button><button class="btn ghost" data-act="rect-start">Rectificar conteo</button></div>';
-    acts+=d.anular?'<div class="panel"><div class="field"><label class="lbl" for="motivo">Motivo para anular</label><input id="motivo" value="'+esc(d.motivo)+'"></div><div class="btnrow"><button class="btn danger" data-act="anular-ok">Sí, anular conteo</button><button class="btn ghost" data-act="anular-no">No</button></div></div>':'<button class="btn small ghost" data-act="anular">Anular este conteo</button>';
+    if(!admX)acts+='';else acts+=d.anular?'<div class="panel"><div class="field"><label class="lbl" for="motivo">Motivo para anular</label><input id="motivo" value="'+esc(d.motivo)+'"></div><div class="btnrow"><button class="btn danger" data-act="anular-ok">Sí, anular conteo</button><button class="btn ghost" data-act="anular-no">No</button></div></div>':'<button class="btn small ghost" data-act="anular">Anular este conteo</button>';
   }
-  var cierreH=c.cierre?'<div class="panel"><div class="lbl">Cierre del turno</div><p>✓ Áreas, relleno, limpiezas, equipos, caja, baños y safacones confirmados.</p><p><b>Novedad:</b> '+(c.cierre.nov==="si"?esc(c.cierre.txt):"No")+'</p></div>':"";
-  return head+kp+table+notaH+cierreH+sin+acts+'<div style="height:8px"></div>';
+  var cierreH=c.cierre?'<div class="panel"><div class="lbl">Cierre del turno</div><p>✓ Áreas, relleno, limpiezas, equipos, caja, baños y safacones confirmados.</p><p><b>Novedad:</b> '+(c.cierre.nov==="si"?esc(c.cierre.txt):"No")+'</p>'+(c.cierre.cafe?'<p><b>Máquinas de café:</b> rellenadas '+(c.cierre.cafe.rell==="si"?"✓ sí":"✗ NO")+' · funcionan bien '+(c.cierre.cafe.func==="si"?"✓ sí":"✗ NO")+(c.cierre.cafe.txt?' — '+esc(c.cierre.cafe.txt):"")+'</p>':"")+'</div>':"";
+  var histH=(c.hist&&c.hist.length)?'<div class="panel"><div class="lbl">Historial de cambios</div>'+c.hist.map(function(h){var a=h.accion==="rectificar"?"Rectificó el conteo":h.accion==="anular"?"Anuló el conteo":h.accion==="ventas-cambio"?"Cambió las ventas":"Registró las ventas";return '<div class="pitem"><div><b>'+esc(a)+'</b><small>'+esc(h.quien)+' · '+fmtFecha(new Date(h.ts).toISOString().slice(0,10))+' '+hora(h.ts)+'</small>'+(h.detalle?'<small>'+esc(h.detalle)+'</small>':"")+'</div></div>'}).join("")+'</div>':"";
+  return head+kp+table+notaH+cierreH+histH+sin+acts+'<div style="height:8px"></div>';
 }
 function pill(e){var c=e==="OK"?"ok":e==="REVISAR"?"rev":"crit";return '<span class="pill '+c+'">'+(e==="OK"?"OK":e==="REVISAR"?"Revisar":"Crítico")+'</span>'}
 async function rectSave(){
@@ -1352,7 +1377,9 @@ function equipoHTML(){
     var chips=S.cfg.todosNegocios.map(function(n,i){var on=f.negocios.indexOf(n)>-1;return '<button type="button" class="tchip'+(on?" on":"")+'" data-act="eq-neg" data-v="'+i+'">'+esc(n)+'</button>'}).join("");
     var seg=function(k,vals){return '<div class="seg">'+vals.map(function(v){return '<button class="'+(f[k]===v[0]?"on":"")+'" data-act="eq-set" data-k="'+k+'" data-v="'+v[0]+'">'+v[1]+'</button>'}).join("")+'</div>'};
     form='<div class="panel"><h2>'+esc(f.nombre)+'</h2><p class="sub">'+esc(f.email)+'</p>'+
-      '<div class="lbl">Rol</div>'+seg("rol",[["colaborador","Colaborador"],["lider","Líder"],["admin","Administración"],["gerencia","Gerencia"]])+
+      '<div class="lbl">Rol</div>'+seg("rol",[["colaborador","Colaborador"],["lider","Líder"],["supervisor","Supervisor"],["admin","Administración"],["gerencia","Gerencia"]])+
+      (f.rol==='supervisor'?'<p class="sub">Valida y completa conteos y ventas de todos los negocios. Cada cambio queda registrado con su nombre.</p>':'')+
+      '<div class="field"><label class="lbl" for="eq-tel">Teléfono de WhatsApp (opcional)</label><input id="eq-tel" type="tel" inputmode="tel" autocomplete="off" placeholder="809 555 1234" value="'+esc(f.telefono||"")+'"><p class="hint">Sirve para mandarle recordatorios si falta su conteo.</p></div>'+
       ((f.rol==="lider"||f.rol==="colaborador")?'<div><div class="lbl">Negocios asignados</div><div class="chips" style="margin-top:8px">'+chips+'</div></div>':"")+
       '<div class="lbl">Estado</div>'+seg("estado",[["aprobado","Con acceso"],["pendiente","Pendiente"],["bloqueado","Bloqueado"]])+
       '<div class="btnrow"><button class="btn" data-act="eq-save">Guardar</button><button class="btn ghost" data-act="eq-cancel">Cancelar</button></div></div>';
@@ -1393,6 +1420,8 @@ document.addEventListener("input",function(ev){
   else if(ds.rq){var c4=clean(t.value);if(c4!==t.value)t.value=c4;var ln=S.rec.lines.filter(function(l){return l.pid===ds.rq})[0];if(ln)ln.qty=c4;updateRecBtn()}
   else if(t.id==="rq"){S.rec.q=t.value;var rr=$("#rres");if(rr)rr.innerHTML=recSearchHTML()}
   else if(t.id==="rnota"){S.rec.nota=t.value}
+  else if(t.id==="ccaf"){if(S.draft){cierreDe(S.draft).cafe.txt=t.value;persistDraft();updateProgress()}}
+  else if(t.id==="eq-tel"){if(S.eq.form)S.eq.form.telefono=t.value}
   else if(t.id==="cnov"){if(S.draft){cierreDe(S.draft).txt=t.value;persistDraft();updateProgress()}}
   else if(t.id==="cnota"){if(S.draft){S.draft.nota=t.value;persistDraft()}}
   else if(t.id==="rdet"){S.rec.detalle=t.value;updateRecBtn()}
@@ -1440,6 +1469,7 @@ document.addEventListener("click",function(ev){
   var act=el.dataset.act,v=el.dataset.v,id=el.dataset.id;
   var A={
     "ck":function(){var c=cierreDe(S.draft),i=+v;c.chk[i]=!c.chk[i];cierreRefresh()},
+    "caf":function(){cierreDe(S.draft).cafe[el.dataset.k]=v;cierreRefresh()},
     "nov":function(){cierreDe(S.draft).nov=v;cierreRefresh()},
     "go":function(){
       S.detail=null;S.vs=null;S.view=v;S.cat.editing=null;S.eq.form=null;
@@ -1550,7 +1580,7 @@ document.addEventListener("click",function(ev){
       saveCfg({negocios:negs,turnos:turnos,limites:lim},"Turnos guardados");
     },
     /* equipo */
-    "eq-edit":function(){var u=S.eq.users.filter(function(x){return x.email===id})[0];if(u){S.eq.form={email:u.email,nombre:u.nombre,rol:u.rol,estado:u.estado==="pendiente"?"aprobado":u.estado,negocios:(u.negocios||[]).slice()};S.eq.editing=true;render();window.scrollTo(0,0)}},
+    "eq-edit":function(){var u=S.eq.users.filter(function(x){return x.email===id})[0];if(u){S.eq.form={email:u.email,nombre:u.nombre,telefono:u.telefono||"",rol:u.rol,estado:u.estado==="pendiente"?"aprobado":u.estado,negocios:(u.negocios||[]).slice()};S.eq.editing=true;render();window.scrollTo(0,0)}},
     "eq-set":function(){S.eq.form[el.dataset.k]=v;render()},
     "eq-neg":function(){var n=S.cfg.todosNegocios[+v],a=S.eq.form.negocios,i=a.indexOf(n);if(i>-1)a.splice(i,1);else a.push(n);el.classList.toggle("on")},
     "eq-cancel":function(){S.eq.form=null;S.eq.editing=false;render()},
@@ -1558,8 +1588,8 @@ document.addEventListener("click",function(ev){
       var f=S.eq.form;
       if((f.rol==="lider"||f.rol==="colaborador")&&f.estado==="aprobado"&&!f.negocios.length)return toast("Asigna al menos un negocio.");
       guarded(async function(){
-        await api("setUser",{email:f.email,rol:f.rol,estado:f.estado,negocios:(f.rol==="lider"||f.rol==="colaborador")?f.negocios:[]});
-        S.eq.form=null;S.eq.editing=false;toast("Guardado");S.eq.users=await api("listUsers");render();
+        await api("setUser",{email:f.email,telefono:f.telefono||"",rol:f.rol,estado:f.estado,negocios:(f.rol==="lider"||f.rol==="colaborador")?f.negocios:[]});
+        S.contactos=null;S.eq.form=null;S.eq.editing=false;toast("Guardado");S.eq.users=await api("listUsers");render();
       });
     }
   };

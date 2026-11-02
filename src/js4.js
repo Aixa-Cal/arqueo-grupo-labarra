@@ -119,7 +119,9 @@ function equipoHTML(){
     var chips=S.cfg.todosNegocios.map(function(n,i){var on=f.negocios.indexOf(n)>-1;return '<button type="button" class="tchip'+(on?" on":"")+'" data-act="eq-neg" data-v="'+i+'">'+esc(n)+'</button>'}).join("");
     var seg=function(k,vals){return '<div class="seg">'+vals.map(function(v){return '<button class="'+(f[k]===v[0]?"on":"")+'" data-act="eq-set" data-k="'+k+'" data-v="'+v[0]+'">'+v[1]+'</button>'}).join("")+'</div>'};
     form='<div class="panel"><h2>'+esc(f.nombre)+'</h2><p class="sub">'+esc(f.email)+'</p>'+
-      '<div class="lbl">Rol</div>'+seg("rol",[["colaborador","Colaborador"],["lider","Líder"],["admin","Administración"],["gerencia","Gerencia"]])+
+      '<div class="lbl">Rol</div>'+seg("rol",[["colaborador","Colaborador"],["lider","Líder"],["supervisor","Supervisor"],["admin","Administración"],["gerencia","Gerencia"]])+
+      (f.rol==='supervisor'?'<p class="sub">Valida y completa conteos y ventas de todos los negocios. Cada cambio queda registrado con su nombre.</p>':'')+
+      '<div class="field"><label class="lbl" for="eq-tel">Teléfono de WhatsApp (opcional)</label><input id="eq-tel" type="tel" inputmode="tel" autocomplete="off" placeholder="809 555 1234" value="'+esc(f.telefono||"")+'"><p class="hint">Sirve para mandarle recordatorios si falta su conteo.</p></div>'+
       ((f.rol==="lider"||f.rol==="colaborador")?'<div><div class="lbl">Negocios asignados</div><div class="chips" style="margin-top:8px">'+chips+'</div></div>':"")+
       '<div class="lbl">Estado</div>'+seg("estado",[["aprobado","Con acceso"],["pendiente","Pendiente"],["bloqueado","Bloqueado"]])+
       '<div class="btnrow"><button class="btn" data-act="eq-save">Guardar</button><button class="btn ghost" data-act="eq-cancel">Cancelar</button></div></div>';

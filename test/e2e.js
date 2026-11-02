@@ -77,7 +77,7 @@ async function login(page,email,name){
     await ana.fill(`#i-${pid}-fin`,'12');
   }
   await shot(ana,'07-ana-contando');
-  for(let i=0;i<6;i++)await ana.click('[data-act=ck][data-v="'+i+'"]');await ana.click('[data-act=nov][data-v=no]');
+  for(let i=0;i<6;i++)await ana.click('[data-act=ck][data-v="'+i+'"]');await ana.click('[data-act=caf][data-k=rell][data-v=si]').catch(()=>{});await ana.click('[data-act=caf][data-k=func][data-v=si]').catch(()=>{});await ana.click('[data-act=nov][data-v=no]');
   await ana.click('#saveBtn');
   await ana.waitForSelector('text=Conteo guardado');
   await shot(ana,'08-ana-listo');
@@ -97,7 +97,7 @@ async function login(page,email,name){
   console.log('Había oculto en Food Shop:',(await ana.$$('[data-f=ini]')).length===0);
   console.log('autofilled ini',vals);
   for(const [pid,v] of vals.slice(0,4)){await ana.fill(`#i-${pid}-fin`,'7')}
-  for(let i=0;i<6;i++)await ana.click('[data-act=ck][data-v="'+i+'"]');await ana.click('[data-act=nov][data-v=no]');
+  for(let i=0;i<6;i++)await ana.click('[data-act=ck][data-v="'+i+'"]');await ana.click('[data-act=caf][data-k=rell][data-v=si]').catch(()=>{});await ana.click('[data-act=caf][data-k=func][data-v=si]').catch(()=>{});await ana.click('[data-act=nov][data-v=no]');
   await ana.click('#saveBtn');
   await ana.waitForSelector('text=Conteo guardado');
   // admin: ventas with CSV

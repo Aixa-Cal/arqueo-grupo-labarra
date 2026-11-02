@@ -31,6 +31,17 @@ function porCompletar(){
   rows.sort(function(a,b){return (ord[a.k]-ord[b.k])||(a.fe<b.fe?1:a.fe>b.fe?-1:0)});
   return rows;
 }
+/* Recordatorio por WhatsApp: abre el chat con el mensaje ya escrito (no envía solo) */
+function waNum(t){var d=String(t||"").replace(/\D/g,"");return d.length===10?"1"+d:d}
+function waBtns(r){
+  if(!(role()==="admin"||role()==="supervisor"))return "";
+  var gente=(S.contactos||[]).filter(function(c){return (c.rol==="lider"||c.rol==="colaborador")&&(c.negocios||[]).indexOf(r.n)>-1});
+  if(!gente.length)return isAdmin()?'<small class="hint">Sin teléfonos de '+esc(r.n)+'. Agrégalos en Equipo para avisar por WhatsApp.</small>':"";
+  var url=location.origin+location.pathname;
+  return '<div class="wabox">'+gente.map(function(c){
+    var msg="Hola "+c.nombre.split(" ")[0]+", aún no aparece el conteo de "+r.n+" · "+r.t+" de hoy"+(r.lim?" (límite "+r.lim+")":"")+". Por favor cuéntalo y confirma el cierre del turno en: "+url;
+    return '<a class="btn small wa" target="_blank" rel="noopener" href="https://wa.me/'+waNum(c.telefono)+'?text='+encodeURIComponent(msg)+'">WhatsApp · '+esc(c.nombre.split(" ")[0])+'</a>'}).join("")+'</div>';
+}
 function pendHTML(){
   var rows=porCompletar(),h=today();
   var nSin=0,nVen=0,nOk=0;
@@ -50,8 +61,8 @@ function pendHTML(){
     if(r.k==="ini"){
       return '<div class="pitem"><div>'+title+'<small><span class="st ok">✓ Conteo inicial</span>'+dia+' · no necesita ventas</small></div></div>';
     }
-    if(r.k==="atraso")return '<div class="pitem"><div>'+title+'<small><span class="st late">Atrasado: sin contar</span>'+dia+(r.lim&&!r.past?' · límite '+r.lim:"")+'</small></div></div>';
-    return '<div class="pitem"><div>'+title+'<small><span class="st wait">Sin contar · hasta '+(r.lim||"fin del día")+'</span></small></div></div>';
+    if(r.k==="atraso")return '<div class="pitem"><div>'+title+'<small><span class="st late">Atrasado: sin contar</span>'+dia+(r.lim&&!r.past?' · límite '+r.lim:"")+'</small>'+waBtns(r)+'</div></div>';
+    return '<div class="pitem"><div>'+title+'<small><span class="st wait">Sin contar · hasta '+(r.lim||"fin del día")+'</span></small>'+waBtns(r)+'</div></div>';
   }).join("");
   if(!rows.length)html='<div class="panel center"><div class="big">✓</div><h3>Todo al día</h3><p class="sub">No hay turnos configurados con conteo hoy.</p></div>';
   return '<div><h1>Por completar</h1><p class="sub">Cada conteo se arquea con sus propias ventas: no espera a los demás. Aquí ves qué falta por contar y qué falta por arquear.</p></div>'+
@@ -258,7 +269,7 @@ async function openDetalle(id){
 function detalleHTML(){
   var d=S.detail;
   if(d.loading)return '<div class="loading">Cargando…</div>';
-  var c=d.c,adm=isAdmin();
+  var c=d.c,adm=canRect(),admX=isAdmin();
   var head='<div class="bar"><div class="bar-row"><button class="back" data-act="det-back">← Volver</button><span class="sub">'+fmtFecha(c.fecha)+'</span></div></div>'+
     '<div><h1>'+esc(c.negocio)+'</h1><p class="sub">'+esc(c.turno)+' · contó '+esc(c.resp)+' · '+hora(c.ts)+(c.rect?' · rectificado':'')+'</p></div>';
   var rs=c.resumen||{};
@@ -287,10 +298,11 @@ function detalleHTML(){
   var acts="";
   if(adm&&!d.edit&&c.estado!=="anulado"&&c.estado!=="inicial"&&!rs.consumo){
     acts='<div class="btnrow"><button class="btn" data-act="vs-open" data-id="'+esc(c.id)+'">'+(c.estado==="arqueado"?"Cambiar ventas":"Registrar ventas")+'</button><button class="btn ghost" data-act="rect-start">Rectificar conteo</button></div>';
-    acts+=d.anular?'<div class="panel"><div class="field"><label class="lbl" for="motivo">Motivo para anular</label><input id="motivo" value="'+esc(d.motivo)+'"></div><div class="btnrow"><button class="btn danger" data-act="anular-ok">Sí, anular conteo</button><button class="btn ghost" data-act="anular-no">No</button></div></div>':'<button class="btn small ghost" data-act="anular">Anular este conteo</button>';
+    if(!admX)acts+='';else acts+=d.anular?'<div class="panel"><div class="field"><label class="lbl" for="motivo">Motivo para anular</label><input id="motivo" value="'+esc(d.motivo)+'"></div><div class="btnrow"><button class="btn danger" data-act="anular-ok">Sí, anular conteo</button><button class="btn ghost" data-act="anular-no">No</button></div></div>':'<button class="btn small ghost" data-act="anular">Anular este conteo</button>';
   }
-  var cierreH=c.cierre?'<div class="panel"><div class="lbl">Cierre del turno</div><p>✓ Áreas, relleno, limpiezas, equipos, caja, baños y safacones confirmados.</p><p><b>Novedad:</b> '+(c.cierre.nov==="si"?esc(c.cierre.txt):"No")+'</p></div>':"";
-  return head+kp+table+notaH+cierreH+sin+acts+'<div style="height:8px"></div>';
+  var cierreH=c.cierre?'<div class="panel"><div class="lbl">Cierre del turno</div><p>✓ Áreas, relleno, limpiezas, equipos, caja, baños y safacones confirmados.</p><p><b>Novedad:</b> '+(c.cierre.nov==="si"?esc(c.cierre.txt):"No")+'</p>'+(c.cierre.cafe?'<p><b>Máquinas de café:</b> rellenadas '+(c.cierre.cafe.rell==="si"?"✓ sí":"✗ NO")+' · funcionan bien '+(c.cierre.cafe.func==="si"?"✓ sí":"✗ NO")+(c.cierre.cafe.txt?' — '+esc(c.cierre.cafe.txt):"")+'</p>':"")+'</div>':"";
+  var histH=(c.hist&&c.hist.length)?'<div class="panel"><div class="lbl">Historial de cambios</div>'+c.hist.map(function(h){var a=h.accion==="rectificar"?"Rectificó el conteo":h.accion==="anular"?"Anuló el conteo":h.accion==="ventas-cambio"?"Cambió las ventas":"Registró las ventas";return '<div class="pitem"><div><b>'+esc(a)+'</b><small>'+esc(h.quien)+' · '+fmtFecha(new Date(h.ts).toISOString().slice(0,10))+' '+hora(h.ts)+'</small>'+(h.detalle?'<small>'+esc(h.detalle)+'</small>':"")+'</div></div>'}).join("")+'</div>':"";
+  return head+kp+table+notaH+cierreH+histH+sin+acts+'<div style="height:8px"></div>';
 }
 function pill(e){var c=e==="OK"?"ok":e==="REVISAR"?"rev":"crit";return '<span class="pill '+c+'">'+(e==="OK"?"OK":e==="REVISAR"?"Revisar":"Crítico")+'</span>'}
 async function rectSave(){
