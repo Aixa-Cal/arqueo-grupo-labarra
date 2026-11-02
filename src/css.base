@@ -1,20 +1,20 @@
 /* Layout: app de una columna para celular (máx. 640px). Contar en pantalla completa, con barra de navegación inferior para Resultados y Productos. */
 :root{
-  --bg:#F3F6F1; --surface:#FFFFFF; --ink:#16231E; --muted:#58675F; --line:#D9E2DB; --field:#EEF2EC;
-  --brand:#1B6B55; --brand-ink:#FFFFFF; --accent:#F0A62B;
+  --bg:#FBF5F2; --surface:#FFFFFF; --ink:#2A1614; --muted:#6E5A55; --line:#EBDCD6; --field:#F6EDE9;
+  --brand:#D8160F; --brand-ink:#FFFFFF; --accent:#F0A62B;
   --ok:#23724A; --ok-bg:#DAF1E3; --warn:#7D5600; --warn-bg:#FFEDB8; --crit:#A8302A; --crit-bg:#F9D9D4;
   --font-display:'Archivo',system-ui,sans-serif; --font-body:'Public Sans',system-ui,sans-serif;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#0F1814; --surface:#17241F; --ink:#E7EFE9; --muted:#9DB0A6; --line:#2A3B33; --field:#1F2F28;
-    --brand:#4FBF9F; --brand-ink:#07201A; --accent:#F2B24C;
+    --bg:#1A0F0E; --surface:#261716; --ink:#F6E9E6; --muted:#C2A9A3; --line:#3E2B28; --field:#2F1F1D;
+    --brand:#FF6B5E; --brand-ink:#2A0705; --accent:#F2B24C;
     --ok:#74D6A0; --ok-bg:#1B3A2A; --warn:#F2C655; --warn-bg:#3B3114; --crit:#FF9488; --crit-bg:#45221F; color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#0F1814; --surface:#17241F; --ink:#E7EFE9; --muted:#9DB0A6; --line:#2A3B33; --field:#1F2F28;
-  --brand:#4FBF9F; --brand-ink:#07201A; --accent:#F2B24C;
+  --bg:#1A0F0E; --surface:#261716; --ink:#F6E9E6; --muted:#C2A9A3; --line:#3E2B28; --field:#2F1F1D;
+  --brand:#FF6B5E; --brand-ink:#2A0705; --accent:#F2B24C;
   --ok:#74D6A0; --ok-bg:#1B3A2A; --warn:#F2C655; --warn-bg:#3B3114; --crit:#FF9488; --crit-bg:#45221F; color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -31,7 +31,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .top{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.brand{font-family:var(--font-display);font-weight:800;font-size:1.05rem;letter-spacing:.02em}
+.brand{display:inline-flex;align-items:center;gap:8px;font-family:var(--font-display);font-weight:800;font-size:1.05rem;letter-spacing:.02em}
 .chip{font-size:.78rem;font-weight:600;padding:4px 10px;border-radius:99px;background:var(--field);color:var(--muted);white-space:nowrap}
 .chip.live{background:var(--ok-bg);color:var(--ok)}
 .banner{background:var(--warn-bg);color:var(--warn);padding:10px 12px;border-radius:10px;font-size:.92rem}
