@@ -73,7 +73,7 @@ async function login(page,email,name){
   const ids=await ana.$$eval('[data-f=fin]',els=>els.slice(0,4).map(e=>e.dataset.pid));
   console.log('first pids',ids);
   for(const pid of ids){
-    await ana.fill(`#i-${pid}-ini`,'20');
+    /* sin «Había» en el Food Shop: solo Quedan */
     await ana.fill(`#i-${pid}-fin`,'12');
   }
   await shot(ana,'07-ana-contando');
@@ -92,7 +92,8 @@ async function login(page,email,name){
   await ana.click('[data-act=turno][data-v="1"]');
   await ana.click('#startBtn');
   await ana.waitForSelector('#saveBtn');
-  const vals=await ana.$$eval('[data-f=ini]',els=>els.slice(0,6).map(e=>[e.dataset.pid,e.value]));
+  const vals=await ana.$$eval('[data-f=fin]',els=>els.slice(0,6).map(e=>[e.dataset.pid,'']));
+  console.log('Había oculto en Food Shop:',(await ana.$$('[data-f=ini]')).length===0);
   console.log('autofilled ini',vals);
   for(const [pid,v] of vals.slice(0,4)){await ana.fill(`#i-${pid}-fin`,'7')}
   await ana.click('#saveBtn');

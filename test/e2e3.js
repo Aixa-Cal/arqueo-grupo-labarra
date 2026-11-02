@@ -47,7 +47,7 @@ const shot=(p,n)=>p.screenshot({path:'shots/'+n+'.png'});
   const cats=await ana.$$eval('#fcat-sel option',e=>e.map(x=>x.textContent.trim()));
   console.log('tarjetas',total,'categorias',cats.length,cats.slice(0,4));
   // llenar 3: dos en 0
-  await ana.evaluate(()=>{const c=[...document.querySelectorAll('.pcard')].slice(0,3);c.forEach((card,i)=>{const id=card.id.replace('card-','');const set=(f,v)=>{const e=document.getElementById('i-'+id+'-'+f);e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}))};set('ini','10');set('fin',i<2?'0':'4')})});
+  await ana.evaluate(()=>{const c=[...document.querySelectorAll('.pcard')].slice(0,3);c.forEach((card,i)=>{const id=card.id.replace('card-','');const set=(f,v)=>{const e=document.getElementById('i-'+id+'-'+f);if(!e)return;e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}))};set('ini','10');set('fin',i<2?'0':'4')})});
   const zc=await ana.$eval('#fm-cero',e=>e.textContent);const pc=await ana.$eval('#fm-pend',e=>e.textContent);
   console.log('contador cero',zc,'sin contar',pc);
   await ana.click('[data-act=fmode][data-v=cero]');
