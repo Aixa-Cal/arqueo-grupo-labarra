@@ -53,8 +53,8 @@ document.addEventListener("change",function(ev){
   else if(t.id==="f-neg"){S.fNeg=t.value;render()}
   else if(t.id==="f-rango"){S.fRango=t.value;if(t.value==="custom"&&!S.fDesde){S.fDesde=addDays(today(),-6);S.fHasta=today()}render()}
   else if(t.id==="f-est"){S.fEstado=t.value;render()}
-  else if(ds.dp){var box=t.closest("[data-dsel]"),v=dateFrom(box),id=box.dataset.dsel;
-    if(id==="p-fecha")S.pFecha=(v===today()?"":v);else if(id==="f-desde")S.fDesde=v;else if(id==="f-hasta")S.fHasta=v;
+  else if(ds.dpin){var v=t.value,id=ds.dpin,h=today();if(!v)return;if(v>h)v=h;
+    if(id==="p-fecha")S.pFecha=(v===h?"":v);else if(id==="f-desde")S.fDesde=v;else if(id==="f-hasta")S.fHasta=v;
     if(S.fDesde&&S.fHasta&&S.fDesde>S.fHasta){if(id==="f-desde")S.fHasta=S.fDesde;else S.fDesde=S.fHasta}
     render()}
   else if(t.id==="p-neg"){S.panel.negocio=t.value;S.panel.data=null;render()}
@@ -220,3 +220,5 @@ document.addEventListener("visibilitychange",function(){if(!document.hidden&&S.a
 /* ---------- arranque ---------- */
 boot();
 })();
+
+document.addEventListener("click",function(ev){var t=ev.target;if(t&&t.classList&&t.classList.contains("dpin")&&t.showPicker){try{t.showPicker()}catch(e){}}});

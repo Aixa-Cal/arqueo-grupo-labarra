@@ -45,18 +45,9 @@ function waBtns(r){
 }
 var DOWS=["dom","lun","mar","mié","jue","vie","sáb"];
 var MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
-/* Selector de fecha en español (día / mes / año), igual en todos los teléfonos */
-function dateSel(id,val,max){
-  var y=+val.slice(0,4),m=+val.slice(5,7),d=+val.slice(8,10),my=+max.slice(0,4),dim=new Date(y,m,0).getDate(),o="";
-  var opt=function(v,l,cur){return '<option value="'+v+'"'+(v===cur?" selected":"")+'>'+l+'</option>'};
-  var ds="";for(var i=1;i<=dim;i++)ds+=opt(i,i,d);
-  var ms="";for(var j=1;j<=12;j++)ms+=opt(j,MESES[j-1],m);
-  var ys="";for(var k=my;k>=2026;k--)ys+=opt(k,k,y);
-  return '<div class="dsel" data-dsel="'+id+'" data-max="'+max+'"><select aria-label="Día" data-dp="d">'+ds+'</select><select aria-label="Mes" data-dp="m">'+ms+'</select><select aria-label="Año" data-dp="y">'+ys+'</select></div>';
-}
-function dateFrom(box){
-  var g=function(k){return +box.querySelector('[data-dp='+k+']').value},y=g("y"),m=g("m"),d=Math.min(g("d"),new Date(y,m,0).getDate());
-  var v=y+"-"+(m<10?"0":"")+m+"-"+(d<10?"0":"")+d,mx=box.dataset.max;return v>mx?mx:v;
+/* Selector de fecha: calendario del teléfono, mostrado siempre como dd/mm/aaaa y con el diseño de la app */
+function datePick(id,val,max){
+  return '<label class="dpick"><span class="dptxt">'+(val?fmtFecha(val):"dd/mm/aaaa")+'</span><svg class="dpic" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><input type="date" class="dpin" data-dpin="'+id+'" aria-label="Elegir fecha" max="'+max+'" value="'+esc(val||"")+'"></label>';
 }
 function fechaCorta(fe){var d=new Date(fe+"T12:00:00");return DOWS[d.getDay()]+" "+(+fe.slice(8))+"/"+(+fe.slice(5,7))}
 function diaLbl(fe){var h=today();return (fe===h?"Hoy · ":fe===addDays(h,-1)?"Ayer · ":"")+fechaCorta(fe)}
@@ -100,7 +91,7 @@ function pendHTML(){
   if(!rows.length)html='<div class="panel center"><div class="big">✓</div><h3>Todo al día</h3><p class="sub">No hay turnos configurados con conteo hoy.</p></div>';
   else if(!falta.length&&!vent.length)html='<div class="panel center"><div class="big">✓</div><h3>Todo al día</h3><p class="sub">No falta ningún conteo ni ventas por cargar.</p></div>'+html;
   var sel=S.pFecha&&S.pFecha<=h?S.pFecha:"";
-  var fsel='<div class="datebar"><span class="lbl">Ver otro día</span><div class="dbrow">'+dateSel("p-fecha",sel||h,h)+(sel&&sel!==h?'<button class="btn small ghost" data-act="p-hoy">Volver a hoy</button>':"")+'</div></div>';
+  var fsel='<div class="datebar"><span class="lbl">Ver otro día</span><div class="dbrow">'+datePick("p-fecha",sel||h,h)+(sel&&sel!==h?'<button class="btn small ghost" data-act="p-hoy">Volver a hoy</button>':"")+'</div></div>';
   return '<div><h1>Por completar</h1><p class="sub">'+(sel?'Mostrando <b>'+esc(diaLbl(sel))+'</b>.':'Lo que falta por contar y por arquear, con su fecha.')+'</p></div>'+
     fsel+resumen+html+
     '<button class="btn ghost" data-act="campo-on">Hacer un conteo o registrar entrada</button>';
@@ -327,7 +318,7 @@ function resultadosHTML(){
   }).join(""):'<div class="panel"><h3>Sin conteos en este período</h3><p class="sub">Cuando los líderes guarden conteos, aparecerán aquí.</p></div>';
   return '<div><h1>Resultados</h1></div>'+
     '<div class="row2"><div class="field"><label class="lbl" for="f-neg">Negocio</label><select id="f-neg">'+neg+'</select></div><div class="field"><label class="lbl" for="f-rango">Período</label><select id="f-rango">'+rg+'</select></div></div>'+
-    (S.fRango==="custom"?'<div class="row2"><div class="field"><span class="lbl">Desde</span>'+dateSel("f-desde",S.fDesde||addDays(today(),-6),today())+'</div><div class="field"><span class="lbl">Hasta</span>'+dateSel("f-hasta",S.fHasta||today(),today())+'</div></div>':"")+
+    (S.fRango==="custom"?'<div class="row2"><div class="field"><span class="lbl">Desde</span>'+datePick("f-desde",S.fDesde||addDays(today(),-6),today())+'</div><div class="field"><span class="lbl">Hasta</span>'+datePick("f-hasta",S.fHasta||today(),today())+'</div></div>':"")+
     '<div class="field"><label class="lbl" for="f-est">Estado</label><select id="f-est">'+es+'</select></div>'+
     '<div class="plist">'+cards+'</div>'+(list.length?'<button class="btn ghost" data-act="csv-lista">Descargar reporte (Excel/CSV)</button>':"");
 }
