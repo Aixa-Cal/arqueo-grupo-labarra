@@ -123,6 +123,7 @@ function equipoHTML(){
       (f.rol==='supervisor'?'<p class="sub">Valida y completa conteos y ventas de todos los negocios. Cada cambio queda registrado con su nombre.</p>':'')+
       '<div class="field"><label class="lbl" for="eq-tel">Teléfono de WhatsApp (opcional)</label><input id="eq-tel" type="tel" inputmode="tel" autocomplete="off" placeholder="809 555 1234" value="'+esc(f.telefono||"")+'"><p class="hint">Sirve para mandarle recordatorios si falta su conteo.</p></div>'+
       ((f.rol==="lider"||f.rol==="colaborador")?'<div><div class="lbl">Negocios asignados</div><div class="chips" style="margin-top:8px">'+chips+'</div></div>':"")+
+      ((f.rol==="lider"||f.rol==="colaborador")?'<div><div class="lbl">Turnos que cubre (opcional)</div><p class="hint">Sirve para que el aviso de WhatsApp le llegue a quien le toca. Sin marcar, se le avisa de todos los turnos.</p><div class="chips" style="margin-top:8px">'+["1","2","3"].map(function(t){return '<button type="button" class="tchip'+((f.turnos||[]).indexOf(t)>-1?" on":"")+'" data-act="eq-tur" data-v="'+t+'">Turno '+t+'</button>'}).join("")+'</div></div>':"")+
       '<div class="lbl">Estado</div>'+seg("estado",[["aprobado","Con acceso"],["pendiente","Pendiente"],["bloqueado","Bloqueado"]])+
       '<div class="btnrow"><button class="btn" data-act="eq-save">Guardar</button><button class="btn ghost" data-act="eq-cancel">Cancelar</button></div></div>';
   }

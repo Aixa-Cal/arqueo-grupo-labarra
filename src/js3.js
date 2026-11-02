@@ -35,7 +35,7 @@ function porCompletar(){
 function waNum(t){var d=String(t||"").replace(/\D/g,"");return d.length===10?"1"+d:d}
 function waBtns(r){
   if(!(role()==="admin"||role()==="supervisor"))return "";
-  var gente=(S.contactos||[]).filter(function(c){return (c.rol==="lider"||c.rol==="colaborador")&&(c.negocios||[]).indexOf(r.n)>-1});
+  var gente=(S.contactos||[]).filter(function(c){return (c.rol==="lider"||c.rol==="colaborador")&&(c.negocios||[]).indexOf(r.n)>-1&&(!(c.turnos||[]).length||c.turnos.indexOf(String(r.t).replace(/^Turno (\d).*$/,"$1"))>-1)});
   if(!gente.length)return isAdmin()?'<small class="hint">Sin teléfonos de '+esc(r.n)+'. Agrégalos en Equipo para avisar por WhatsApp.</small>':"";
   var url=location.origin+location.pathname;
   return '<div class="wabox">'+gente.map(function(c){

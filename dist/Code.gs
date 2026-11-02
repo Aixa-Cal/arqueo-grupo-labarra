@@ -7,7 +7,7 @@ var TZ = 'America/Santo_Domingo';
 var TOKEN_DIAS = 60;
 
 var H = {
-  Usuarios: ['email', 'nombre', 'rol', 'estado', 'negocios', 'creado', 'aprobadoPor', 'ultimoAcceso', 'telefono'],
+  Usuarios: ['email', 'nombre', 'rol', 'estado', 'negocios', 'creado', 'aprobadoPor', 'ultimoAcceso', 'telefono', 'turnos'],
   Productos: ['id', 'nombre', 'cat', 'unidad', 'factor', 'tol', 'costo', 'critico', 'negocios', 'orden', 'activo'],
   Conteos: ['id', 'fecha', 'negocio', 'turno', 'resp', 'email', 'ts', 'estado', 'items', 'ventas', 'res', 'resumen', 'sin', 'ventasPor', 'ventasTs', 'rect', 'nota', 'cierre'],
   Entradas: ['id', 'fecha', 'negocio', 'resp', 'email', 'ts', 'nota', 'items', 'anulada', 'origen'],
@@ -17,7 +17,7 @@ var H = {
   Equivalencias: ['clave', 'pid', 'original'],
   Config: ['key', 'value']
 };
-var JSONC = { Usuarios: ['negocios'], Productos: ['negocios'], Conteos: ['items', 'ventas', 'res', 'resumen', 'sin', 'cierre'], Entradas: ['items'], Movimientos: ['items', 'recItems'], Notificaciones: ['leidoPor'] };
+var JSONC = { Usuarios: ['negocios', 'turnos'], Productos: ['negocios'], Conteos: ['items', 'ventas', 'res', 'resumen', 'sin', 'cierre'], Entradas: ['items'], Movimientos: ['items', 'recItems'], Notificaciones: ['leidoPor'] };
 var NUMC = ['factor', 'tol', 'costo', 'critico', 'orden', 'activo', 'ts', 'rect', 'anulada', 'ventasTs', 'recTs'];
 var TEXTC = ['id', 'fecha', 'email', 'turno', 'negocio', 'clave', 'pid', 'nombre', 'resp', 'ref'];
 
@@ -1085,11 +1085,11 @@ function saveAliases(me, p) {
 
 /* ============================ equipo ============================ */
 function listUsers() {
-  return readAll('Usuarios').map(function (u) { return { email: u.email, nombre: u.nombre, rol: u.rol, estado: u.estado, negocios: u.negocios || [], creado: u.creado, ultimoAcceso: u.ultimoAcceso, telefono: u.telefono || '' }; });
+  return readAll('Usuarios').map(function (u) { return { email: u.email, nombre: u.nombre, rol: u.rol, estado: u.estado, negocios: u.negocios || [], creado: u.creado, ultimoAcceso: u.ultimoAcceso, telefono: u.telefono || '', turnos: u.turnos || [] }; });
 }
 /* Personas con acceso y su teléfono, para recordatorios por WhatsApp */
 function contactos() {
-  return readAll('Usuarios').filter(function (u) { return u.estado === 'aprobado' && u.telefono; }).map(function (u) { return { nombre: u.nombre, rol: u.rol, negocios: u.negocios || [], telefono: String(u.telefono) }; });
+  return readAll('Usuarios').filter(function (u) { return u.estado === 'aprobado' && u.telefono; }).map(function (u) { return { nombre: u.nombre, rol: u.rol, negocios: u.negocios || [], telefono: String(u.telefono), turnos: u.turnos || [] }; });
 }
 /* Agrega al encabezado las columnas nuevas de versiones posteriores */
 function ensureHeaders(name) {
@@ -1109,6 +1109,7 @@ function setUser(me, p) {
     var nuevo = u.estado !== 'aprobado' && p.estado === 'aprobado';
     u.rol = p.rol; u.estado = p.estado; u.negocios = (p.negocios || []).map(String);
     if (p.nombre) u.nombre = String(p.nombre).trim().slice(0, 60);
+    if (p.turnos !== undefined) u.turnos = (p.turnos || []).map(String).filter(function (x) { return /^[1-3]$/.test(x); });
     if (p.telefono !== undefined) u.telefono = String(p.telefono || '').replace(/\D/g, '').slice(0, 15);
     ensureHeaders('Usuarios');
     if (nuevo) u.aprobadoPor = me.email;
