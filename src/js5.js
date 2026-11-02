@@ -111,6 +111,8 @@ document.addEventListener("click",function(ev){
     "rec-save":function(){registrarEntrada()},
     "rec-del-ent":function(){guarded(async function(){await api("delEntrada",{id:id});toast("Entrada anulada");await refresh(true);render()})},
     /* ventas */
+    "csv-lista":function(){csvLista(S.conteos.filter(function(c){return (!S.fNeg||c.negocio===S.fNeg)&&(!S.fEstado||c.estado===S.fEstado)&&inRange(c.fecha)}))},
+    "csv-det":function(){if(S.detail&&S.detail.c)csvDet(S.detail.c)},
     "vs-open":function(){openVentas(id)},
     "vs-back":function(){S.vs=null;render();window.scrollTo(0,0)},
     "vs-calc":function(){calcVentas()},

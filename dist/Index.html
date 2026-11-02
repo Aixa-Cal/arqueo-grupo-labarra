@@ -1193,6 +1193,37 @@ function inRange(f){
   if(S.fRango==="all")return true;
   return f>=addDays(today(),-(n-1))&&f<=today();
 }
+
+function csvDown(name,rows){
+  var t="﻿"+rows.map(function(r){return r.map(function(v){v=v==null?"":String(v);return /[",;\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}).join(",")}).join("\r\n");
+  var b=new Blob([t],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");
+  a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1500);
+}
+function estTxt(e){return {inicial:"Conteo inicial",contado:"Esperando ventas",arqueado:"Arqueado",anulado:"Anulado"}[e]||e}
+function slug(s){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z0-9]+/g,"_").replace(/^_|_$/g,"")}
+function csvDet(c){
+  var rs=c.resumen||{},rows=[["Negocio",c.negocio],["Turno",c.turno],["Fecha",fmtFecha(c.fecha)],["Contó",c.resp],["Estado",estTxt(c.estado)]];
+  if(c.estado==="arqueado"&&!rs.consumo)rows.push(["OK",rs.ok||0],["Por revisar",rs.rev||0],["Críticos",rs.crit||0],["Faltante estimado",rs.faltante||0]);
+  rows.push([]);
+  if(c.estado==="arqueado"&&c.res&&!rs.consumo){
+    rows.push(["Producto","Unidad","Había","Entró","Quedan","Ventas","Salió","Debía","Diferencia","Estado"]);
+    c.res.forEach(function(x){rows.push([x[1],x[2],x[3],x[4],x[5],x[6],x[7],x[8],x[9],x[11]])});
+  }else if(c.estado==="arqueado"&&c.res){
+    rows.push(["Producto","Unidad","Había","Entró","Quedan","Consumo"]);
+    c.res.forEach(function(x){rows.push([x[1],x[2],x[3],x[4],x[5],x[7]])});
+  }else{
+    rows.push(["Producto","Había","Entró","Quedan"]);
+    c.items.forEach(function(it){rows.push([it.nombre,it.ini,it.ent,it.fin])});
+  }
+  csvDown("Arqueo_"+slug(c.negocio)+"_"+slug(c.turno.split(" (")[0])+"_"+c.fecha+".csv",rows);
+}
+function csvLista(list){
+  var rows=[["Fecha","Negocio","Turno","Contó","Estado","OK","Por revisar","Críticos","Faltante estimado"]];
+  list.slice().sort(function(a,b){return a.fecha<b.fecha?-1:a.fecha>b.fecha?1:0}).forEach(function(c){var r=c.resumen||{};
+    rows.push([fmtFecha(c.fecha),c.negocio,c.turno,c.resp,estTxt(c.estado),r.ok||0,r.rev||0,r.crit||0,r.faltante||0])});
+  csvDown("Arqueos_"+(S.fNeg?slug(S.fNeg)+"_":"")+new Date().toISOString().slice(0,10)+".csv",rows);
+}
 function resumenPills(c){
   var rs=c.resumen||{};
   if(c.estado!=="arqueado")return estadoChip(c);
@@ -1210,7 +1241,7 @@ function resultadosHTML(){
   return '<div><h1>Resultados</h1></div>'+
     '<div class="row2"><div class="field"><label class="lbl" for="f-neg">Negocio</label><select id="f-neg">'+neg+'</select></div><div class="field"><label class="lbl" for="f-rango">Período</label><select id="f-rango">'+rg+'</select></div></div>'+
     '<div class="field"><label class="lbl" for="f-est">Estado</label><select id="f-est">'+es+'</select></div>'+
-    '<div class="plist">'+cards+'</div>';
+    '<div class="plist">'+cards+'</div>'+(list.length?'<button class="btn ghost" data-act="csv-lista">Descargar reporte (Excel/CSV)</button>':"");
 }
 async function openDetalle(id){
   S.detail={id:id,loading:true,edit:false,cambios:{},motivo:"",anular:false};S.vs=null;render();window.scrollTo(0,0);
@@ -1253,6 +1284,7 @@ function detalleHTML(){
   }
   var cierreH=c.cierre?'<div class="panel"><div class="lbl">Cierre del turno</div><p>✓ Áreas, relleno, limpiezas, equipos, caja, baños y safacones confirmados.</p><p><b>Novedad:</b> '+(c.cierre.nov==="si"?esc(c.cierre.txt):"No")+'</p>'+(c.cierre.fz?'<p><b>Freezers:</b> '+(c.cierre.fz.ok==="si"?"✓ todos funcionan":"✗ NO funcionan")+(c.cierre.fz.txt?' — '+esc(c.cierre.fz.txt):"")+'</p>':"")+(c.cierre.cafe?'<p><b>Máquinas de café:</b> rellenadas '+(c.cierre.cafe.rell==="si"?"✓ sí":"✗ NO")+' · funcionan bien '+(c.cierre.cafe.func==="si"?"✓ sí":"✗ NO")+(c.cierre.cafe.txt?' — '+esc(c.cierre.cafe.txt):"")+'</p>':"")+'</div>':"";
   var histH=(c.hist&&c.hist.length)?'<div class="panel"><div class="lbl">Historial de cambios</div>'+c.hist.map(function(h){var a=h.accion==="rectificar"?"Rectificó el conteo":h.accion==="anular"?"Anuló el conteo":h.accion==="ventas-cambio"?"Cambió las ventas":"Registró las ventas";return '<div class="pitem"><div><b>'+esc(a)+'</b><small>'+esc(h.quien)+' · '+fmtFecha(new Date(h.ts).toISOString().slice(0,10))+' '+hora(h.ts)+'</small>'+(h.detalle?'<small>'+esc(h.detalle)+'</small>':"")+'</div></div>'}).join("")+'</div>':"";
+  if(c.estado!=="anulado")acts+='<button class="btn ghost" data-act="csv-det">Descargar este arqueo (Excel/CSV)</button>';
   return head+kp+table+notaH+cierreH+histH+sin+acts+'<div style="height:8px"></div>';
 }
 function pill(e){var c=e==="OK"?"ok":e==="REVISAR"?"rev":"crit";return '<span class="pill '+c+'">'+(e==="OK"?"OK":e==="REVISAR"?"Revisar":"Crítico")+'</span>'}
@@ -1538,6 +1570,8 @@ document.addEventListener("click",function(ev){
     "rec-save":function(){registrarEntrada()},
     "rec-del-ent":function(){guarded(async function(){await api("delEntrada",{id:id});toast("Entrada anulada");await refresh(true);render()})},
     /* ventas */
+    "csv-lista":function(){csvLista(S.conteos.filter(function(c){return (!S.fNeg||c.negocio===S.fNeg)&&(!S.fEstado||c.estado===S.fEstado)&&inRange(c.fecha)}))},
+    "csv-det":function(){if(S.detail&&S.detail.c)csvDet(S.detail.c)},
     "vs-open":function(){openVentas(id)},
     "vs-back":function(){S.vs=null;render();window.scrollTo(0,0)},
     "vs-calc":function(){calcVentas()},

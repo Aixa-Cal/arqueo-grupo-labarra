@@ -1,0 +1,33 @@
+// Descarga de reportes CSV (lista y detalle) por un líder
+const {chromium}=require('playwright');const {makeEnv}=require('./mock');const fs=require('fs');const assert=require('assert');
+const html=fs.readFileSync('../docs/index.html','utf8');
+const env=makeEnv({clock:Date.UTC(2026,10,2,15,0,0)});env.ctx.instalar();const errors=[];
+const call=(a,p,t)=>JSON.parse(env.ctx.api(JSON.stringify({a,p,t})));
+const login=(e,n)=>{call('reqCode',{email:e});const c=env.mails[env.mails.length-1].body.match(/\d{6}/)[0];return call('verifyCode',{email:e,code:c,nombre:n}).data.token};
+(async()=>{
+  const A=login('dueno@gmail.com'),G=login('gris@g.com','Griselda'),C=login('sol@g.com','Sol');
+  call('setUser',{email:'gris@g.com',rol:'lider',estado:'aprobado',negocios:['Food Shop','Zona Presidente']},A);
+  call('setUser',{email:'sol@g.com',rol:'colaborador',estado:'aprobado',negocios:['Food Shop']},A);
+  const P=call('sync',{},C).data.productos.filter(p=>p.negocios.includes('Food Shop')||!p.negocios.length).slice(0,3);
+  const it=P.map(p=>({pid:p.id,ini:0,ent:0,fin:8,src:''}));
+  const r=call('saveConteo',{id:'c_dl000001',fecha:'2026-11-02',negocio:'Food Shop',turno:'Turno 1 (7AM-3PM)',items:it,cierre:{chk:[true,true,true,true,true,true],nov:'no',txt:'',cafe:{rell:'si',func:'si',txt:''},fz:{ok:'si',txt:''}}},C);
+  assert(r.ok,JSON.stringify(r));
+  const b=await chromium.launch(),c=await b.newContext({viewport:{width:390,height:844},acceptDownloads:true}),p=await c.newPage();
+  p.on('pageerror',e=>errors.push(e.message));
+  await p.exposeFunction('__api',s=>env.ctx.api(s));
+  await p.addInitScript(()=>{const mk=()=>{let ok=()=>{},bad=()=>{};const o={withSuccessHandler(f){ok=f;return o},withFailureHandler(f){bad=f;return o},api(s){window.__api(s).then(ok,bad)}};return o};
+    window.google={script:{run:{withSuccessHandler(f){return mk().withSuccessHandler(f)},withFailureHandler(f){return mk().withFailureHandler(f)},api(s){return mk().api(s)}}}};});
+  await p.route('http://app.local/',x=>x.fulfill({status:200,contentType:'text/html; charset=utf-8',body:html}));await p.goto('http://app.local/');
+  await p.fill('#lg-email','gris@g.com');await p.click('[data-act=lg-send]');await p.waitForSelector('#lg-code');
+  await p.fill('#lg-code',env.mails[env.mails.length-1].body.match(/\d{6}/)[0]);await p.click('[data-act=lg-verify]');
+  await p.waitForSelector('text=Por completar');
+  await p.click('[data-act=go][data-v=res]');await p.waitForSelector('[data-act=det-open]');
+  let [d]=await Promise.all([p.waitForEvent('download'),p.click('[data-act=csv-lista]')]);
+  let t=fs.readFileSync(await d.path(),'utf8');console.log(d.suggestedFilename());console.log(t);
+  assert(/Food Shop/.test(t)&&/Turno 1/.test(t));
+  await p.click('[data-act=det-open]');await p.waitForSelector('[data-act=csv-det]');
+  [d]=await Promise.all([p.waitForEvent('download'),p.click('[data-act=csv-det]')]);
+  t=fs.readFileSync(await d.path(),'utf8');console.log(d.suggestedFilename());console.log(t);
+  assert(t.split('\n').length>8);
+  console.log('errores',errors);await b.close();if(errors.length)process.exit(1);
+})().catch(e=>{console.error(e);process.exit(1)});
