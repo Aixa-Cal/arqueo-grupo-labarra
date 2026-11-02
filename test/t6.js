@@ -21,7 +21,7 @@ assert(s.productos.some(p=>p.negocios.includes('La Barra Atalaya')),'productos r
 assert(!s.productos.some(p=>p.negocios.some(n=>/La Barra \d/.test(n))),'sin nombres viejos');
 // el líder (asignado a Atalaya) ve solo Atalaya y 2 turnos
 const sl=ok('sync',{},L);assert.deepEqual(sl.config.negocios,['La Barra Atalaya']);assert.equal(sl.config.turnos['La Barra Atalaya'].length,2);
-assert.deepEqual(s.config.turnos['Food Shop'],['Turno 1 (7AM-3PM)','Turno 2 (3PM-11PM)','Turno 3 (11PM-7AM)']);assert.equal(s.config.limites['Food Shop|Turno 3 (11PM-7AM)'],'07:30');
+assert.deepEqual(s.config.turnos['Food Shop'],['Turno 1 (7AM-3PM)','Turno 2 (3PM-11PM)']);assert.equal(s.config.limites['Food Shop|Turno 3 (11PM-7AM)'],undefined);
 // idempotente
 const again=ok('sync',{},A);assert.deepEqual(again.config.turnos['La Barra Atala'].length,3);
 // Atalaya no admite turno 3; Atala sí

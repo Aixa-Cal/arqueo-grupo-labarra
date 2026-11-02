@@ -24,6 +24,6 @@ const login=(e,n)=>{call('reqCode',{email:e});const c=env.mails[env.mails.length
   const g=t=>rows.find(x=>x.t.includes(t));
   assert.deepEqual(g('Turno 1').wa,['WhatsApp · Sol']);
   assert.deepEqual(g('Turno 2').wa,['WhatsApp · Deyanira']);
-  assert.deepEqual(g('Turno 3').wa,[]);
+  assert.equal(g('Turno 3'),undefined);
   console.log('errores',errors);await b.close();if(errors.length)process.exit(1);
 })().catch(e=>{console.error(e);process.exit(1)});
