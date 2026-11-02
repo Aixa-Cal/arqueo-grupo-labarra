@@ -33,3 +33,5 @@ input.ro{background:var(--line);color:var(--muted);border-style:dashed}
 :root[data-neg="zp"]{--bg:#070B08;--surface:#0F1711;--ink:#EAF7EE;--muted:#9DB8A5;--line:#1F3324;--field:#15221A;--brand:#39E15A;--brand-ink:#04200B;--accent:#9DFFB2;--ok:#74D6A0;--ok-bg:#16301F;--warn:#F2C655;--warn-bg:#3B3114;--crit:#FF9488;--crit-bg:#45221F;color-scheme:dark}
 :root[data-neg="zp"] .brand{text-shadow:0 0 10px rgba(57,225,90,.55)}
 @media (prefers-color-scheme: dark){:root[data-neg="cw"]:not([data-theme="light"]){--bg:#08101F;--surface:#101C33;--ink:#E8EFFC;--muted:#A5B6D4;--line:#1F3254;--field:#17263F;--brand:#5B9BFF;--brand-ink:#06172E}}
+.brand img.zpl{width:auto;height:38px;max-width:200px;border-radius:0;object-fit:contain}
+.brand img.zpl{mix-blend-mode:screen}
