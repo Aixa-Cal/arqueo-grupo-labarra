@@ -15,13 +15,19 @@ function newDraft(){return {negocio:"",turno:"",fecha:today(),vals:{},base:null,
 var CIERRE=["Revisé las áreas","Rellené lo necesario","El turno completó sus limpiezas","Dejé los equipos cargando y en orden","Cerré el sistema e hice el cierre de caja","Dejé los baños limpios y los safacones listos"];
 function conCierre(neg){return !!neg&&INSUMOS.indexOf(neg)<0}
 function conCafe(neg){return esLB(neg)||neg==="Food Shop"}
-function cierreDe(d){var c=d.cierre||(d.cierre={chk:[],nov:"",txt:""});if(!c.cafe)c.cafe={rell:"",func:"",txt:""};return c}
+function conFreezer(neg){return neg==="Food Shop"}
+function cierreDe(d){var c=d.cierre||(d.cierre={chk:[],nov:"",txt:""});if(!c.cafe)c.cafe={rell:"",func:"",txt:""};if(!c.fz)c.fz={ok:"",txt:""};return c}
 function cierreOk(d){
   if(!conCierre(d.negocio))return true;
   var c=cierreDe(d);
   for(var i=0;i<CIERRE.length;i++)if(!c.chk[i])return false;
   if(conCafe(d.negocio)){var f=c.cafe;if(!f.rell||!f.func)return false;if((f.rell==="no"||f.func==="no")&&f.txt.trim().length<3)return false}
+  if(conFreezer(d.negocio)){if(!c.fz.ok)return false;if(c.fz.ok==="no"&&c.fz.txt.trim().length<3)return false}
   return c.nov==="no"||(c.nov==="si"&&c.txt.trim().length>=3);
+}
+function fzHTML(c){
+  var f=c.fz;return '<div class="lbl" style="margin-top:12px">¿Todos los freezers funcionan correctamente?</div><div class="seg"><button type="button" class="'+(f.ok==="si"?'on':'')+'" data-act="fz" data-v="si">Sí</button><button type="button" class="'+(f.ok==="no"?'on':'')+'" data-act="fz" data-v="no">No</button></div>'+
+    (f.ok==="no"?'<div class="field"><label class="lbl" for="cfz">¿Qué pasó? ¿Cuál freezer?</label><textarea id="cfz" rows="2" maxlength="300" placeholder="Cuéntalo brevemente">'+esc(f.txt)+'</textarea></div>':'');
 }
 function cafeHTML(c){
   var f=c.cafe;function q(k,t){return '<div class="lbl" style="margin-top:12px">'+t+'</div><div class="seg"><button type="button" class="'+(f[k]==="si"?'on':'')+'" data-act="caf" data-k="'+k+'" data-v="si">Sí</button><button type="button" class="'+(f[k]==="no"?'on':'')+'" data-act="caf" data-k="'+k+'" data-v="no">No</button></div>'}
@@ -32,7 +38,7 @@ function cierreHTML(){
   var d=S.draft,c=cierreDe(d);
   return '<div class="panel" id="cierre"><h2>Cierre del turno</h2><p class="sub">Confirma antes de guardar.</p>'+
     CIERRE.map(function(t,i){return '<button type="button" class="chk'+(c.chk[i]?' on':'')+'" data-act="ck" data-v="'+i+'" aria-pressed="'+(c.chk[i]?'true':'false')+'"><span class="bx">'+(c.chk[i]?'✓':'')+'</span>'+esc(t)+'</button>'}).join('')+
-    (conCafe(d.negocio)?cafeHTML(c):'')+'<div class="lbl" style="margin-top:12px">¿Hubo alguna novedad?</div><div class="seg"><button type="button" class="'+(c.nov==="si"?'on':'')+'" data-act="nov" data-v="si">Sí</button><button type="button" class="'+(c.nov==="no"?'on':'')+'" data-act="nov" data-v="no">No</button></div>'+
+    (conCafe(d.negocio)?cafeHTML(c):'')+(conFreezer(d.negocio)?fzHTML(c):'')+'<div class="lbl" style="margin-top:12px">¿Hubo alguna novedad?</div><div class="seg"><button type="button" class="'+(c.nov==="si"?'on':'')+'" data-act="nov" data-v="si">Sí</button><button type="button" class="'+(c.nov==="no"?'on':'')+'" data-act="nov" data-v="no">No</button></div>'+
     (c.nov==="si"?'<div class="field"><label class="lbl" for="cnov">¿Qué pasó? ¿Se dañó algo?</label><textarea id="cnov" rows="3" maxlength="400" placeholder="Cuéntalo brevemente">'+esc(c.txt)+'</textarea></div>':'')+'</div>';
 }
 function esLB(neg){return /^La Barra/.test(neg||"")}
@@ -209,7 +215,7 @@ async function guardar(){
   if(!items.length)return;
   S.saving=true;updateProgress();
   try{
-    await api("saveConteo",{id:d.id,fecha:d.fecha,negocio:d.negocio,turno:d.turno,items:items,sin:sin,nota:(d.nota||"").trim(),cierre:conCierre(d.negocio)?{chk:CIERRE.map(function(t,i){return !!cierreDe(d).chk[i]}),nov:cierreDe(d).nov,txt:cierreDe(d).nov==='si'?cierreDe(d).txt.trim():'',cafe:conCafe(d.negocio)?cierreDe(d).cafe:undefined}:null});
+    await api("saveConteo",{id:d.id,fecha:d.fecha,negocio:d.negocio,turno:d.turno,items:items,sin:sin,nota:(d.nota||"").trim(),cierre:conCierre(d.negocio)?{chk:CIERRE.map(function(t,i){return !!cierreDe(d).chk[i]}),nov:cierreDe(d).nov,txt:cierreDe(d).nov==='si'?cierreDe(d).txt.trim():'',cafe:conCafe(d.negocio)?cierreDe(d).cafe:undefined,fz:conFreezer(d.negocio)?cierreDe(d).fz:undefined}:null});
     S.saved={negocio:d.negocio,turno:d.turno,fecha:d.fecha,n:items.length,sin:sin.length,ini:items.every(function(i){return !i.src})};
     S.step="listo";clearDraft();S.saving=false;render();window.scrollTo(0,0);refresh(true);
   }catch(e){

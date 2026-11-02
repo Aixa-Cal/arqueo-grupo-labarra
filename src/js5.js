@@ -25,6 +25,7 @@ document.addEventListener("input",function(ev){
   else if(ds.rq){var c4=clean(t.value);if(c4!==t.value)t.value=c4;var ln=S.rec.lines.filter(function(l){return l.pid===ds.rq})[0];if(ln)ln.qty=c4;updateRecBtn()}
   else if(t.id==="rq"){S.rec.q=t.value;var rr=$("#rres");if(rr)rr.innerHTML=recSearchHTML()}
   else if(t.id==="rnota"){S.rec.nota=t.value}
+  else if(t.id==="cfz"){if(S.draft){cierreDe(S.draft).fz.txt=t.value;persistDraft();updateProgress()}}
   else if(t.id==="ccaf"){if(S.draft){cierreDe(S.draft).cafe.txt=t.value;persistDraft();updateProgress()}}
   else if(t.id==="eq-tel"){if(S.eq.form)S.eq.form.telefono=t.value}
   else if(t.id==="cnov"){if(S.draft){cierreDe(S.draft).txt=t.value;persistDraft();updateProgress()}}
@@ -74,6 +75,7 @@ document.addEventListener("click",function(ev){
   var act=el.dataset.act,v=el.dataset.v,id=el.dataset.id;
   var A={
     "ck":function(){var c=cierreDe(S.draft),i=+v;c.chk[i]=!c.chk[i];cierreRefresh()},
+    "fz":function(){cierreDe(S.draft).fz.ok=v;cierreRefresh()},
     "caf":function(){cierreDe(S.draft).cafe[el.dataset.k]=v;cierreRefresh()},
     "nov":function(){cierreDe(S.draft).nov=v;cierreRefresh()},
     "go":function(){

@@ -365,6 +365,7 @@ function need(me, roles) {
   if (roles.indexOf(me.rol) < 0) fail('permiso', 'No tienes permiso para esto.');
 }
 /* Roles: admin, supervisor (sub-administración: valida/completa conteos de todos los negocios y todo queda en la bitácora), gerencia, lider (cuenta + revisa/registra ventas de SUS negocios), colaborador (solo cuenta y registra movimientos de SUS negocios) */
+function conFreezer(neg) { return neg === 'Food Shop'; }
 function conCafe(neg) { return /^La Barra/.test(neg) || neg === 'Food Shop'; }
 function scoped(me) { return me.rol === 'lider' || me.rol === 'colaborador'; }
 function negOk(me, neg) {
@@ -576,6 +577,13 @@ function saveConteo(me, p) {
       var ctxt = String(ck.txt || '').trim().slice(0, 400);
       if (ck.nov === 'si' && ctxt.length < 3) fail('datos', 'Cuenta qué novedad hubo.');
       o.cierre = { ok: 1, nov: ck.nov, txt: ck.nov === 'si' ? ctxt : '' };
+      if (conFreezer(neg)) {
+        var fz = ck.fz || {};
+        if (['si', 'no'].indexOf(fz.ok) < 0) fail('datos', 'Confirma si los freezers funcionan.');
+        var fzt = String(fz.txt || '').trim().slice(0, 300);
+        if (fz.ok === 'no' && fzt.length < 3) fail('datos', 'Cuenta qué pasó con los freezers.');
+        o.cierre.fz = { ok: fz.ok, txt: fz.ok === 'no' ? fzt : '' };
+      }
       if (conCafe(neg)) {
         var cf = ck.cafe || {};
         if (['si', 'no'].indexOf(cf.rell) < 0 || ['si', 'no'].indexOf(cf.func) < 0) fail('datos', 'Responde lo de las máquinas de café.');
@@ -591,6 +599,7 @@ function saveConteo(me, p) {
     }
     appendObj('Conteos', o);
     if (o.cierre && o.cierre.cafe && (o.cierre.cafe.rell === 'no' || o.cierre.cafe.func === 'no')) notify('cafetera', 'Máquinas de café: ' + neg, me.nombre + ' · ' + turno + ': ' + (o.cierre.cafe.rell === 'no' ? 'NO rellenadas. ' : '') + (o.cierre.cafe.func === 'no' ? 'NO funcionan bien. ' : '') + o.cierre.cafe.txt, { para: 'admin,gerencia', negocio: neg, ref: 'conteo|' + id, email: true });
+    if (o.cierre && o.cierre.fz && o.cierre.fz.ok === 'no') notify('freezer', 'Freezers con problema: ' + neg, me.nombre + ' · ' + turno + ': ' + o.cierre.fz.txt, { para: 'admin,gerencia', negocio: neg, ref: 'conteo|' + id, email: true });
     if (o.cierre && o.cierre.nov === 'si') notify('novedad', 'Novedad en el cierre: ' + neg, me.nombre + ' · ' + turno + ': ' + o.cierre.txt, { para: 'admin,gerencia', negocio: neg, ref: 'conteo|' + id, email: true });
     if (inicial) return { id: id, inicial: true };
     if (INSUMOS.indexOf(neg) > -1) {

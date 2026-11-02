@@ -37,10 +37,10 @@ console.log('T4 OK');
   const it=[{pid:otros[0].id,ini:5,ent:0,fin:5,src:''}];
   const bad=(c)=>{const r=E.call('saveConteo',{id:'c_cierre'+Math.random().toString(36).slice(2,6),fecha:'2026-11-09',negocio:'La Barra 2',turno:'Día completo',items:it,cierre:c},C);return r};
   ok('setUser',{email:'b1@g.com',rol:'colaborador',estado:'aprobado',negocios:['La Barra 1','La Barra 2']},A);
-  assert(!bad(null).ok);assert(!bad({chk:[true,true,true,true,true,false],nov:'no',txt:'',cafe:{rell:'si',func:'si',txt:''}}).ok);
-  assert(!bad({chk:[true,true,true,true,true,true],nov:'',txt:'',cafe:{rell:'si',func:'si',txt:''}}).ok);assert(!bad({chk:[true,true,true,true,true,true],nov:'si',txt:'',cafe:{rell:'si',func:'si',txt:''}}).ok);
+  assert(!bad(null).ok);assert(!bad({chk:[true,true,true,true,true,false],nov:'no',txt:'',cafe:{rell:'si',func:'si',txt:''},fz:{ok:'si',txt:''}}).ok);
+  assert(!bad({chk:[true,true,true,true,true,true],nov:'',txt:'',cafe:{rell:'si',func:'si',txt:''},fz:{ok:'si',txt:''}}).ok);assert(!bad({chk:[true,true,true,true,true,true],nov:'si',txt:'',cafe:{rell:'si',func:'si',txt:''},fz:{ok:'si',txt:''}}).ok);
   const n0=E.mails.length;
-  const g=bad({chk:[true,true,true,true,true,true],nov:'si',txt:'Se dañó la licuadora',cafe:{rell:'si',func:'si',txt:''}});assert(g.ok,JSON.stringify(g));
+  const g=bad({chk:[true,true,true,true,true,true],nov:'si',txt:'Se dañó la licuadora',cafe:{rell:'si',func:'si',txt:''},fz:{ok:'si',txt:''}});assert(g.ok,JSON.stringify(g));
   assert(E.mails.slice(n0).some(m=>/Novedad/.test(m.subject||m.body||'')),'mail novedad');
   console.log('cierre OK');
 }

@@ -266,13 +266,19 @@ function newDraft(){return {negocio:"",turno:"",fecha:today(),vals:{},base:null,
 var CIERRE=["Revisé las áreas","Rellené lo necesario","El turno completó sus limpiezas","Dejé los equipos cargando y en orden","Cerré el sistema e hice el cierre de caja","Dejé los baños limpios y los safacones listos"];
 function conCierre(neg){return !!neg&&INSUMOS.indexOf(neg)<0}
 function conCafe(neg){return esLB(neg)||neg==="Food Shop"}
-function cierreDe(d){var c=d.cierre||(d.cierre={chk:[],nov:"",txt:""});if(!c.cafe)c.cafe={rell:"",func:"",txt:""};return c}
+function conFreezer(neg){return neg==="Food Shop"}
+function cierreDe(d){var c=d.cierre||(d.cierre={chk:[],nov:"",txt:""});if(!c.cafe)c.cafe={rell:"",func:"",txt:""};if(!c.fz)c.fz={ok:"",txt:""};return c}
 function cierreOk(d){
   if(!conCierre(d.negocio))return true;
   var c=cierreDe(d);
   for(var i=0;i<CIERRE.length;i++)if(!c.chk[i])return false;
   if(conCafe(d.negocio)){var f=c.cafe;if(!f.rell||!f.func)return false;if((f.rell==="no"||f.func==="no")&&f.txt.trim().length<3)return false}
+  if(conFreezer(d.negocio)){if(!c.fz.ok)return false;if(c.fz.ok==="no"&&c.fz.txt.trim().length<3)return false}
   return c.nov==="no"||(c.nov==="si"&&c.txt.trim().length>=3);
+}
+function fzHTML(c){
+  var f=c.fz;return '<div class="lbl" style="margin-top:12px">¿Todos los freezers funcionan correctamente?</div><div class="seg"><button type="button" class="'+(f.ok==="si"?'on':'')+'" data-act="fz" data-v="si">Sí</button><button type="button" class="'+(f.ok==="no"?'on':'')+'" data-act="fz" data-v="no">No</button></div>'+
+    (f.ok==="no"?'<div class="field"><label class="lbl" for="cfz">¿Qué pasó? ¿Cuál freezer?</label><textarea id="cfz" rows="2" maxlength="300" placeholder="Cuéntalo brevemente">'+esc(f.txt)+'</textarea></div>':'');
 }
 function cafeHTML(c){
   var f=c.cafe;function q(k,t){return '<div class="lbl" style="margin-top:12px">'+t+'</div><div class="seg"><button type="button" class="'+(f[k]==="si"?'on':'')+'" data-act="caf" data-k="'+k+'" data-v="si">Sí</button><button type="button" class="'+(f[k]==="no"?'on':'')+'" data-act="caf" data-k="'+k+'" data-v="no">No</button></div>'}
@@ -283,7 +289,7 @@ function cierreHTML(){
   var d=S.draft,c=cierreDe(d);
   return '<div class="panel" id="cierre"><h2>Cierre del turno</h2><p class="sub">Confirma antes de guardar.</p>'+
     CIERRE.map(function(t,i){return '<button type="button" class="chk'+(c.chk[i]?' on':'')+'" data-act="ck" data-v="'+i+'" aria-pressed="'+(c.chk[i]?'true':'false')+'"><span class="bx">'+(c.chk[i]?'✓':'')+'</span>'+esc(t)+'</button>'}).join('')+
-    (conCafe(d.negocio)?cafeHTML(c):'')+'<div class="lbl" style="margin-top:12px">¿Hubo alguna novedad?</div><div class="seg"><button type="button" class="'+(c.nov==="si"?'on':'')+'" data-act="nov" data-v="si">Sí</button><button type="button" class="'+(c.nov==="no"?'on':'')+'" data-act="nov" data-v="no">No</button></div>'+
+    (conCafe(d.negocio)?cafeHTML(c):'')+(conFreezer(d.negocio)?fzHTML(c):'')+'<div class="lbl" style="margin-top:12px">¿Hubo alguna novedad?</div><div class="seg"><button type="button" class="'+(c.nov==="si"?'on':'')+'" data-act="nov" data-v="si">Sí</button><button type="button" class="'+(c.nov==="no"?'on':'')+'" data-act="nov" data-v="no">No</button></div>'+
     (c.nov==="si"?'<div class="field"><label class="lbl" for="cnov">¿Qué pasó? ¿Se dañó algo?</label><textarea id="cnov" rows="3" maxlength="400" placeholder="Cuéntalo brevemente">'+esc(c.txt)+'</textarea></div>':'')+'</div>';
 }
 function esLB(neg){return /^La Barra/.test(neg||"")}
@@ -460,7 +466,7 @@ async function guardar(){
   if(!items.length)return;
   S.saving=true;updateProgress();
   try{
-    await api("saveConteo",{id:d.id,fecha:d.fecha,negocio:d.negocio,turno:d.turno,items:items,sin:sin,nota:(d.nota||"").trim(),cierre:conCierre(d.negocio)?{chk:CIERRE.map(function(t,i){return !!cierreDe(d).chk[i]}),nov:cierreDe(d).nov,txt:cierreDe(d).nov==='si'?cierreDe(d).txt.trim():'',cafe:conCafe(d.negocio)?cierreDe(d).cafe:undefined}:null});
+    await api("saveConteo",{id:d.id,fecha:d.fecha,negocio:d.negocio,turno:d.turno,items:items,sin:sin,nota:(d.nota||"").trim(),cierre:conCierre(d.negocio)?{chk:CIERRE.map(function(t,i){return !!cierreDe(d).chk[i]}),nov:cierreDe(d).nov,txt:cierreDe(d).nov==='si'?cierreDe(d).txt.trim():'',cafe:conCafe(d.negocio)?cierreDe(d).cafe:undefined,fz:conFreezer(d.negocio)?cierreDe(d).fz:undefined}:null});
     S.saved={negocio:d.negocio,turno:d.turno,fecha:d.fecha,n:items.length,sin:sin.length,ini:items.every(function(i){return !i.src})};
     S.step="listo";clearDraft();S.saving=false;render();window.scrollTo(0,0);refresh(true);
   }catch(e){
@@ -979,7 +985,7 @@ function detalleHTML(){
     acts='<div class="btnrow"><button class="btn" data-act="vs-open" data-id="'+esc(c.id)+'">'+(c.estado==="arqueado"?"Cambiar ventas":"Registrar ventas")+'</button><button class="btn ghost" data-act="rect-start">Rectificar conteo</button></div>';
     if(!admX)acts+='';else acts+=d.anular?'<div class="panel"><div class="field"><label class="lbl" for="motivo">Motivo para anular</label><input id="motivo" value="'+esc(d.motivo)+'"></div><div class="btnrow"><button class="btn danger" data-act="anular-ok">Sí, anular conteo</button><button class="btn ghost" data-act="anular-no">No</button></div></div>':'<button class="btn small ghost" data-act="anular">Anular este conteo</button>';
   }
-  var cierreH=c.cierre?'<div class="panel"><div class="lbl">Cierre del turno</div><p>✓ Áreas, relleno, limpiezas, equipos, caja, baños y safacones confirmados.</p><p><b>Novedad:</b> '+(c.cierre.nov==="si"?esc(c.cierre.txt):"No")+'</p>'+(c.cierre.cafe?'<p><b>Máquinas de café:</b> rellenadas '+(c.cierre.cafe.rell==="si"?"✓ sí":"✗ NO")+' · funcionan bien '+(c.cierre.cafe.func==="si"?"✓ sí":"✗ NO")+(c.cierre.cafe.txt?' — '+esc(c.cierre.cafe.txt):"")+'</p>':"")+'</div>':"";
+  var cierreH=c.cierre?'<div class="panel"><div class="lbl">Cierre del turno</div><p>✓ Áreas, relleno, limpiezas, equipos, caja, baños y safacones confirmados.</p><p><b>Novedad:</b> '+(c.cierre.nov==="si"?esc(c.cierre.txt):"No")+'</p>'+(c.cierre.fz?'<p><b>Freezers:</b> '+(c.cierre.fz.ok==="si"?"✓ todos funcionan":"✗ NO funcionan")+(c.cierre.fz.txt?' — '+esc(c.cierre.fz.txt):"")+'</p>':"")+(c.cierre.cafe?'<p><b>Máquinas de café:</b> rellenadas '+(c.cierre.cafe.rell==="si"?"✓ sí":"✗ NO")+' · funcionan bien '+(c.cierre.cafe.func==="si"?"✓ sí":"✗ NO")+(c.cierre.cafe.txt?' — '+esc(c.cierre.cafe.txt):"")+'</p>':"")+'</div>':"";
   var histH=(c.hist&&c.hist.length)?'<div class="panel"><div class="lbl">Historial de cambios</div>'+c.hist.map(function(h){var a=h.accion==="rectificar"?"Rectificó el conteo":h.accion==="anular"?"Anuló el conteo":h.accion==="ventas-cambio"?"Cambió las ventas":"Registró las ventas";return '<div class="pitem"><div><b>'+esc(a)+'</b><small>'+esc(h.quien)+' · '+fmtFecha(new Date(h.ts).toISOString().slice(0,10))+' '+hora(h.ts)+'</small>'+(h.detalle?'<small>'+esc(h.detalle)+'</small>':"")+'</div></div>'}).join("")+'</div>':"";
   return head+kp+table+notaH+cierreH+histH+sin+acts+'<div style="height:8px"></div>';
 }
@@ -1180,6 +1186,7 @@ document.addEventListener("input",function(ev){
   else if(ds.rq){var c4=clean(t.value);if(c4!==t.value)t.value=c4;var ln=S.rec.lines.filter(function(l){return l.pid===ds.rq})[0];if(ln)ln.qty=c4;updateRecBtn()}
   else if(t.id==="rq"){S.rec.q=t.value;var rr=$("#rres");if(rr)rr.innerHTML=recSearchHTML()}
   else if(t.id==="rnota"){S.rec.nota=t.value}
+  else if(t.id==="cfz"){if(S.draft){cierreDe(S.draft).fz.txt=t.value;persistDraft();updateProgress()}}
   else if(t.id==="ccaf"){if(S.draft){cierreDe(S.draft).cafe.txt=t.value;persistDraft();updateProgress()}}
   else if(t.id==="eq-tel"){if(S.eq.form)S.eq.form.telefono=t.value}
   else if(t.id==="cnov"){if(S.draft){cierreDe(S.draft).txt=t.value;persistDraft();updateProgress()}}
@@ -1229,6 +1236,7 @@ document.addEventListener("click",function(ev){
   var act=el.dataset.act,v=el.dataset.v,id=el.dataset.id;
   var A={
     "ck":function(){var c=cierreDe(S.draft),i=+v;c.chk[i]=!c.chk[i];cierreRefresh()},
+    "fz":function(){cierreDe(S.draft).fz.ok=v;cierreRefresh()},
     "caf":function(){cierreDe(S.draft).cafe[el.dataset.k]=v;cierreRefresh()},
     "nov":function(){cierreDe(S.draft).nov=v;cierreRefresh()},
     "go":function(){

@@ -14,7 +14,7 @@ no('contactos',{},C,'permiso');
 // cafeteras
 const P=ok('sync',{},C).productos.filter(p=>p.negocios.includes('La Barra 1')).slice(0,3);
 const it=P.map(p=>({pid:p.id,ini:10,ent:0,fin:10,src:''}));
-const ck=(cafe,nov)=>({chk:[true,true,true,true,true,true],nov:nov||'no',txt:'',cafe});
+const ck=(cafe,nov,fz)=>({chk:[true,true,true,true,true,true],nov:nov||'no',txt:'',cafe,fz:fz===undefined?{ok:'si',txt:''}:fz});
 no('saveConteo',{id:'c_caf00001',fecha:'2026-11-02',negocio:'La Barra 1',turno:'Día completo',items:it,cierre:{chk:[true,true,true,true,true,true],nov:'no',txt:''}},C,'datos');
 no('saveConteo',{id:'c_caf00001',fecha:'2026-11-02',negocio:'La Barra 1',turno:'Día completo',items:it,cierre:ck({rell:'si',func:'no',txt:''})},C,'datos');
 const n0=E.mails.length;
@@ -25,6 +25,11 @@ assert(!ok('sync',{},S).notifs.some(n=>n.tipo==='acceso'),'supervisor no recibe 
 // Food Shop también exige cafetera; Car Wash no
 const FP=ok('sync',{},F).productos.filter(p=>p.negocios.includes('Food Shop')).slice(0,2);
 no('saveConteo',{id:'c_caf00002',fecha:'2026-11-02',negocio:'Food Shop',turno:'Turno 1 (7AM-3PM)',items:FP.map(p=>({pid:p.id,ini:5,ent:0,fin:5,src:''})),cierre:ck(undefined)},F,'datos');
+no('saveConteo',{id:'c_fz000001',fecha:'2026-11-02',negocio:'Food Shop',turno:'Turno 1 (7AM-3PM)',items:FP.map(p=>({pid:p.id,ini:5,ent:0,fin:5,src:''})),cierre:ck({rell:'si',func:'si',txt:''},'no',null)},F,'datos');
+no('saveConteo',{id:'c_fz000001',fecha:'2026-11-02',negocio:'Food Shop',turno:'Turno 1 (7AM-3PM)',items:FP.map(p=>({pid:p.id,ini:5,ent:0,fin:5,src:''})),cierre:ck({rell:'si',func:'si',txt:''},'no',{ok:'no',txt:''})},F,'datos');
+const nf=E.mails.length;ok('saveConteo',{id:'c_fz000001',fecha:'2026-11-02',negocio:'Food Shop',turno:'Turno 1 (7AM-3PM)',items:FP.map(p=>({pid:p.id,ini:5,ent:0,fin:5,src:''})),cierre:ck({rell:'si',func:'si',txt:''},'no',{ok:'no',txt:'Freezer 2 no enfría'})},F);
+assert(E.mails.slice(nf).some(m=>/Freezers/.test(m.subject||m.body||'')),'aviso freezer');
+assert(ok('getConteo',{id:'c_fz000001'},A).cierre.fz.txt==='Freezer 2 no enfría');
 // segundo conteo para arqueo y supervisor completa
 E.setClock(Date.UTC(2026,10,3,15,0,0));
 const it2=P.map(p=>({pid:p.id,ini:10,ent:0,fin:7,src:'c_caf00001'}));
@@ -45,6 +50,6 @@ assert(!ok('getConteo',{id:'c_caf00003'},C).hist,'colaborador no ve historial');
 // lo que NO puede
 for(const [a,p] of [['anular',{id:'c_caf00003',motivo:'xxx'}],['saveProducto',{nombre:'x'}],['delProducto',{id:'x'}],['saveConfig',{cfg:{}}],['listUsers',{}],['setUser',{email:'col@g.com',rol:'admin',estado:'aprobado'}],['anularMov',{id:'m_xxxxxx'}],['dash',{}]])no(a,p,S,'permiso');
 // supervisor cuenta cualquier negocio
-ok('saveConteo',{id:'c_caf00004',fecha:'2026-11-03',negocio:'Food Shop',turno:'Turno 1 (7AM-3PM)',items:FP.map(p=>({pid:p.id,ini:5,ent:0,fin:5,src:''})),cierre:ck({rell:'si',func:'si',txt:''})},S);
+ok('saveConteo',{id:'c_caf00004',fecha:'2026-11-03',negocio:'Food Shop',turno:'Turno 2 (3PM-11PM)',items:FP.map(p=>({pid:p.id,ini:5,ent:0,fin:5,src:''})),cierre:ck({rell:'si',func:'si',txt:''})},S);
 // bitácora de usuario con teléfono
 console.log('t5 OK');
