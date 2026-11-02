@@ -55,5 +55,6 @@ input.ro{background:var(--line);color:var(--muted);border-style:dashed}
 .dayd>summary::after{content:"▾";margin-left:auto;color:var(--muted)}
 .dayd[open]>summary::after{content:"▴"}
 .datebar{display:flex;flex-direction:column;gap:6px}
-.dbrow{display:flex;gap:8px;align-items:center}
-.dbrow input[type=date],#f-desde,#f-hasta{min-height:48px;flex:1}
+.dbrow{display:flex;flex-direction:column;gap:8px;align-items:stretch}
+.dsel{display:grid;grid-template-columns:.8fr 1.5fr 1fr;gap:8px;flex:1}
+.dsel select{min-height:48px;border:2px solid var(--line);background:var(--field);border-radius:10px;padding:10px 8px;width:100%;min-width:0}

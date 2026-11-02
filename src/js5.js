@@ -51,11 +51,12 @@ document.addEventListener("change",function(ev){
   var t=ev.target,ds=t.dataset||{};
   if(t.id==="fcat-sel"&&S.draft){var op=t.options[t.selectedIndex];S.draft.fcat=(+t.value<0)?null:op.dataset.c;persistDraft();applyFilter()}
   else if(t.id==="f-neg"){S.fNeg=t.value;render()}
-  else if(t.id==="f-rango"){S.fRango=t.value;render()}
+  else if(t.id==="f-rango"){S.fRango=t.value;if(t.value==="custom"&&!S.fDesde){S.fDesde=addDays(today(),-6);S.fHasta=today()}render()}
   else if(t.id==="f-est"){S.fEstado=t.value;render()}
-  else if(t.id==="f-desde"){S.fDesde=t.value;render()}
-  else if(t.id==="f-hasta"){S.fHasta=t.value;render()}
-  else if(t.id==="p-fecha"){S.pFecha=t.value||"";render()}
+  else if(ds.dp){var box=t.closest("[data-dsel]"),v=dateFrom(box),id=box.dataset.dsel;
+    if(id==="p-fecha")S.pFecha=(v===today()?"":v);else if(id==="f-desde")S.fDesde=v;else if(id==="f-hasta")S.fHasta=v;
+    if(S.fDesde&&S.fHasta&&S.fDesde>S.fHasta){if(id==="f-desde")S.fHasta=S.fDesde;else S.fDesde=S.fHasta}
+    render()}
   else if(t.id==="p-neg"){S.panel.negocio=t.value;S.panel.data=null;render()}
   else if(t.id==="cneg"){S.cat.neg=t.value;render()}
   else if(t.id==="rorigen"){S.rec.origen=t.value;render()}

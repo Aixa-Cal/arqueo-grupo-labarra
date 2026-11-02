@@ -21,13 +21,13 @@ const login=(e,n)=>{call('reqCode',{email:e});const c=env.mails[env.mails.length
   await p.fill('#lg-email','gris@g.com');await p.click('[data-act=lg-send]');await p.waitForSelector('#lg-code');
   await p.fill('#lg-code',env.mails[env.mails.length-1].body.match(/\d{6}/)[0]);await p.click('[data-act=lg-verify]');
   await p.waitForSelector('text=Por completar');
-  await p.fill('#p-fecha','2026-11-02');await p.waitForSelector('text=Mostrando');
+  await p.selectOption('[data-dsel=p-fecha] [data-dp=d]','2');await p.waitForSelector('text=Mostrando');
   const t=await p.textContent('body');assert(/lun 2\/11/i.test(t),'muestra el día elegido');assert(/Food Shop/.test(t));
   console.log('pend fecha ok');
   await p.click('[data-act=p-hoy]');await p.waitForSelector('text=Lo que falta por contar');
   await p.click('[data-act=go][data-v=res]');await p.waitForSelector('#f-rango');
-  await p.selectOption('#f-rango','custom');await p.waitForSelector('#f-desde');
-  await p.fill('#f-desde','2026-11-02');await p.fill('#f-hasta','2026-11-02');await p.waitForSelector('[data-act=det-open]');
-  await p.fill('#f-desde','2026-11-03');await p.waitForSelector('text=Sin conteos en este período');
+  await p.selectOption('#f-rango','custom');await p.waitForSelector('[data-dsel=f-desde]');
+  await p.selectOption('[data-dsel=f-desde] [data-dp=d]','2');await p.selectOption('[data-dsel=f-hasta] [data-dp=d]','2');await p.waitForSelector('[data-act=det-open]');
+  await p.selectOption('[data-dsel=f-desde] [data-dp=d]','1');await p.selectOption('[data-dsel=f-hasta] [data-dp=d]','1');await p.waitForSelector('text=Sin conteos en este período');
   console.log('res fechas ok','errores',errors);await b.close();if(errors.length)process.exit(1);
 })().catch(e=>{console.error(e);process.exit(1)});
