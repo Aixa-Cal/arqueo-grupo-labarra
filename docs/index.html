@@ -221,6 +221,7 @@ main#view>*{min-width:0}
 .savemsg{min-height:1.2em}
 [hidden]{display:none!important}
 input.ro{background:var(--line);color:var(--muted);border-style:dashed}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 </style>
 </head>
 <body>
@@ -234,6 +235,7 @@ input.ro{background:var(--line);color:var(--muted);border-style:dashed}
 <script>
 (function(){
 "use strict";
+var DOBLE=["Zona Presidente"];
 var ROL={colaborador:"Colaborador",lider:"Líder",admin:"Administración",gerencia:"Gerencia"};
 var DIAS=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"],DIAS_L=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
 var S={
@@ -581,32 +583,37 @@ function contarHTML(){
   return '<div class="bar"><div class="bar-row"><button class="back" data-act="back">← Cambiar</button><span class="sub"><b>'+esc(d.negocio)+'</b> · '+esc(d.turno)+'</span></div>'+
     '<div class="bar-row"><span class="sub" id="prog"></span><span class="chip">'+(isFullDay(d.negocio,d.fecha)?"Conteo completo":"Solo críticos")+'</span></div><div class="meter"><i id="meter"></i></div></div>'+
     '<div class="fbox"><input id="q" class="srch" type="search" placeholder="Buscar producto…" autocomplete="off">'+filtroHTML(list)+'</div>'+
-    '<details class="help"><summary>¿Qué pongo en cada casilla?</summary><ul><li><b>Había:</b> lo que quedó en el conteo anterior. Ya viene lleno.</li><li><b>Entró:</b> la mercancía que llegó desde el último conteo (lo registrado en Recibir).</li><li><b>Quedan:</b> lo que cuentas ahora mismo.</li></ul></details>'+
+    '<details class="help"><summary>¿Qué pongo en cada casilla?</summary><ul>'+(conDoble()?'<li><b>Había:</b> lo que hay al empezar el turno (cuéntalo).</li>':'')+'<li><b>Entró:</b> la mercancía que llegó en tu turno (lo registrado en Movimientos).</li><li><b>Quedan:</b> lo que cuentas ahora mismo.</li></ul></details>'+
     '<div class="plist">'+cards+'</div><p class="banner" id="fempty" hidden>Ningún producto coincide con el filtro.</p>';
 }
 function cardHTML(p){
   var v=S.draft.vals[p.id]||(S.draft.vals[p.id]={ini:"",ent:"",fin:"",src:""});
-  var lockIni=!!v.src&&!isAdmin();
+  var dbl=conDoble(),lockIni=!!v.src&&!isAdmin()&&!dbl;
   function f(k,l){return '<label class="f"><span>'+l+(k==="ini"&&lockIni?' 🔒':'')+'</span><input'+(k==="ini"&&lockIni?' readonly tabindex="-1" class="ro"':'')+' id="i-'+esc(p.id)+'-'+k+'" data-pid="'+esc(p.id)+'" data-f="'+k+'" inputmode="decimal" autocomplete="off" placeholder="0" value="'+esc(v[k])+'"></label>'}
   var u=usage(v);
   return '<section class="pcard'+(u?(u.real<0?" s-crit":" s-ok"):"")+'" id="card-'+esc(p.id)+'" data-n="'+esc(String(p.nombre).toLowerCase())+'" data-c="'+esc(p.cat||"")+'" data-z="'+(isZero(v)?"1":"")+'" data-p="'+(usage(v)?"":"1")+'"><div class="phead"><h3>'+esc(p.nombre)+'</h3><span class="unit">'+esc(p.unidad)+'</span></div>'+
-    '<div class="grid3">'+f("ini","Había")+f("ent","Entró")+f("fin","Quedan")+'</div>'+
+    (dbl?'<div class="grid3">'+f("ini","Había")+f("ent","Entró")+f("fin","Quedan")+'</div>':'<div class="grid2">'+f("ent","Entró")+f("fin","Quedan")+'</div>')+
     '<div class="res" id="res-'+esc(p.id)+'">'+usageHTML(u)+'</div><p class="note" id="note-'+esc(p.id)+'">'+noteText(v)+'</p></section>';
 }
+function conDoble(){return !!S.draft&&DOBLE.indexOf(S.draft.negocio)>-1}
 function usage(v){
   var ini=num(v.ini),ent=num(v.ent)||0,fin=num(v.fin);
+  if(!conDoble()&&!v.src){if(fin==null)return null;return {real:0,first:true}}
   if(ini==null||fin==null)return null;
   return {real:ini+ent-fin};
 }
 function usageHTML(u){
-  if(!u)return '<span class="hint">Llena «Había» y «Quedan».</span>';
+  if(!u)return '<span class="hint">'+(conDoble()?'Llena «Había» y «Quedan».':'Llena «Quedan».')+'</span>';
+  if(u.first)return '<span class="pill ok">Listo</span><span class="hint">Primer conteo: punto de partida</span>';
   if(u.real<0)return '<span class="pill crit">Revisa</span><span class="hint">Quedan más de los que había y entraron. Cuenta de nuevo.</span>';
   return '<span class="pill ok">Listo</span><span class="hint">Salieron '+fmt(u.real)+'</span>';
 }
 function noteText(v){
   var a=[];
-  if(!v.src&&!v.iniAuto&&v.ini==="")a.push("Primer conteo de este producto: escribe lo que había al empezar. Esta vez no se arquea.");
-  if(v.iniAuto&&!v.iniTouched)a.push("«Había» viene del conteo del "+fmtFecha(v.iniFecha)+".");
+  if(conDoble()){
+    if(!v.src&&!v.iniAuto&&v.ini==="")a.push("Primer conteo de este producto: escribe lo que había al empezar. Esta vez no se arquea.");
+  }else if(!v.src)a.push("Primer conteo de este producto: lo que cuentes es el punto de partida. Esta vez no se arquea.");
+  if(conDoble()&&v.iniAuto&&!v.iniTouched)a.push("«Había» viene del conteo del "+fmtFecha(v.iniFecha)+".");
   if(v.entAuto&&!v.entTouched)a.push("«Entró» suma lo registrado en Recibir.");
   return a.length?a.join(" "):"";
 }
@@ -637,7 +644,7 @@ async function guardar(){
   var d=S.draft,items=[],sin=[];
   negProducts().forEach(function(p){
     var v=d.vals[p.id],u=usage(v);
-    if(u)items.push({pid:p.id,ini:num(v.ini),ent:num(v.ent)||0,fin:num(v.fin),src:v.src||""});
+    if(u)items.push({pid:p.id,ini:(u.first?num(v.fin):num(v.ini)),ent:num(v.ent)||0,fin:num(v.fin),src:v.src||""});
     else sin.push(p.nombre);
   });
   if(!items.length)return;
@@ -1120,7 +1127,7 @@ function detalleHTML(){
   var head='<div class="bar"><div class="bar-row"><button class="back" data-act="det-back">← Volver</button><span class="sub">'+fmtFecha(c.fecha)+'</span></div></div>'+
     '<div><h1>'+esc(c.negocio)+'</h1><p class="sub">'+esc(c.turno)+' · contó '+esc(c.resp)+' · '+hora(c.ts)+(c.rect?' · rectificado':'')+'</p></div>';
   var rs=c.resumen||{};
-  var kp=c.estado==="arqueado"?'<div class="stat"><div class="sbox good"><b>'+(rs.ok||0)+'</b><span>OK</span></div><div class="sbox"><b>'+(rs.rev||0)+'</b><span>Por revisar</span></div><div class="sbox bad"><b>'+(rs.crit||0)+'</b><span>Críticos</span></div><div class="sbox"><b>'+money(rs.faltante||0)+'</b><span>Faltante estimado</span></div></div>':
+  var kp=(c.estado==="arqueado"&&rs.consumo)?'<div class="panel"><div class="stat"><div class="sbox good"><b>'+fmt(rs.total||0)+'</b><span>Consumo total</span></div></div><p class="sub">Insumos sin POS: se controla lo que se consumió en el período (había + entró − quedan).</p></div>':c.estado==="arqueado"?'<div class="stat"><div class="sbox good"><b>'+(rs.ok||0)+'</b><span>OK</span></div><div class="sbox"><b>'+(rs.rev||0)+'</b><span>Por revisar</span></div><div class="sbox bad"><b>'+(rs.crit||0)+'</b><span>Críticos</span></div><div class="sbox"><b>'+money(rs.faltante||0)+'</b><span>Faltante estimado</span></div></div>':
     '<div class="panel"><div>'+estadoChip(c)+'</div>'+(c.estado==="contado"?'<p class="sub">Falta registrar las ventas para arquear este conteo.</p>':(c.estado==="inicial"?'<p class="sub">Conteo inicial: es el punto de partida. Se arquea desde el siguiente conteo, no necesita ventas.</p>':""))+'</div>';
   var table="";
   if(d.edit){
@@ -1134,14 +1141,15 @@ function detalleHTML(){
     var order={"CRÍTICO":0,"REVISAR":1,"OK":2};
     var rows=c.res.slice().sort(function(a,b){return order[a[11]]-order[b[11]]}).map(function(x){
       return '<tr><td>'+esc(x[1])+(x[13]>0?'<small style="display:block;color:var(--muted)">incluye '+fmt(x[13])+' declarados (merma/traspaso)</small>':'')+'</td><td class="n">'+fmt(x[7])+'</td><td class="n">'+fmt(x[8])+'</td><td class="n">'+(x[9]>0?"+":"")+fmt(x[9])+'</td><td>'+pill(x[11])+'</td></tr>'}).join("");
-    table='<div class="panel"><div class="tw"><table><thead><tr><th>Producto</th><th class="n">Salió</th><th class="n">Debía</th><th class="n">Dif.</th><th>Estado</th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="note">Dif. positiva = faltan unidades. «Debía» = ventas × lo que gasta cada venta.</p></div>';
+    if(rs.consumo)table='<div class="panel"><div class="tw"><table><thead><tr><th>Producto</th><th class="n">Había</th><th class="n">Entró</th><th class="n">Quedan</th><th class="n">Consumo</th></tr></thead><tbody>'+c.res.map(function(x){return '<tr><td>'+esc(x[1])+'</td><td class="n">'+fmt(x[3])+'</td><td class="n">'+fmt(x[4])+'</td><td class="n">'+fmt(x[5])+'</td><td class="n"><b>'+fmt(x[7])+' '+esc(x[2])+'</b></td></tr>'}).join("")+'</tbody></table></div></div>';
+    else table='<div class="panel"><div class="tw"><table><thead><tr><th>Producto</th><th class="n">Salió</th><th class="n">Debía</th><th class="n">Dif.</th><th>Estado</th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="note">Dif. positiva = faltan unidades. «Debía» = ventas × lo que gasta cada venta.</p></div>';
   }else{
     var rows2=c.items.map(function(it){return '<tr><td>'+esc(it.nombre)+'</td><td class="n">'+fmt(it.ini)+'</td><td class="n">'+fmt(it.ent)+'</td><td class="n">'+fmt(it.fin)+'</td></tr>'}).join("");
     table='<div class="panel"><div class="tw"><table><thead><tr><th>Producto</th><th class="n">Había</th><th class="n">Entró</th><th class="n">Quedan</th></tr></thead><tbody>'+rows2+'</tbody></table></div></div>';
   }
   var sin=(c.sin&&c.sin.length)?'<p class="note">Sin contar: '+c.sin.map(esc).join(", ")+'</p>':"";
   var acts="";
-  if(adm&&!d.edit&&c.estado!=="anulado"&&c.estado!=="inicial"){
+  if(adm&&!d.edit&&c.estado!=="anulado"&&c.estado!=="inicial"&&!rs.consumo){
     acts='<div class="btnrow"><button class="btn" data-act="vs-open" data-id="'+esc(c.id)+'">'+(c.estado==="arqueado"?"Cambiar ventas":"Registrar ventas")+'</button><button class="btn ghost" data-act="rect-start">Rectificar conteo</button></div>';
     acts+=d.anular?'<div class="panel"><div class="field"><label class="lbl" for="motivo">Motivo para anular</label><input id="motivo" value="'+esc(d.motivo)+'"></div><div class="btnrow"><button class="btn danger" data-act="anular-ok">Sí, anular conteo</button><button class="btn ghost" data-act="anular-no">No</button></div></div>':'<button class="btn small ghost" data-act="anular">Anular este conteo</button>';
   }

@@ -262,7 +262,7 @@ function detalleHTML(){
   var head='<div class="bar"><div class="bar-row"><button class="back" data-act="det-back">← Volver</button><span class="sub">'+fmtFecha(c.fecha)+'</span></div></div>'+
     '<div><h1>'+esc(c.negocio)+'</h1><p class="sub">'+esc(c.turno)+' · contó '+esc(c.resp)+' · '+hora(c.ts)+(c.rect?' · rectificado':'')+'</p></div>';
   var rs=c.resumen||{};
-  var kp=c.estado==="arqueado"?'<div class="stat"><div class="sbox good"><b>'+(rs.ok||0)+'</b><span>OK</span></div><div class="sbox"><b>'+(rs.rev||0)+'</b><span>Por revisar</span></div><div class="sbox bad"><b>'+(rs.crit||0)+'</b><span>Críticos</span></div><div class="sbox"><b>'+money(rs.faltante||0)+'</b><span>Faltante estimado</span></div></div>':
+  var kp=(c.estado==="arqueado"&&rs.consumo)?'<div class="panel"><div class="stat"><div class="sbox good"><b>'+fmt(rs.total||0)+'</b><span>Consumo total</span></div></div><p class="sub">Insumos sin POS: se controla lo que se consumió en el período (había + entró − quedan).</p></div>':c.estado==="arqueado"?'<div class="stat"><div class="sbox good"><b>'+(rs.ok||0)+'</b><span>OK</span></div><div class="sbox"><b>'+(rs.rev||0)+'</b><span>Por revisar</span></div><div class="sbox bad"><b>'+(rs.crit||0)+'</b><span>Críticos</span></div><div class="sbox"><b>'+money(rs.faltante||0)+'</b><span>Faltante estimado</span></div></div>':
     '<div class="panel"><div>'+estadoChip(c)+'</div>'+(c.estado==="contado"?'<p class="sub">Falta registrar las ventas para arquear este conteo.</p>':(c.estado==="inicial"?'<p class="sub">Conteo inicial: es el punto de partida. Se arquea desde el siguiente conteo, no necesita ventas.</p>':""))+'</div>';
   var table="";
   if(d.edit){
@@ -276,14 +276,15 @@ function detalleHTML(){
     var order={"CRÍTICO":0,"REVISAR":1,"OK":2};
     var rows=c.res.slice().sort(function(a,b){return order[a[11]]-order[b[11]]}).map(function(x){
       return '<tr><td>'+esc(x[1])+(x[13]>0?'<small style="display:block;color:var(--muted)">incluye '+fmt(x[13])+' declarados (merma/traspaso)</small>':'')+'</td><td class="n">'+fmt(x[7])+'</td><td class="n">'+fmt(x[8])+'</td><td class="n">'+(x[9]>0?"+":"")+fmt(x[9])+'</td><td>'+pill(x[11])+'</td></tr>'}).join("");
-    table='<div class="panel"><div class="tw"><table><thead><tr><th>Producto</th><th class="n">Salió</th><th class="n">Debía</th><th class="n">Dif.</th><th>Estado</th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="note">Dif. positiva = faltan unidades. «Debía» = ventas × lo que gasta cada venta.</p></div>';
+    if(rs.consumo)table='<div class="panel"><div class="tw"><table><thead><tr><th>Producto</th><th class="n">Había</th><th class="n">Entró</th><th class="n">Quedan</th><th class="n">Consumo</th></tr></thead><tbody>'+c.res.map(function(x){return '<tr><td>'+esc(x[1])+'</td><td class="n">'+fmt(x[3])+'</td><td class="n">'+fmt(x[4])+'</td><td class="n">'+fmt(x[5])+'</td><td class="n"><b>'+fmt(x[7])+' '+esc(x[2])+'</b></td></tr>'}).join("")+'</tbody></table></div></div>';
+    else table='<div class="panel"><div class="tw"><table><thead><tr><th>Producto</th><th class="n">Salió</th><th class="n">Debía</th><th class="n">Dif.</th><th>Estado</th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="note">Dif. positiva = faltan unidades. «Debía» = ventas × lo que gasta cada venta.</p></div>';
   }else{
     var rows2=c.items.map(function(it){return '<tr><td>'+esc(it.nombre)+'</td><td class="n">'+fmt(it.ini)+'</td><td class="n">'+fmt(it.ent)+'</td><td class="n">'+fmt(it.fin)+'</td></tr>'}).join("");
     table='<div class="panel"><div class="tw"><table><thead><tr><th>Producto</th><th class="n">Había</th><th class="n">Entró</th><th class="n">Quedan</th></tr></thead><tbody>'+rows2+'</tbody></table></div></div>';
   }
   var sin=(c.sin&&c.sin.length)?'<p class="note">Sin contar: '+c.sin.map(esc).join(", ")+'</p>':"";
   var acts="";
-  if(adm&&!d.edit&&c.estado!=="anulado"&&c.estado!=="inicial"){
+  if(adm&&!d.edit&&c.estado!=="anulado"&&c.estado!=="inicial"&&!rs.consumo){
     acts='<div class="btnrow"><button class="btn" data-act="vs-open" data-id="'+esc(c.id)+'">'+(c.estado==="arqueado"?"Cambiar ventas":"Registrar ventas")+'</button><button class="btn ghost" data-act="rect-start">Rectificar conteo</button></div>';
     acts+=d.anular?'<div class="panel"><div class="field"><label class="lbl" for="motivo">Motivo para anular</label><input id="motivo" value="'+esc(d.motivo)+'"></div><div class="btnrow"><button class="btn danger" data-act="anular-ok">Sí, anular conteo</button><button class="btn ghost" data-act="anular-no">No</button></div></div>':'<button class="btn small ghost" data-act="anular">Anular este conteo</button>';
   }

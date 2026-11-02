@@ -24,6 +24,16 @@ var TEXTC = ['id', 'fecha', 'email', 'turno', 'negocio', 'clave', 'pid', 'nombre
 var SEED_PRODUCTOS = /*__SEED_PRODUCTOS__*/[];
 var SEED_ALIAS = /*__SEED_ALIAS__*/[];
 
+/* Negocios que cuentan «Había» (apertura) y «Quedan» (cierre) a mano. En los demás, «Había» es lo que dejó el conteo anterior. */
+var DOBLE = ['Zona Presidente'];
+/* Negocios sin POS: se controla el consumo por conteo, sin ventas */
+var INSUMOS = ['Car Wash'];
+var INSUMOS_PRODUCTOS = [
+  { id: 'cw-001', nombre: 'Shampoo (libras)', orden: 1 },
+  { id: 'cw-002', nombre: 'Desengrasante (libras)', orden: 2 },
+  { id: 'cw-003', nombre: 'Amorol (libras)', orden: 3 }
+];
+
 var CONFIG_DEF = {
   negocios: ['La Barra 1', 'La Barra 2', 'La Barra 3', 'Food Shop', 'Zona Presidente', 'Car Wash'],
   turnos: {
@@ -435,6 +445,7 @@ function notifsFor(me) {
   return out.slice(0, 50);
 }
 function sync(me) {
+  migrarInsumos();
   var cfg = getConfig(), negs = visibleNegocios(me, cfg);
   var prods = getProductos().filter(function (r) { return r.activo; }).map(productoOut);
   if (scoped(me)) {
@@ -519,7 +530,7 @@ function saveConteo(me, p) {
   });
   if (!items.length) fail('datos', 'No hay productos contados.');
   /* «Había» es lo que dejó el turno anterior: el personal no lo puede cambiar. Se toma del conteo de origen. */
-  if (me.rol !== 'admin') {
+  if (me.rol !== 'admin' && DOBLE.indexOf(neg) < 0) {
     var srcCache = {};
     items.forEach(function (it) {
       var sid = it[4];
@@ -542,11 +553,16 @@ function saveConteo(me, p) {
     var dup = readRecentConteos(4).filter(function (c) { return c.negocio === neg && c.turno === turno && c.fecha === fecha && c.estado !== 'anulado'; });
     if (dup.length) fail('duplicado', 'Ya hay un conteo de ' + neg + ' · ' + turno + ' del ' + fecha + '. Si hubo un error, pide a administración que lo anule o rectifique.');
     var o = {
-      id: id, fecha: fecha, negocio: neg, turno: turno, resp: me.nombre, email: me.email, ts: now(), estado: inicial ? 'inicial' : 'contado',
+      id: id, fecha: fecha, negocio: neg, turno: turno, resp: me.nombre, email: me.email, ts: now(), estado: inicial ? 'inicial' : (INSUMOS.indexOf(neg) > -1 ? 'arqueado' : 'contado'),
       items: items, ventas: {}, res: [], resumen: {}, sin: (p.sin || []).slice(0, 200).map(String), ventasPor: '', ventasTs: 0, rect: 0, nota: String(p.nota || '').slice(0, 300)
     };
+    if (!inicial && INSUMOS.indexOf(neg) > -1) {
+      var cons = consumoDe(o, productMap());
+      o.res = cons.res; o.resumen = cons.resumen; o.ventasPor = 'Sin ventas (consumo)'; o.ventasTs = now();
+    }
     appendObj('Conteos', o);
     if (inicial) return { id: id, inicial: true };
+    if (INSUMOS.indexOf(neg) > -1) return { id: id, consumo: true };
     notify('pendiente', 'Conteo listo para registrar ventas', neg + ' · ' + turno + ' · ' + fecha + ' (contó ' + me.nombre + '). Falta registrar las ventas.', { para: 'admin,nl:' + neg, negocio: neg, ref: 'conteo|' + id, email: true });
     return { id: id };
   });
@@ -610,6 +626,35 @@ function computeArqueo(c, pm) {
   });
   rs.faltante = r2(rs.faltante); rs.sobrante = r2(rs.sobrante); rs.decl = r2(rs.decl);
   return { res: res, resumen: rs };
+}
+/* Consumo de insumos (sin POS): lo que salió = había + entró − quedan */
+function consumoDe(c, pm) {
+  var res = [], tot = 0;
+  c.items.forEach(function (it) {
+    var pr = pm[it[0]];
+    if (!pr || !it[4]) return;
+    var real = r2(it[1] + it[2] - it[3], 3);
+    res.push([it[0], pr.nombre, pr.unidad, it[1], it[2], it[3], 0, real, 0, 0, 0, 'OK', 0, 0]);
+    tot += real;
+  });
+  return { res: res, resumen: { ok: res.length, rev: 0, crit: 0, faltante: 0, sobrante: 0, decl: 0, consumo: true, total: r2(tot, 3) } };
+}
+/* Una sola vez: productos del Car Wash y su conteo semanal */
+function migrarInsumos() {
+  if (props().getProperty('MIG_INSUMOS')) return;
+  withLock(function () {
+    if (props().getProperty('MIG_INSUMOS')) return;
+    INSUMOS_PRODUCTOS.forEach(function (p) {
+      if (findRowById('Productos', p.id)) return;
+      appendObj('Productos', { id: p.id, nombre: p.nombre, cat: 'Insumos', unidad: 'lb', factor: 1, tol: 1, costo: 0, critico: 0, negocios: ['Car Wash'], orden: p.orden, activo: 1 });
+    });
+    var cfg = getConfig(), t = cfg.turnos || {}, l = cfg.limites || {}, cal = cfg.calendario || {};
+    if (!(t['Car Wash'] && t['Car Wash'].length)) { t['Car Wash'] = ['Semanal']; setConfigKey('turnos', t); }
+    if (!l['Car Wash|Semanal']) { l['Car Wash|Semanal'] = '23:30'; setConfigKey('limites', l); }
+    if (!Array.isArray(cal['Car Wash'])) { cal['Car Wash'] = [0]; setConfigKey('calendario', cal); }
+    props().setProperty('MIG_INSUMOS', '1');
+    cacheDrop();
+  });
 }
 function avisarArqueo(c, rs) {
   if (rs.crit > 0) {
@@ -1022,6 +1067,8 @@ function revisarPendientes() {
       (cfg.turnos[neg] || []).forEach(function (t) {
         var lim = cfg.limites[neg + '|' + t];
         if (!lim) return;
+        var calN = cfg.calendario && cfg.calendario[neg];
+        if (Array.isArray(calN) && calN.indexOf(new Date(f + 'T12:00:00Z').getUTCDay()) < 0) return;   // no es día de conteo
         var pasado = f < h || hm >= lim;
         if (!pasado) return;
         var hecho = recientes.some(function (c) { return c.negocio === neg && c.turno === t && c.fecha === f && c.estado !== 'anulado'; });
@@ -1112,6 +1159,8 @@ function dash(p) {
       (cfg.turnos[neg] || []).forEach(function (t) {
         var lim = cfg.limites[neg + '|' + t];
         if (!lim) return;
+        var calN = cfg.calendario && cfg.calendario[neg];
+        if (Array.isArray(calN) && calN.indexOf(new Date(f + 'T12:00:00Z').getUTCDay()) < 0) return;   // no es día de conteo
         var hecho = vivos.some(function (c) { return c.negocio === neg && c.turno === t && c.fecha === f; });
         if (f === h && hm < lim && !hecho) return;   // aún no vence y todavía no se hace
         var o = porNeg[neg]; o.esperados++;

@@ -37,7 +37,7 @@ const shot=(p,n)=>p.screenshot({path:'shots/'+n+'.png'});
   await ana.reload();await ana.waitForSelector('text=¿Qué vas a contar?');
   await ana.click('[data-act=neg]');await ana.click('[data-act=turno][data-v="1"]');await ana.click('#startBtn');await ana.waitForSelector('#saveBtn');
   await shot(ana,'50-fs-inicio');
-  console.log('ini readonly',await ana.$eval('#i-fs-032-ini',e=>[e.readOnly,e.value]));
+  console.log('Había visible en Food Shop:',await ana.$$eval('[data-f=ini]',e=>e.length));
   await shot(ana,'52-habia-bloqueado');
   const cats=await ana.$$eval('#fcat-sel option',e=>e.map(x=>x.textContent));
   console.log('cats',cats.length,cats.slice(0,6));

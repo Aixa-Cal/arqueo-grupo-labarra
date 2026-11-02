@@ -102,32 +102,37 @@ function contarHTML(){
   return '<div class="bar"><div class="bar-row"><button class="back" data-act="back">← Cambiar</button><span class="sub"><b>'+esc(d.negocio)+'</b> · '+esc(d.turno)+'</span></div>'+
     '<div class="bar-row"><span class="sub" id="prog"></span><span class="chip">'+(isFullDay(d.negocio,d.fecha)?"Conteo completo":"Solo críticos")+'</span></div><div class="meter"><i id="meter"></i></div></div>'+
     '<div class="fbox"><input id="q" class="srch" type="search" placeholder="Buscar producto…" autocomplete="off">'+filtroHTML(list)+'</div>'+
-    '<details class="help"><summary>¿Qué pongo en cada casilla?</summary><ul><li><b>Había:</b> lo que quedó en el conteo anterior. Ya viene lleno.</li><li><b>Entró:</b> la mercancía que llegó desde el último conteo (lo registrado en Recibir).</li><li><b>Quedan:</b> lo que cuentas ahora mismo.</li></ul></details>'+
+    '<details class="help"><summary>¿Qué pongo en cada casilla?</summary><ul>'+(conDoble()?'<li><b>Había:</b> lo que hay al empezar el turno (cuéntalo).</li>':'')+'<li><b>Entró:</b> la mercancía que llegó en tu turno (lo registrado en Movimientos).</li><li><b>Quedan:</b> lo que cuentas ahora mismo.</li></ul></details>'+
     '<div class="plist">'+cards+'</div><p class="banner" id="fempty" hidden>Ningún producto coincide con el filtro.</p>';
 }
 function cardHTML(p){
   var v=S.draft.vals[p.id]||(S.draft.vals[p.id]={ini:"",ent:"",fin:"",src:""});
-  var lockIni=!!v.src&&!isAdmin();
+  var dbl=conDoble(),lockIni=!!v.src&&!isAdmin()&&!dbl;
   function f(k,l){return '<label class="f"><span>'+l+(k==="ini"&&lockIni?' 🔒':'')+'</span><input'+(k==="ini"&&lockIni?' readonly tabindex="-1" class="ro"':'')+' id="i-'+esc(p.id)+'-'+k+'" data-pid="'+esc(p.id)+'" data-f="'+k+'" inputmode="decimal" autocomplete="off" placeholder="0" value="'+esc(v[k])+'"></label>'}
   var u=usage(v);
   return '<section class="pcard'+(u?(u.real<0?" s-crit":" s-ok"):"")+'" id="card-'+esc(p.id)+'" data-n="'+esc(String(p.nombre).toLowerCase())+'" data-c="'+esc(p.cat||"")+'" data-z="'+(isZero(v)?"1":"")+'" data-p="'+(usage(v)?"":"1")+'"><div class="phead"><h3>'+esc(p.nombre)+'</h3><span class="unit">'+esc(p.unidad)+'</span></div>'+
-    '<div class="grid3">'+f("ini","Había")+f("ent","Entró")+f("fin","Quedan")+'</div>'+
+    (dbl?'<div class="grid3">'+f("ini","Había")+f("ent","Entró")+f("fin","Quedan")+'</div>':'<div class="grid2">'+f("ent","Entró")+f("fin","Quedan")+'</div>')+
     '<div class="res" id="res-'+esc(p.id)+'">'+usageHTML(u)+'</div><p class="note" id="note-'+esc(p.id)+'">'+noteText(v)+'</p></section>';
 }
+function conDoble(){return !!S.draft&&DOBLE.indexOf(S.draft.negocio)>-1}
 function usage(v){
   var ini=num(v.ini),ent=num(v.ent)||0,fin=num(v.fin);
+  if(!conDoble()&&!v.src){if(fin==null)return null;return {real:0,first:true}}
   if(ini==null||fin==null)return null;
   return {real:ini+ent-fin};
 }
 function usageHTML(u){
-  if(!u)return '<span class="hint">Llena «Había» y «Quedan».</span>';
+  if(!u)return '<span class="hint">'+(conDoble()?'Llena «Había» y «Quedan».':'Llena «Quedan».')+'</span>';
+  if(u.first)return '<span class="pill ok">Listo</span><span class="hint">Primer conteo: punto de partida</span>';
   if(u.real<0)return '<span class="pill crit">Revisa</span><span class="hint">Quedan más de los que había y entraron. Cuenta de nuevo.</span>';
   return '<span class="pill ok">Listo</span><span class="hint">Salieron '+fmt(u.real)+'</span>';
 }
 function noteText(v){
   var a=[];
-  if(!v.src&&!v.iniAuto&&v.ini==="")a.push("Primer conteo de este producto: escribe lo que había al empezar. Esta vez no se arquea.");
-  if(v.iniAuto&&!v.iniTouched)a.push("«Había» viene del conteo del "+fmtFecha(v.iniFecha)+".");
+  if(conDoble()){
+    if(!v.src&&!v.iniAuto&&v.ini==="")a.push("Primer conteo de este producto: escribe lo que había al empezar. Esta vez no se arquea.");
+  }else if(!v.src)a.push("Primer conteo de este producto: lo que cuentes es el punto de partida. Esta vez no se arquea.");
+  if(conDoble()&&v.iniAuto&&!v.iniTouched)a.push("«Había» viene del conteo del "+fmtFecha(v.iniFecha)+".");
   if(v.entAuto&&!v.entTouched)a.push("«Entró» suma lo registrado en Recibir.");
   return a.length?a.join(" "):"";
 }
@@ -158,7 +163,7 @@ async function guardar(){
   var d=S.draft,items=[],sin=[];
   negProducts().forEach(function(p){
     var v=d.vals[p.id],u=usage(v);
-    if(u)items.push({pid:p.id,ini:num(v.ini),ent:num(v.ent)||0,fin:num(v.fin),src:v.src||""});
+    if(u)items.push({pid:p.id,ini:(u.first?num(v.fin):num(v.ini)),ent:num(v.ent)||0,fin:num(v.fin),src:v.src||""});
     else sin.push(p.nombre);
   });
   if(!items.length)return;
