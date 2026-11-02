@@ -143,7 +143,7 @@ function updateChrome(){
 }
 
 /* ---------- render ---------- */
-var TEMAS={"Car Wash":{k:"cw",c:"#1A5FC8"},"Zona Presidente":{k:"zp",c:"#0A0F0B"}};
+var TEMAS={"Car Wash":{k:"cw",c:"#1A5FC8"},"Zona Presidente":{k:"zp",c:"#14803A"}};
 function negTema(){
   if(S.auth!=="app"||!S.me)return "";
   var n="";
