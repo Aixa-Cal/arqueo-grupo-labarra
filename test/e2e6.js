@@ -27,7 +27,7 @@ const shot=(p,n)=>p.screenshot({path:'shots/'+n+'.png'});
   const b=await chromium.launch();
   const adm=await newUser(b);await login(adm,'dueno@gmail.com');await adm.waitForSelector('text=Por completar');
   const tok=await adm.evaluate(()=>localStorage.getItem('arq-tok'));
-  const call=(a,p,t)=>JSON.parse(env.ctx.api(JSON.stringify({a,p,t})));
+  const call=(a,p,t)=>{if(a==='saveConteo'&&p.cierre===undefined)p=Object.assign({cierre:{chk:[1,1,1,1,1,1].map(Boolean),nov:'no',txt:''}},p);return JSON.parse(env.ctx.api(JSON.stringify({a,p,t})))};
   const mk=async(email,name,rol)=>{const pg=await newUser(b);await login(pg,email,name);await pg.waitForSelector('text=Solicitud enviada');
     console.log('setUser',email,call('setUser',{email,rol,estado:'aprobado',negocios:['Food Shop']},tok).ok);return pg};
   const ana=await mk('ana@gmail.com','Ana Pérez','colaborador');

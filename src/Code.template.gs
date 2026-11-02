@@ -9,7 +9,7 @@ var TOKEN_DIAS = 60;
 var H = {
   Usuarios: ['email', 'nombre', 'rol', 'estado', 'negocios', 'creado', 'aprobadoPor', 'ultimoAcceso'],
   Productos: ['id', 'nombre', 'cat', 'unidad', 'factor', 'tol', 'costo', 'critico', 'negocios', 'orden', 'activo'],
-  Conteos: ['id', 'fecha', 'negocio', 'turno', 'resp', 'email', 'ts', 'estado', 'items', 'ventas', 'res', 'resumen', 'sin', 'ventasPor', 'ventasTs', 'rect', 'nota'],
+  Conteos: ['id', 'fecha', 'negocio', 'turno', 'resp', 'email', 'ts', 'estado', 'items', 'ventas', 'res', 'resumen', 'sin', 'ventasPor', 'ventasTs', 'rect', 'nota', 'cierre'],
   Entradas: ['id', 'fecha', 'negocio', 'resp', 'email', 'ts', 'nota', 'items', 'anulada', 'origen'],
   Movimientos: ['id', 'fecha', 'tipo', 'negocio', 'destino', 'motivo', 'detalle', 'resp', 'email', 'ts', 'items', 'estado', 'recPor', 'recTs', 'recItems', 'anulada'],
   Notificaciones: ['id', 'ts', 'para', 'tipo', 'titulo', 'texto', 'negocio', 'ref', 'leidoPor'],
@@ -17,7 +17,7 @@ var H = {
   Equivalencias: ['clave', 'pid', 'original'],
   Config: ['key', 'value']
 };
-var JSONC = { Usuarios: ['negocios'], Productos: ['negocios'], Conteos: ['items', 'ventas', 'res', 'resumen', 'sin'], Entradas: ['items'], Movimientos: ['items', 'recItems'], Notificaciones: ['leidoPor'] };
+var JSONC = { Usuarios: ['negocios'], Productos: ['negocios'], Conteos: ['items', 'ventas', 'res', 'resumen', 'sin', 'cierre'], Entradas: ['items'], Movimientos: ['items', 'recItems'], Notificaciones: ['leidoPor'] };
 var NUMC = ['factor', 'tol', 'costo', 'critico', 'orden', 'activo', 'ts', 'rect', 'anulada', 'ventasTs', 'recTs'];
 var TEXTC = ['id', 'fecha', 'email', 'turno', 'negocio', 'clave', 'pid', 'nombre', 'resp', 'ref'];
 
@@ -565,13 +565,23 @@ function saveConteo(me, p) {
     if (dup.length) fail('duplicado', 'Ya hay un conteo de ' + neg + ' · ' + turno + ' del ' + fecha + '. Si hubo un error, pide a administración que lo anule o rectifique.');
     var o = {
       id: id, fecha: fecha, negocio: neg, turno: turno, resp: me.nombre, email: me.email, ts: now(), estado: inicial ? 'inicial' : (INSUMOS.indexOf(neg) > -1 ? 'arqueado' : 'contado'),
-      items: items, ventas: {}, res: [], resumen: {}, sin: (p.sin || []).slice(0, 200).map(String), ventasPor: '', ventasTs: 0, rect: 0, nota: String(p.nota || '').slice(0, 300)
+      items: items, ventas: {}, res: [], resumen: {}, sin: (p.sin || []).slice(0, 200).map(String), ventasPor: '', ventasTs: 0, rect: 0, nota: String(p.nota || '').slice(0, 300), cierre: null
     };
+    if (INSUMOS.indexOf(neg) < 0) {
+      var ck = p.cierre;
+      if (!ck || !ck.chk || ck.chk.length !== 6 || ck.chk.some(function (x) { return x !== true; })) fail('datos', 'Completa el cierre del turno.');
+      if (ck.nov !== 'si' && ck.nov !== 'no') fail('datos', 'Indica si hubo novedad.');
+      var ctxt = String(ck.txt || '').trim().slice(0, 400);
+      if (ck.nov === 'si' && ctxt.length < 3) fail('datos', 'Cuenta qué novedad hubo.');
+      o.cierre = { ok: 1, nov: ck.nov, txt: ck.nov === 'si' ? ctxt : '' };
+    }
+    var hs = sheet('Conteos'), hc = hs.getRange(1, H.Conteos.length, 1, 1); if (!hc.getValues()[0][0]) hc.setValues([['cierre']]).setFontWeight('bold');
     if (!inicial && INSUMOS.indexOf(neg) > -1) {
       var cons = consumoDe(o, productMap());
       o.res = cons.res; o.resumen = cons.resumen; o.ventasPor = 'Sin ventas (consumo)'; o.ventasTs = now();
     }
     appendObj('Conteos', o);
+    if (o.cierre && o.cierre.nov === 'si') notify('novedad', 'Novedad en el cierre: ' + neg, me.nombre + ' · ' + turno + ': ' + o.cierre.txt, { para: 'admin,gerencia', negocio: neg, ref: 'conteo|' + id, email: true });
     if (inicial) return { id: id, inicial: true };
     if (INSUMOS.indexOf(neg) > -1) {
       if (o.nota) notify('faltan-insumos', 'Insumos que hacen falta: ' + neg, me.nombre + ': ' + o.nota, { para: 'admin,gerencia', negocio: neg, ref: 'conteo|' + id, email: true });
@@ -607,7 +617,7 @@ function getConteo(me, p) {
     }
   });
   var out = {
-    id: c.id, fecha: c.fecha, negocio: c.negocio, turno: c.turno, resp: c.resp, ts: c.ts, estado: c.estado, nota: c.nota, rect: c.rect, sin: c.sin,
+    id: c.id, fecha: c.fecha, negocio: c.negocio, turno: c.turno, resp: c.resp, ts: c.ts, estado: c.estado, nota: c.nota, rect: c.rect, sin: c.sin, cierre: c.cierre,
     items: expandItems(c.items, pm), srcInfo: srcInfo, ventasPor: c.ventasPor, ventasTs: c.ventasTs
   };
   if (me.rol !== 'colaborador') { var sm = salidasDe(c), so2 = {}; Object.keys(sm).forEach(function (k) { so2[k] = { q: r2(sm[k].q, 3), det: sm[k].det.join(', ') }; }); out.sal = so2; }

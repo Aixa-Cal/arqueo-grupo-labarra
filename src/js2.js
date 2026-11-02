@@ -12,6 +12,22 @@ function prodsFor(neg){
     .sort(function(a,b){return (a.orden||0)-(b.orden||0)||String(a.nombre).localeCompare(String(b.nombre))});
 }
 function newDraft(){return {negocio:"",turno:"",fecha:today(),vals:{},base:null,id:null,fcat:null,fmode:""}}
+var CIERRE=["Revisé las áreas","Rellené lo necesario","El turno completó sus limpiezas","Dejé los equipos cargando y en orden","Cerré el sistema e hice el cierre de caja","Dejé los baños limpios y los safacones listos"];
+function conCierre(neg){return !!neg&&INSUMOS.indexOf(neg)<0}
+function cierreDe(d){return d.cierre||(d.cierre={chk:[],nov:"",txt:""})}
+function cierreOk(d){
+  if(!conCierre(d.negocio))return true;
+  var c=cierreDe(d);
+  for(var i=0;i<CIERRE.length;i++)if(!c.chk[i])return false;
+  return c.nov==="no"||(c.nov==="si"&&c.txt.trim().length>=3);
+}
+function cierreHTML(){
+  var d=S.draft,c=cierreDe(d);
+  return '<div class="panel" id="cierre"><h2>Cierre del turno</h2><p class="sub">Confirma antes de guardar.</p>'+
+    CIERRE.map(function(t,i){return '<button type="button" class="chk'+(c.chk[i]?' on':'')+'" data-act="ck" data-v="'+i+'" aria-pressed="'+(c.chk[i]?'true':'false')+'"><span class="bx">'+(c.chk[i]?'✓':'')+'</span>'+esc(t)+'</button>'}).join('')+
+    '<div class="lbl" style="margin-top:12px">¿Hubo alguna novedad?</div><div class="seg"><button type="button" class="'+(c.nov==="si"?'on':'')+'" data-act="nov" data-v="si">Sí</button><button type="button" class="'+(c.nov==="no"?'on':'')+'" data-act="nov" data-v="no">No</button></div>'+
+    (c.nov==="si"?'<div class="field"><label class="lbl" for="cnov">¿Qué pasó? ¿Se dañó algo?</label><textarea id="cnov" rows="3" maxlength="400" placeholder="Cuéntalo brevemente">'+esc(c.txt)+'</textarea></div>':'')+'</div>';
+}
 function esLB(neg){return /^La Barra/.test(neg||"")}
 /* ¿esta categoría se cuenta en esa fecha? (ej. cervezas de La Barra solo los lunes) */
 function catHoy(neg,cat,fecha){
@@ -118,7 +134,7 @@ function contarHTML(){
     (esLB(d.negocio)?'<div class="banner"><b>Entró:</b> lo que recibiste de la principal o sacaste del cuarto frío.<br><b>Quedan:</b> lo que dejas, contando todo: lo que está en la sandwichera y lo que está almacenado.</div>':'')+
     '<details class="help"><summary>¿Qué pongo en cada casilla?</summary><ul>'+(conDoble()?'<li><b>Había:</b> lo que hay al empezar el turno (cuéntalo).</li>':'')+'<li><b>Entró:</b> '+(esLB(d.negocio)?'lo que recibiste de la principal o sacaste del cuarto frío en tu turno (lo registrado en Movimientos).':'la mercancía que llegó en tu turno (lo registrado en Movimientos).')+'</li><li><b>Quedan:</b> '+(esLB(d.negocio)?'lo que dejas al cerrar, incluido lo de la sandwichera y lo almacenado.':'lo que cuentas ahora mismo.')+'</li></ul></details>'+
     '<div class="plist">'+cards+'</div><p class="banner" id="fempty" hidden>Ningún producto coincide con el filtro.</p>'+
-    (INSUMOS.indexOf(d.negocio)>-1?'<div class="panel"><div class="field"><label class="lbl" for="cnota">¿Qué te hace falta? (opcional)</label><textarea id="cnota" rows="3" maxlength="300" placeholder="Ej. Falta cera, 2 esponjas y una lija 3000">'+esc(d.nota||"")+'</textarea><p class="hint">Administración recibe este aviso. Escribe lo que necesites, esté o no en la lista.</p></div></div>':"");
+    (INSUMOS.indexOf(d.negocio)>-1?'<div class="panel"><div class="field"><label class="lbl" for="cnota">¿Qué te hace falta? (opcional)</label><textarea id="cnota" rows="3" maxlength="300" placeholder="Ej. Falta cera, 2 esponjas y una lija 3000">'+esc(d.nota||"")+'</textarea><p class="hint">Administración recibe este aviso. Escribe lo que necesites, esté o no en la lista.</p></div></div>':cierreHTML());
 }
 function cardHTML(p){
   var v=S.draft.vals[p.id]||(S.draft.vals[p.id]={ini:"",ent:"",fin:"",src:""});
@@ -163,16 +179,17 @@ function progress(){
   list.forEach(function(p){var v=S.draft.vals[p.id]||{};var u=usage(v);if(u)done++;else if((v.fin||"")!=="")partial++});
   return {total:list.length,done:done,partial:partial};
 }
+function cierreRefresh(){var e=document.getElementById('cierre');if(e){var t=document.createElement('div');t.innerHTML=cierreHTML();e.replaceWith(t.firstChild)}persistDraft();updateProgress()}
 function updateProgress(){
   if(!S.draft||S.step!=="contar")return;
   var pr=progress(),g=$("#prog");if(!g)return;updateFiltroCounts();
   g.textContent=pr.done+" de "+pr.total+" listos";
   $("#meter").style.width=(pr.total?pr.done/pr.total*100:0)+"%";
   var b=$("#saveBtn"),m=$("#saveMsg");if(!b)return;
-  var ok=pr.done>0&&pr.partial===0&&!S.saving;
+  var cok=cierreOk(S.draft),ok=pr.done>0&&pr.partial===0&&cok&&!S.saving;
   b.disabled=!ok;b.textContent=S.saving?"Guardando…":"Guardar conteo";
   m.textContent=pr.partial>0?("Falta «Había» en "+pr.partial+(pr.partial>1?" productos":" producto")):
-    pr.done===0?"Cuenta al menos un producto":(pr.total-pr.done>0?"Quedan "+(pr.total-pr.done)+" sin contar; se guardan los "+pr.done+" listos":"Todo listo para guardar");
+    pr.done===0?"Cuenta al menos un producto":!cok?"Completa el cierre del turno":(pr.total-pr.done>0?"Quedan "+(pr.total-pr.done)+" sin contar; se guardan los "+pr.done+" listos":"Todo listo para guardar");
 }
 async function guardar(){
   if(S.saving)return;
@@ -185,7 +202,7 @@ async function guardar(){
   if(!items.length)return;
   S.saving=true;updateProgress();
   try{
-    await api("saveConteo",{id:d.id,fecha:d.fecha,negocio:d.negocio,turno:d.turno,items:items,sin:sin,nota:(d.nota||"").trim()});
+    await api("saveConteo",{id:d.id,fecha:d.fecha,negocio:d.negocio,turno:d.turno,items:items,sin:sin,nota:(d.nota||"").trim(),cierre:conCierre(d.negocio)?{chk:CIERRE.map(function(t,i){return !!cierreDe(d).chk[i]}),nov:cierreDe(d).nov,txt:cierreDe(d).nov==='si'?cierreDe(d).txt.trim():''}:null});
     S.saved={negocio:d.negocio,turno:d.turno,fecha:d.fecha,n:items.length,sin:sin.length,ini:items.every(function(i){return !i.src})};
     S.step="listo";clearDraft();S.saving=false;render();window.scrollTo(0,0);refresh(true);
   }catch(e){

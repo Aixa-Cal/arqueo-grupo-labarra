@@ -33,3 +33,14 @@ const res=ok('getConteo',{id:'c_lb000009'},A).res;
 cerv.forEach(p=>{const x=res.find(y=>y[0]===p.id);assert.equal(x[7],20,'cerveza: salieron 20 en la semana');});
 console.log('resumen',JSON.stringify(r.resumen));
 console.log('T4 OK');
+{ // cierre del turno obligatorio y novedad
+  const it=[{pid:otros[0].id,ini:5,ent:0,fin:5,src:''}];
+  const bad=(c)=>{const r=E.call('saveConteo',{id:'c_cierre'+Math.random().toString(36).slice(2,6),fecha:'2026-11-09',negocio:'La Barra 2',turno:'Día completo',items:it,cierre:c},C);return r};
+  ok('setUser',{email:'b1@g.com',rol:'colaborador',estado:'aprobado',negocios:['La Barra 1','La Barra 2']},A);
+  assert(!bad(null).ok);assert(!bad({chk:[true,true,true,true,true,false],nov:'no',txt:''}).ok);
+  assert(!bad({chk:[true,true,true,true,true,true],nov:'',txt:''}).ok);assert(!bad({chk:[true,true,true,true,true,true],nov:'si',txt:''}).ok);
+  const n0=E.mails.length;
+  const g=bad({chk:[true,true,true,true,true,true],nov:'si',txt:'Se dañó la licuadora'});assert(g.ok,JSON.stringify(g));
+  assert(E.mails.slice(n0).some(m=>/Novedad/.test(m.subject||m.body||'')),'mail novedad');
+  console.log('cierre OK');
+}

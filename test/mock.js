@@ -40,6 +40,6 @@ function makeEnv(opts){
   vm.createContext(ctx);
   vm.runInContext(fs.readFileSync(__dirname+'/../dist/Code.gs','utf8'),ctx);
   return {ctx,mails,sheets,cacheStore,setClock:t=>{clock=t},getClock:()=>clock,
-    call(a,p,t){return JSON.parse(ctx.api(JSON.stringify({a,p,t})))}};
+    call(a,p,t){if(a==='saveConteo'&&p&&p.negocio!=='Car Wash'&&p.cierre===undefined)p=Object.assign({cierre:{chk:[true,true,true,true,true,true],nov:'no',txt:''}},p);return JSON.parse(ctx.api(JSON.stringify({a,p,t})))}};
 }
 module.exports={makeEnv};

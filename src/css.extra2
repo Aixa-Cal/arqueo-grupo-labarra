@@ -20,3 +20,6 @@ main#view>*{min-width:0}
 [hidden]{display:none!important}
 input.ro{background:var(--line);color:var(--muted);border-style:dashed}
 .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.chk{display:flex;align-items:center;gap:10px;width:100%;min-height:46px;padding:8px 12px;margin:6px 0;border-radius:12px;border:2px solid var(--line);background:var(--surface);font-size:.95rem;text-align:left}
+.chk .bx{flex:none;width:24px;height:24px;border-radius:7px;border:2px solid var(--line);display:grid;place-items:center;font-weight:800}
+.chk.on{border-color:var(--brand)}.chk.on .bx{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}

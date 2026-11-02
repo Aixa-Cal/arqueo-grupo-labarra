@@ -25,6 +25,7 @@ document.addEventListener("input",function(ev){
   else if(ds.rq){var c4=clean(t.value);if(c4!==t.value)t.value=c4;var ln=S.rec.lines.filter(function(l){return l.pid===ds.rq})[0];if(ln)ln.qty=c4;updateRecBtn()}
   else if(t.id==="rq"){S.rec.q=t.value;var rr=$("#rres");if(rr)rr.innerHTML=recSearchHTML()}
   else if(t.id==="rnota"){S.rec.nota=t.value}
+  else if(t.id==="cnov"){if(S.draft){cierreDe(S.draft).txt=t.value;persistDraft();updateProgress()}}
   else if(t.id==="cnota"){if(S.draft){S.draft.nota=t.value;persistDraft()}}
   else if(t.id==="rdet"){S.rec.detalle=t.value;updateRecBtn()}
   else if(ds.tq){var c5=clean(t.value);if(c5!==t.value)t.value=c5;var tp=ds.tq.split("|"),tt=S.rec.tr[tp[0]]||(S.rec.tr[tp[0]]={});tt[tp[1]]=c5}
@@ -70,6 +71,8 @@ document.addEventListener("click",function(ev){
   var el=ev.target.closest("[data-act]");if(!el)return;
   var act=el.dataset.act,v=el.dataset.v,id=el.dataset.id;
   var A={
+    "ck":function(){var c=cierreDe(S.draft),i=+v;c.chk[i]=!c.chk[i];cierreRefresh()},
+    "nov":function(){cierreDe(S.draft).nov=v;cierreRefresh()},
     "go":function(){
       S.detail=null;S.vs=null;S.view=v;S.cat.editing=null;S.eq.form=null;
       if(v==="panel")loadPanel();

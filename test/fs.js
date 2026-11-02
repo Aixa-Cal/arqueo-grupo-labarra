@@ -32,7 +32,7 @@ const shot=(p,n)=>p.screenshot({path:'shots/'+n+'.png'});
   console.log(JSON.parse(env.ctx.api(JSON.stringify({a:'setUser',p:{email:'ana@gmail.com',rol:'colaborador',estado:'aprobado',negocios:['Food Shop','Zona Presidente']},t:tok}))).ok);
   await ana.click('[data-act=check-pending]');await ana.waitForSelector('text=¿Qué vas a contar?');
   const tA=await ana.evaluate(()=>localStorage.getItem('arq-tok'));
-  const call=(a,p,t)=>JSON.parse(env.ctx.api(JSON.stringify({a,p,t})));
+  const call=(a,p,t)=>{if(a==='saveConteo'&&p.cierre===undefined)p=Object.assign({cierre:{chk:[1,1,1,1,1,1].map(Boolean),nov:'no',txt:''}},p);return JSON.parse(env.ctx.api(JSON.stringify({a,p,t})))};
   console.log('c1',call('saveConteo',{id:'c_fs000001',fecha:'2026-11-02',negocio:'Food Shop',turno:'Turno 1 (7AM-3PM)',items:[{pid:'fs-032',ini:0,ent:0,fin:50,src:''}]},tA).ok);
   await ana.reload();await ana.waitForSelector('text=¿Qué vas a contar?');
   await ana.click('[data-act=neg]');await ana.click('[data-act=turno][data-v="1"]');await ana.click('#startBtn');await ana.waitForSelector('#saveBtn');
