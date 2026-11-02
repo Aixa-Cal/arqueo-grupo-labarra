@@ -57,6 +57,8 @@ var CONFIG_DEF = {
     'Zona Presidente|Turno único (3PM-11PM)': '23:30'
   },
   calendario: {},
+  /* Categorías que no se cuentan todos los días: {negocio: {categoría: [días 0=dom…6=sáb]}} */
+  catDias: { 'La Barra 1': { 'Cervezas': [1] }, 'La Barra 2': { 'Cervezas': [1] }, 'La Barra 3': { 'Cervezas': [1] } },
   avisos: { acceso: true, pendiente: true, critico: true, falta: true }
 };
 
@@ -473,7 +475,7 @@ function sync(me) {
   movs = movs.map(function (m) { return { id: m.id, fecha: m.fecha, tipo: m.tipo, negocio: m.negocio, destino: m.destino, motivo: m.motivo, detalle: m.detalle, resp: m.resp, ts: m.ts, items: m.items, estado: m.estado, recPor: m.recPor, recTs: m.recTs, recItems: m.recItems }; });
   return {
     me: publicMe(me), hoy: hoy(), ahora: now(),
-    config: { negocios: negs, turnos: cfg.turnos, limites: cfg.limites, calendario: cfg.calendario, avisos: cfg.avisos, todosNegocios: cfg.negocios },
+    config: { negocios: negs, turnos: cfg.turnos, limites: cfg.limites, calendario: cfg.calendario, catDias: cfg.catDias || {}, avisos: cfg.avisos, todosNegocios: cfg.negocios },
     productos: prods, conteos: conteos, entradas: entradas.map(function (e) { return { id: e.id, fecha: e.fecha, negocio: e.negocio, resp: e.resp, ts: e.ts, nota: e.nota, items: e.items, origen: e.origen || 'Proveedor' }; }), movs: movs, motivos: MOTIVOS,
     notifs: notifsFor(me), pendientes: pend.length
   };
@@ -907,7 +909,7 @@ function addEntrada(me, p) {
   if (!items.length) fail('datos', 'No hay productos.');
   return withLock(function () {
     if (findRowById('Entradas', id)) return { id: id, repetido: true };
-    var origen = (p.origen === 'Cocina') ? 'Cocina' : 'Proveedor';
+    var origen = ['Cocina', 'Principal', 'Cuarto frío'].indexOf(p.origen) > -1 ? p.origen : 'Proveedor';
     appendObj('Entradas', { id: id, fecha: hoy(), negocio: neg, resp: me.nombre, email: me.email, ts: now(), nota: String(p.nota || '').slice(0, 200), items: items, anulada: 0, origen: origen });
     return { id: id };
   });
@@ -953,7 +955,7 @@ function delProducto(me, p) {
   });
 }
 function saveConfig(me, p) {
-  var ok = ['negocios', 'turnos', 'limites', 'calendario', 'avisos'];
+  var ok = ['negocios', 'turnos', 'limites', 'calendario', 'catDias', 'avisos'];
   return withLock(function () {
     Object.keys(p.cfg || {}).forEach(function (k) {
       if (ok.indexOf(k) < 0) return;

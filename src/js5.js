@@ -94,7 +94,7 @@ document.addEventListener("click",function(ev){
     "save":function(){guardar()},
     "again":function(){S.draft=newDraft();S.step="elegir";S.saved=null;render();window.scrollTo(0,0)},
     /* recibir */
-    "rneg":function(){S.rec.negocio=S.cfg.negocios[+v];S.rec.lines=[];S.rec.q="";S.rec.destino="";S.rec.origen=/^La Barra/.test(S.rec.negocio)?"Cocina":"Proveedor";S.rec.eid=null;render()},
+    "rneg":function(){S.rec.negocio=S.cfg.negocios[+v];S.rec.lines=[];S.rec.q="";S.rec.destino="";S.rec.origen=/^La Barra/.test(S.rec.negocio)?"Principal":"Proveedor";S.rec.eid=null;render()},
     "rmodo":function(){S.rec.modo=v;S.rec.eid=null;S.rec.q="";render()},
     "tr-recv":function(){confirmarTraspaso(id)},
     "mov-del":function(){if(!confirm("¿Anular este registro?"))return;guarded(async function(){await api("anularMov",{id:id});toast("Registro anulado");await refresh(true);render()})},

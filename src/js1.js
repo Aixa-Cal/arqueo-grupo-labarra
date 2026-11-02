@@ -6,7 +6,7 @@ var ROL={colaborador:"Colaborador",lider:"Líder",admin:"Administración",gerenc
 var DIAS=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"],DIAS_L=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
 var S={
   tok:null,auth:"load",me:null,loginEmail:"",loginNuevo:false,loginName:"",loginCode:"",loginBusy:false,
-  hoy:"",cfg:{negocios:[],turnos:{},limites:{},calendario:{},avisos:{},todosNegocios:[]},
+  hoy:"",cfg:{negocios:[],turnos:{},limites:{},calendario:{},catDias:{},avisos:{},todosNegocios:[]},
   productos:[],conteos:[],entradas:[],movs:[],motivos:[],notifs:[],pend:0,
   view:"",campo:false,step:"elegir",draft:null,saved:null,saving:false,
   rec:{modo:"entrada",negocio:"",nota:"",lines:[],q:"",saving:false,origen:"Proveedor",motivo:"",detalle:"",destino:"",tr:{}},

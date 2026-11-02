@@ -241,7 +241,7 @@ var ROL={colaborador:"Colaborador",lider:"Líder",admin:"Administración",gerenc
 var DIAS=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"],DIAS_L=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
 var S={
   tok:null,auth:"load",me:null,loginEmail:"",loginNuevo:false,loginName:"",loginCode:"",loginBusy:false,
-  hoy:"",cfg:{negocios:[],turnos:{},limites:{},calendario:{},avisos:{},todosNegocios:[]},
+  hoy:"",cfg:{negocios:[],turnos:{},limites:{},calendario:{},catDias:{},avisos:{},todosNegocios:[]},
   productos:[],conteos:[],entradas:[],movs:[],motivos:[],notifs:[],pend:0,
   view:"",campo:false,step:"elegir",draft:null,saved:null,saving:false,
   rec:{modo:"entrada",negocio:"",nota:"",lines:[],q:"",saving:false,origen:"Proveedor",motivo:"",detalle:"",destino:"",tr:{}},
@@ -494,12 +494,24 @@ function prodsFor(neg){
     .sort(function(a,b){return (a.orden||0)-(b.orden||0)||String(a.nombre).localeCompare(String(b.nombre))});
 }
 function newDraft(){return {negocio:"",turno:"",fecha:today(),vals:{},base:null,id:null,fcat:null,fmode:""}}
-function negProducts(){var d=S.draft;return prodsFor(d.negocio).filter(function(p){return isFullDay(d.negocio,d.fecha)||!!p.critico})}
+function esLB(neg){return /^La Barra/.test(neg||"")}
+/* ¿esta categoría se cuenta en esa fecha? (ej. cervezas de La Barra solo los lunes) */
+function catHoy(neg,cat,fecha){
+  var m=(S.cfg.catDias&&S.cfg.catDias[neg])||{},d=m[cat||""];
+  return !Array.isArray(d)||d.indexOf(dow(fecha||today()))>-1;
+}
+function catsFuera(neg,fecha){
+  var m=(S.cfg.catDias&&S.cfg.catDias[neg])||{},out=[];
+  Object.keys(m).forEach(function(c){if(Array.isArray(m[c])&&m[c].indexOf(dow(fecha||today()))<0&&prodsFor(neg).some(function(p){return (p.cat||"")===c}))out.push(c+" (solo "+m[c].map(function(i){return DIAS_L[i].toLowerCase()}).join(", ")+")")});
+  return out;
+}
+function negProducts(){var d=S.draft;return prodsFor(d.negocio).filter(function(p){return (isFullDay(d.negocio,d.fecha)||!!p.critico)&&catHoy(d.negocio,p.cat,d.fecha)})}
 function fmtRaw(n){return String(Math.round(n*100)/100)}
 function dueInfo(d){
   if(!d.negocio)return"";
   var full=isFullDay(d.negocio,d.fecha),list=prodsFor(d.negocio),n=full?list.length:list.filter(function(p){return p.critico}).length;
-  return '<p class="hint"><b>'+DIAS_L[dow(d.fecha)]+':</b> '+(full?"conteo completo":"solo productos críticos")+' ('+n+' productos).</p>';
+  var fuera=catsFuera(d.negocio,d.fecha);
+  return '<p class="hint"><b>'+DIAS_L[dow(d.fecha)]+':</b> '+(full?"conteo completo":"solo productos críticos")+' ('+negProducts().length+' productos).'+(fuera.length?' Hoy no se cuenta: '+esc(fuera.join(", "))+'.':'')+'</p>';
 }
 function limiteDe(neg,t){return (S.cfg.limites||{})[neg+"|"+t]||""}
 function nowHM(){var d=new Date();return pad(d.getHours())+":"+pad(d.getMinutes())}
@@ -585,7 +597,8 @@ function contarHTML(){
   return '<div class="bar"><div class="bar-row"><button class="back" data-act="back">← Cambiar</button><span class="sub"><b>'+esc(d.negocio)+'</b> · '+esc(d.turno)+'</span></div>'+
     '<div class="bar-row"><span class="sub" id="prog"></span><span class="chip">'+(isFullDay(d.negocio,d.fecha)?"Conteo completo":"Solo críticos")+'</span></div><div class="meter"><i id="meter"></i></div></div>'+
     '<div class="fbox"><input id="q" class="srch" type="search" placeholder="Buscar producto…" autocomplete="off">'+filtroHTML(list)+'</div>'+
-    '<details class="help"><summary>¿Qué pongo en cada casilla?</summary><ul>'+(conDoble()?'<li><b>Había:</b> lo que hay al empezar el turno (cuéntalo).</li>':'')+'<li><b>Entró:</b> la mercancía que llegó en tu turno (lo registrado en Movimientos).</li><li><b>Quedan:</b> lo que cuentas ahora mismo.</li></ul></details>'+
+    (esLB(d.negocio)?'<div class="banner"><b>Entró:</b> lo que recibiste de la principal o sacaste del cuarto frío.<br><b>Quedan:</b> lo que dejas, contando todo: lo que está en la sandwichera y lo que está almacenado.</div>':'')+
+    '<details class="help"><summary>¿Qué pongo en cada casilla?</summary><ul>'+(conDoble()?'<li><b>Había:</b> lo que hay al empezar el turno (cuéntalo).</li>':'')+'<li><b>Entró:</b> '+(esLB(d.negocio)?'lo que recibiste de la principal o sacaste del cuarto frío en tu turno (lo registrado en Movimientos).':'la mercancía que llegó en tu turno (lo registrado en Movimientos).')+'</li><li><b>Quedan:</b> '+(esLB(d.negocio)?'lo que dejas al cerrar, incluido lo de la sandwichera y lo almacenado.':'lo que cuentas ahora mismo.')+'</li></ul></details>'+
     '<div class="plist">'+cards+'</div><p class="banner" id="fempty" hidden>Ningún producto coincide con el filtro.</p>'+
     (INSUMOS.indexOf(d.negocio)>-1?'<div class="panel"><div class="field"><label class="lbl" for="cnota">¿Qué te hace falta? (opcional)</label><textarea id="cnota" rows="3" maxlength="300" placeholder="Ej. Falta cera, 2 esponjas y una lija 3000">'+esc(d.nota||"")+'</textarea><p class="hint">Administración recibe este aviso. Escribe lo que necesites, esté o no en la lista.</p></div></div>':"");
 }
@@ -699,9 +712,13 @@ function recibirHTML(){
   var modos=[["entrada","Entrada"],["merma","Merma"],["traspaso","Traspaso"]].map(function(x){return '<button class="'+(modo===x[0]?"on":"")+'" data-act="rmodo" data-v="'+x[0]+'">'+x[1]+'</button>'}).join("");
   var campos="",titulo="Registrar entrada",sub="Anota la mercancía que llega o que metes para abastecer el turno. Se suma sola en «Entró» del próximo conteo.",lblLista="Lo que entró";
   if(modo==="entrada"){
-    var og='<option value="Proveedor"'+(r.origen==="Proveedor"?" selected":"")+'>Proveedor</option><option value="Cocina"'+(r.origen==="Cocina"?" selected":"")+'>Cocina</option>';
+    var lb=esLB(r.negocio),ops=lb?["Principal","Cuarto frío","Proveedor"]:["Proveedor","Cocina"];
+    if(ops.indexOf(r.origen)<0)r.origen=ops[0];
+    var interno=(r.origen!=="Proveedor");
+    var og=ops.map(function(o){return '<option value="'+o+'"'+(r.origen===o?" selected":"")+'>'+(lb&&o==="Principal"?"De la principal":(lb&&o==="Cuarto frío"?"Del cuarto frío":o))+'</option>'}).join("");
+    if(lb)sub="Anota lo que recibiste de la principal o sacaste del cuarto frío. Se suma sola en «Entró» de tu próximo conteo.";
     campos='<div class="field"><label class="lbl" for="rorigen">¿De dónde viene?</label><select id="rorigen">'+og+'</select></div>'+
-      '<div class="field"><label class="lbl" for="rnota">'+(r.origen==="Cocina"?"Nota (opcional)":"Factura o proveedor")+'</label><input id="rnota" autocomplete="off" value="'+esc(r.nota)+'" placeholder="'+(r.origen==="Cocina"?"Ej. Reabasto turno 2":"Ej. Factura 1234 · Distribuidora")+'"></div>';
+      '<div class="field"><label class="lbl" for="rnota">'+(interno?"Nota (opcional)":"Factura o proveedor")+'</label><input id="rnota" autocomplete="off" value="'+esc(r.nota)+'" placeholder="'+(interno?"Ej. Reabasto turno 2":"Ej. Factura 1234 · Distribuidora")+'"></div>';
   }else if(modo==="merma"){
     titulo="Registrar merma";lblLista="Lo que se perdió";
     sub="Anota lo que sale sin ser una venta. Así el arqueo no lo cuenta como faltante.";
@@ -1423,7 +1440,7 @@ document.addEventListener("click",function(ev){
     "save":function(){guardar()},
     "again":function(){S.draft=newDraft();S.step="elegir";S.saved=null;render();window.scrollTo(0,0)},
     /* recibir */
-    "rneg":function(){S.rec.negocio=S.cfg.negocios[+v];S.rec.lines=[];S.rec.q="";S.rec.destino="";S.rec.origen=/^La Barra/.test(S.rec.negocio)?"Cocina":"Proveedor";S.rec.eid=null;render()},
+    "rneg":function(){S.rec.negocio=S.cfg.negocios[+v];S.rec.lines=[];S.rec.q="";S.rec.destino="";S.rec.origen=/^La Barra/.test(S.rec.negocio)?"Principal":"Proveedor";S.rec.eid=null;render()},
     "rmodo":function(){S.rec.modo=v;S.rec.eid=null;S.rec.q="";render()},
     "tr-recv":function(){confirmarTraspaso(id)},
     "mov-del":function(){if(!confirm("¿Anular este registro?"))return;guarded(async function(){await api("anularMov",{id:id});toast("Registro anulado");await refresh(true);render()})},
