@@ -1,0 +1,33 @@
+// Búsqueda por fecha en Pendientes y Resultados
+const {chromium}=require('playwright');const {makeEnv}=require('./mock');const fs=require('fs');const assert=require('assert');
+const html=fs.readFileSync('../docs/index.html','utf8');
+const env=makeEnv({clock:Date.UTC(2026,10,2,15,0,0)});env.ctx.instalar();const errors=[];
+const call=(a,p,t)=>JSON.parse(env.ctx.api(JSON.stringify({a,p,t})));
+const login=(e,n)=>{call('reqCode',{email:e});const c=env.mails[env.mails.length-1].body.match(/\d{6}/)[0];return call('verifyCode',{email:e,code:c,nombre:n}).data.token};
+(async()=>{
+  const A=login('dueno@gmail.com'),C=login('sol@g.com','Sol');login('gris@g.com','Griselda');
+  call('setUser',{email:'sol@g.com',rol:'colaborador',estado:'aprobado',negocios:['Food Shop']},A);
+  call('setUser',{email:'gris@g.com',rol:'supervisor',estado:'aprobado',negocios:[]},A);
+  const P=call('sync',{},C).data.productos.filter(p=>p.negocios.includes('Food Shop')||!p.negocios.length).slice(0,3);
+  const ck={chk:[true,true,true,true,true,true],nov:'no',txt:'',cafe:{rell:'si',func:'si',txt:''},fz:{ok:'si',txt:''}};
+  assert(call('saveConteo',{id:'c_fd000001',fecha:'2026-11-02',negocio:'Food Shop',turno:'Turno 1 (7AM-3PM)',items:P.map(p=>({pid:p.id,ini:0,ent:0,fin:5,src:''})),cierre:ck},C).ok);
+  env.setClock?env.setClock(Date.UTC(2026,10,3,15,0,0)):0;
+  const b=await chromium.launch(),c=await b.newContext({viewport:{width:390,height:844}}),p=await c.newPage();
+  p.on('pageerror',e=>errors.push(e.message));
+  await p.exposeFunction('__api',s=>env.ctx.api(s));
+  await p.addInitScript(()=>{const mk=()=>{let ok=()=>{},bad=()=>{};const o={withSuccessHandler(f){ok=f;return o},withFailureHandler(f){bad=f;return o},api(s){window.__api(s).then(ok,bad)}};return o};
+    window.google={script:{run:{withSuccessHandler(f){return mk().withSuccessHandler(f)},withFailureHandler(f){return mk().withFailureHandler(f)},api(s){return mk().api(s)}}}};});
+  await p.route('http://app.local/',x=>x.fulfill({status:200,contentType:'text/html; charset=utf-8',body:html}));await p.goto('http://app.local/');
+  await p.fill('#lg-email','gris@g.com');await p.click('[data-act=lg-send]');await p.waitForSelector('#lg-code');
+  await p.fill('#lg-code',env.mails[env.mails.length-1].body.match(/\d{6}/)[0]);await p.click('[data-act=lg-verify]');
+  await p.waitForSelector('text=Por completar');
+  await p.fill('#p-fecha','2026-11-02');await p.waitForSelector('text=Mostrando');
+  const t=await p.textContent('body');assert(/lun 2\/11/i.test(t),'muestra el día elegido');assert(/Food Shop/.test(t));
+  console.log('pend fecha ok');
+  await p.click('[data-act=p-hoy]');await p.waitForSelector('text=Lo que falta por contar');
+  await p.click('[data-act=go][data-v=res]');await p.waitForSelector('#f-rango');
+  await p.selectOption('#f-rango','custom');await p.waitForSelector('#f-desde');
+  await p.fill('#f-desde','2026-11-02');await p.fill('#f-hasta','2026-11-02');await p.waitForSelector('[data-act=det-open]');
+  await p.fill('#f-desde','2026-11-03');await p.waitForSelector('text=Sin conteos en este período');
+  console.log('res fechas ok','errores',errors);await b.close();if(errors.length)process.exit(1);
+})().catch(e=>{console.error(e);process.exit(1)});

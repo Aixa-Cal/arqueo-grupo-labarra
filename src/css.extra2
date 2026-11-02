@@ -54,3 +54,6 @@ input.ro{background:var(--line);color:var(--muted);border-style:dashed}
 .dayd>summary::-webkit-details-marker{display:none}
 .dayd>summary::after{content:"▾";margin-left:auto;color:var(--muted)}
 .dayd[open]>summary::after{content:"▴"}
+.datebar{display:flex;flex-direction:column;gap:6px}
+.dbrow{display:flex;gap:8px;align-items:center}
+.dbrow input[type=date],#f-desde,#f-hasta{min-height:48px;flex:1}

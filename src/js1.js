@@ -14,7 +14,7 @@ var S={
   productos:[],conteos:[],entradas:[],movs:[],motivos:[],notifs:[],pend:0,
   view:"",campo:false,step:"elegir",draft:null,saved:null,saving:false,
   rec:{modo:"entrada",negocio:"",nota:"",lines:[],q:"",saving:false,origen:"Proveedor",motivo:"",detalle:"",destino:"",tr:{}},
-  vs:null,detail:null,fNeg:"",fRango:"7",fEstado:"",
+  vs:null,detail:null,fNeg:"",fRango:"7",fEstado:"",fDesde:"",fHasta:"",pFecha:"",
   panel:{rango:"7",negocio:"",data:null,loading:false},
   cat:{q:"",editing:null,pendingDel:null,open:{}},
   eq:{users:null,editing:null,form:null},

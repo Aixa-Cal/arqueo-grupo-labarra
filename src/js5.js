@@ -53,6 +53,9 @@ document.addEventListener("change",function(ev){
   else if(t.id==="f-neg"){S.fNeg=t.value;render()}
   else if(t.id==="f-rango"){S.fRango=t.value;render()}
   else if(t.id==="f-est"){S.fEstado=t.value;render()}
+  else if(t.id==="f-desde"){S.fDesde=t.value;render()}
+  else if(t.id==="f-hasta"){S.fHasta=t.value;render()}
+  else if(t.id==="p-fecha"){S.pFecha=t.value||"";render()}
   else if(t.id==="p-neg"){S.panel.negocio=t.value;S.panel.data=null;render()}
   else if(t.id==="cneg"){S.cat.neg=t.value;render()}
   else if(t.id==="rorigen"){S.rec.origen=t.value;render()}
@@ -117,6 +120,7 @@ document.addEventListener("click",function(ev){
     "rec-del-ent":function(){guarded(async function(){await api("delEntrada",{id:id});toast("Entrada anulada");await refresh(true);render()})},
     /* ventas */
     "csv-lista":function(){csvLista(S.conteos.filter(function(c){return (!S.fNeg||c.negocio===S.fNeg)&&(!S.fEstado||c.estado===S.fEstado)&&inRange(c.fecha)}))},
+    "p-hoy":function(){S.pFecha="";render()},
     "csv-det":function(){if(S.detail&&S.detail.c)csvDet(S.detail.c)},
     "vs-open":function(){openVentas(id)},
     "vs-back":function(){S.vs=null;render();window.scrollTo(0,0)},

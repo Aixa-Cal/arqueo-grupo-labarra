@@ -256,6 +256,9 @@ input.ro{background:var(--line);color:var(--muted);border-style:dashed}
 .dayd>summary::-webkit-details-marker{display:none}
 .dayd>summary::after{content:"▾";margin-left:auto;color:var(--muted)}
 .dayd[open]>summary::after{content:"▴"}
+.datebar{display:flex;flex-direction:column;gap:6px}
+.dbrow{display:flex;gap:8px;align-items:center}
+.dbrow input[type=date],#f-desde,#f-hasta{min-height:48px;flex:1}
 </style>
 </head>
 <body>
@@ -283,7 +286,7 @@ var S={
   productos:[],conteos:[],entradas:[],movs:[],motivos:[],notifs:[],pend:0,
   view:"",campo:false,step:"elegir",draft:null,saved:null,saving:false,
   rec:{modo:"entrada",negocio:"",nota:"",lines:[],q:"",saving:false,origen:"Proveedor",motivo:"",detalle:"",destino:"",tr:{}},
-  vs:null,detail:null,fNeg:"",fRango:"7",fEstado:"",
+  vs:null,detail:null,fNeg:"",fRango:"7",fEstado:"",fDesde:"",fHasta:"",pFecha:"",
   panel:{rango:"7",negocio:"",data:null,loading:false},
   cat:{q:"",editing:null,pendingDel:null,open:{}},
   eq:{users:null,editing:null,form:null},
@@ -983,13 +986,14 @@ function porCompletar(){
   var first=h;S.conteos.forEach(function(c){if(c.estado!=="anulado"&&c.fecha<first)first=c.fecha});
   var from=addDays(h,-2);if(from<first)from=first;
   var f=h,days=[];while(f>=from){days.push(f);f=addDays(f,-1)}
+  var sel=S.pFecha&&S.pFecha<=h?S.pFecha:"";if(sel)days=[sel];
   days.forEach(function(fe){
     S.cfg.negocios.forEach(function(n){
       turnosFor(n).forEach(function(t){
         var c=S.conteos.filter(function(x){return x.negocio===n&&x.turno===t&&x.fecha===fe&&x.estado!=="anulado"})[0];
         var lim=limiteDe(n,t);
         if(c){seen[c.id]=1;
-          if(fe!==h&&c.estado!=="contado")return;
+          if(fe!==h&&!sel&&c.estado!=="contado")return;
           rows.push({k:c.estado==="contado"?"ventas":(c.estado==="arqueado"?"ok":"ini"),n:n,t:t,fe:fe,c:c,lim:lim});
         }else if(fe===h){
           var late=lim&&hm>lim;
@@ -998,7 +1002,7 @@ function porCompletar(){
       });
     });
   });
-  S.conteos.forEach(function(c){if(c.estado==="contado"&&!seen[c.id])rows.push({k:"ventas",n:c.negocio,t:c.turno,fe:c.fecha,c:c,lim:""})});
+  if(!sel)S.conteos.forEach(function(c){if(c.estado==="contado"&&!seen[c.id])rows.push({k:"ventas",n:c.negocio,t:c.turno,fe:c.fecha,c:c,lim:""})});
   var ord={atraso:0,ventas:1,falta:2,ok:3,ini:4};
   rows.sort(function(a,b){return (ord[a.k]-ord[b.k])||(a.fe<b.fe?1:a.fe>b.fe?-1:0)});
   return rows;
@@ -1053,11 +1057,13 @@ function pendHTML(){
     html+='<section class="psec"><h2>Falta contar <span>'+falta.length+'</span></h2>'+(nt.length?'<p class="hint">Para avisar por WhatsApp agrega teléfonos en Equipo: '+nt.map(esc).join(", ")+'.</p>':"")+porDia(falta,rowFalta)+'</section>';
   }
   if(vent.length)html+='<section class="psec"><h2>Falta cargar ventas <span>'+vent.length+'</span></h2>'+porDia(vent,rowVent)+'</section>';
-  if(okr.length)html+='<details class="psec fold"><summary>Al día <span>'+okr.length+'</span></summary>'+porDia(okr,rowOk)+'</details>';
+  if(okr.length)html+='<details class="psec fold"'+(S.pFecha?' open':'')+'><summary>Al día <span>'+okr.length+'</span></summary>'+porDia(okr,rowOk)+'</details>';
   if(!rows.length)html='<div class="panel center"><div class="big">✓</div><h3>Todo al día</h3><p class="sub">No hay turnos configurados con conteo hoy.</p></div>';
   else if(!falta.length&&!vent.length)html='<div class="panel center"><div class="big">✓</div><h3>Todo al día</h3><p class="sub">No falta ningún conteo ni ventas por cargar.</p></div>'+html;
-  return '<div><h1>Por completar</h1><p class="sub">Lo que falta por contar y por arquear, con su fecha.</p></div>'+
-    resumen+html+
+  var sel=S.pFecha&&S.pFecha<=h?S.pFecha:"";
+  var fsel='<div class="datebar"><label class="lbl" for="p-fecha">Ver otro día</label><div class="dbrow"><input type="date" id="p-fecha" max="'+h+'" value="'+esc(sel)+'">'+(sel?'<button class="btn small ghost" data-act="p-hoy">Volver a hoy</button>':"")+'</div></div>';
+  return '<div><h1>Por completar</h1><p class="sub">'+(sel?'Mostrando <b>'+esc(diaLbl(sel))+'</b>.':'Lo que falta por contar y por arquear, con su fecha.')+'</p></div>'+
+    fsel+resumen+html+
     '<button class="btn ghost" data-act="campo-on">Hacer un conteo o registrar entrada</button>';
 }
 
@@ -1232,6 +1238,7 @@ async function calcVentas(){
 function inRange(f){
   var n=parseInt(S.fRango,10);
   if(S.fRango==="all")return true;
+  if(S.fRango==="custom")return (!S.fDesde||f>=S.fDesde)&&(!S.fHasta||f<=S.fHasta);
   return f>=addDays(today(),-(n-1))&&f<=today();
 }
 
@@ -1274,13 +1281,14 @@ function resultadosHTML(){
   var list=S.conteos.filter(function(c){return (!S.fNeg||c.negocio===S.fNeg)&&(!S.fEstado||c.estado===S.fEstado)&&inRange(c.fecha)});
   var opt=function(v,l,cur){return '<option value="'+esc(v)+'"'+(cur===v?" selected":"")+'>'+esc(l)+'</option>'};
   var neg=opt("","Todos los negocios",S.fNeg)+S.cfg.negocios.map(function(n){return opt(n,n,S.fNeg)}).join("");
-  var rg=[["1","Hoy"],["7","Últimos 7 días"],["30","Últimos 30 días"],["all","Todo"]].map(function(r){return opt(r[0],r[1],S.fRango)}).join("");
+  var rg=[["1","Hoy"],["7","Últimos 7 días"],["30","Últimos 30 días"],["custom","Elegir fechas"],["all","Todo"]].map(function(r){return opt(r[0],r[1],S.fRango)}).join("");
   var es=[["","Todos"],["contado","Esperando ventas"],["inicial","Conteo inicial"],["arqueado","Arqueados"],["anulado","Anulados"]].map(function(r){return opt(r[0],r[1],S.fEstado)}).join("");
   var cards=list.length?list.map(function(c){
     return '<button class="pitem" style="width:100%;text-align:left" data-act="det-open" data-id="'+esc(c.id)+'"><div><b>'+esc(c.negocio)+' · '+esc(c.turno)+'</b><small>'+fmtFecha(c.fecha)+' · '+esc(c.resp)+(c.rect?' · rectificado':'')+'</small></div><div class="chips" style="justify-content:flex-end">'+resumenPills(c)+'</div></button>';
   }).join(""):'<div class="panel"><h3>Sin conteos en este período</h3><p class="sub">Cuando los líderes guarden conteos, aparecerán aquí.</p></div>';
   return '<div><h1>Resultados</h1></div>'+
     '<div class="row2"><div class="field"><label class="lbl" for="f-neg">Negocio</label><select id="f-neg">'+neg+'</select></div><div class="field"><label class="lbl" for="f-rango">Período</label><select id="f-rango">'+rg+'</select></div></div>'+
+    (S.fRango==="custom"?'<div class="row2"><div class="field"><label class="lbl" for="f-desde">Desde</label><input type="date" id="f-desde" max="'+today()+'" value="'+esc(S.fDesde||"")+'"></div><div class="field"><label class="lbl" for="f-hasta">Hasta</label><input type="date" id="f-hasta" max="'+today()+'" value="'+esc(S.fHasta||"")+'"></div></div>':"")+
     '<div class="field"><label class="lbl" for="f-est">Estado</label><select id="f-est">'+es+'</select></div>'+
     '<div class="plist">'+cards+'</div>'+(list.length?'<button class="btn ghost" data-act="csv-lista">Descargar reporte (Excel/CSV)</button>':"");
 }
@@ -1559,6 +1567,9 @@ document.addEventListener("change",function(ev){
   else if(t.id==="f-neg"){S.fNeg=t.value;render()}
   else if(t.id==="f-rango"){S.fRango=t.value;render()}
   else if(t.id==="f-est"){S.fEstado=t.value;render()}
+  else if(t.id==="f-desde"){S.fDesde=t.value;render()}
+  else if(t.id==="f-hasta"){S.fHasta=t.value;render()}
+  else if(t.id==="p-fecha"){S.pFecha=t.value||"";render()}
   else if(t.id==="p-neg"){S.panel.negocio=t.value;S.panel.data=null;render()}
   else if(t.id==="cneg"){S.cat.neg=t.value;render()}
   else if(t.id==="rorigen"){S.rec.origen=t.value;render()}
@@ -1623,6 +1634,7 @@ document.addEventListener("click",function(ev){
     "rec-del-ent":function(){guarded(async function(){await api("delEntrada",{id:id});toast("Entrada anulada");await refresh(true);render()})},
     /* ventas */
     "csv-lista":function(){csvLista(S.conteos.filter(function(c){return (!S.fNeg||c.negocio===S.fNeg)&&(!S.fEstado||c.estado===S.fEstado)&&inRange(c.fecha)}))},
+    "p-hoy":function(){S.pFecha="";render()},
     "csv-det":function(){if(S.detail&&S.detail.c)csvDet(S.detail.c)},
     "vs-open":function(){openVentas(id)},
     "vs-back":function(){S.vs=null;render();window.scrollTo(0,0)},
