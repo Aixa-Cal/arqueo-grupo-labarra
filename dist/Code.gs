@@ -29,9 +29,18 @@ var DOBLE = ['Zona Presidente'];
 /* Negocios sin POS: se controla el consumo por conteo, sin ventas */
 var INSUMOS = ['Car Wash'];
 var INSUMOS_PRODUCTOS = [
-  { id: 'cw-001', nombre: 'Shampoo (libras)', orden: 1 },
-  { id: 'cw-002', nombre: 'Desengrasante (libras)', orden: 2 },
-  { id: 'cw-003', nombre: 'Amorol (libras)', orden: 3 }
+  { id: 'cw-001', nombre: 'Shampoo (libras)', u: 'lb' },
+  { id: 'cw-002', nombre: 'Desengrasante (libras)', u: 'lb' },
+  { id: 'cw-003', nombre: 'Amorol (libras)', u: 'lb' },
+  { id: 'cw-004', nombre: 'Lanilla', u: 'unid' },
+  { id: 'cw-005', nombre: 'Esponja', u: 'unid' },
+  { id: 'cw-006', nombre: 'Cera', u: 'unid' },
+  { id: 'cw-007', nombre: 'Hidratante (galones)', u: 'gal' },
+  { id: 'cw-008', nombre: 'Lija 2000', u: 'unid' },
+  { id: 'cw-009', nombre: 'Lija 3000', u: 'unid' },
+  { id: 'cw-010', nombre: 'Hidratante de motor', u: 'gal' },
+  { id: 'cw-011', nombre: 'Hidratante de interior', u: 'gal' },
+  { id: 'cw-012', nombre: 'Shampoo encerado', u: 'lb' }
 ];
 
 var CONFIG_DEF = {
@@ -562,7 +571,10 @@ function saveConteo(me, p) {
     }
     appendObj('Conteos', o);
     if (inicial) return { id: id, inicial: true };
-    if (INSUMOS.indexOf(neg) > -1) return { id: id, consumo: true };
+    if (INSUMOS.indexOf(neg) > -1) {
+      if (o.nota) notify('faltan-insumos', 'Insumos que hacen falta: ' + neg, me.nombre + ': ' + o.nota, { para: 'admin,gerencia', negocio: neg, ref: 'conteo|' + id, email: true });
+      return { id: id, consumo: true };
+    }
     notify('pendiente', 'Conteo listo para registrar ventas', neg + ' · ' + turno + ' · ' + fecha + ' (contó ' + me.nombre + '). Falta registrar las ventas.', { para: 'admin,nl:' + neg, negocio: neg, ref: 'conteo|' + id, email: true });
     return { id: id };
   });
@@ -641,18 +653,18 @@ function consumoDe(c, pm) {
 }
 /* Una sola vez: productos del Car Wash y su conteo semanal */
 function migrarInsumos() {
-  if (props().getProperty('MIG_INSUMOS')) return;
+  if (props().getProperty('MIG_INSUMOS_V2')) return;
   withLock(function () {
-    if (props().getProperty('MIG_INSUMOS')) return;
-    INSUMOS_PRODUCTOS.forEach(function (p) {
+    if (props().getProperty('MIG_INSUMOS_V2')) return;
+    INSUMOS_PRODUCTOS.forEach(function (p, i) {
       if (findRowById('Productos', p.id)) return;
-      appendObj('Productos', { id: p.id, nombre: p.nombre, cat: 'Insumos', unidad: 'lb', factor: 1, tol: 1, costo: 0, critico: 0, negocios: ['Car Wash'], orden: p.orden, activo: 1 });
+      appendObj('Productos', { id: p.id, nombre: p.nombre, cat: 'Insumos', unidad: p.u, factor: 1, tol: 1, costo: 0, critico: 0, negocios: ['Car Wash'], orden: i + 1, activo: 1 });
     });
     var cfg = getConfig(), t = cfg.turnos || {}, l = cfg.limites || {}, cal = cfg.calendario || {};
     if (!(t['Car Wash'] && t['Car Wash'].length)) { t['Car Wash'] = ['Semanal']; setConfigKey('turnos', t); }
     if (!l['Car Wash|Semanal']) { l['Car Wash|Semanal'] = '23:30'; setConfigKey('limites', l); }
     if (!Array.isArray(cal['Car Wash'])) { cal['Car Wash'] = [0]; setConfigKey('calendario', cal); }
-    props().setProperty('MIG_INSUMOS', '1');
+    props().setProperty('MIG_INSUMOS_V2', '1');
     cacheDrop();
   });
 }

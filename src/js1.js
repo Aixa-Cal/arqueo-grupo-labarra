@@ -1,6 +1,7 @@
 (function(){
 "use strict";
 var DOBLE=["Zona Presidente"];
+var INSUMOS=["Car Wash"];
 var ROL={colaborador:"Colaborador",lider:"Líder",admin:"Administración",gerencia:"Gerencia"};
 var DIAS=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"],DIAS_L=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
 var S={

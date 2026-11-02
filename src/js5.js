@@ -25,6 +25,7 @@ document.addEventListener("input",function(ev){
   else if(ds.rq){var c4=clean(t.value);if(c4!==t.value)t.value=c4;var ln=S.rec.lines.filter(function(l){return l.pid===ds.rq})[0];if(ln)ln.qty=c4;updateRecBtn()}
   else if(t.id==="rq"){S.rec.q=t.value;var rr=$("#rres");if(rr)rr.innerHTML=recSearchHTML()}
   else if(t.id==="rnota"){S.rec.nota=t.value}
+  else if(t.id==="cnota"){if(S.draft){S.draft.nota=t.value;persistDraft()}}
   else if(t.id==="rdet"){S.rec.detalle=t.value;updateRecBtn()}
   else if(ds.tq){var c5=clean(t.value);if(c5!==t.value)t.value=c5;var tp=ds.tq.split("|"),tt=S.rec.tr[tp[0]]||(S.rec.tr[tp[0]]={});tt[tp[1]]=c5}
   else if(t.id==="fecha"){S.draft.fecha=t.value||today()}
