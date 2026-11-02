@@ -49,7 +49,7 @@ var CONFIG_DEF = {
     'La Barra Atala': ['Turno 1 (7AM-3PM)', 'Turno 2 (3PM-11PM)', 'Turno 3 (11PM-7AM)'],
     'La Barra Atalaya': ['Turno 1 (7AM-3PM)', 'Turno 2 (3PM-11PM)'],
     'La Barra Miraflores': ['Turno 1 (7AM-3PM)', 'Turno 2 (3PM-11PM)', 'Turno 3 (11PM-7AM)'],
-    'Food Shop': ['Turno 1 (7AM-3PM)', 'Turno 2 (3PM-11PM)'],
+    'Food Shop': ['Turno 1 (7AM-3PM)', 'Turno 2 (3PM-11PM)', 'Turno 3 (11PM-7AM)'],
     'Zona Presidente': ['Turno único (3PM-11PM)'],
     'Car Wash': []
   },
@@ -58,7 +58,7 @@ var CONFIG_DEF = {
     'La Barra Atala|Turno 1 (7AM-3PM)': '15:30', 'La Barra Atala|Turno 2 (3PM-11PM)': '23:30', 'La Barra Atala|Turno 3 (11PM-7AM)': '07:30',
     'La Barra Atalaya|Turno 1 (7AM-3PM)': '15:30', 'La Barra Atalaya|Turno 2 (3PM-11PM)': '23:30',
     'La Barra Miraflores|Turno 1 (7AM-3PM)': '15:30', 'La Barra Miraflores|Turno 2 (3PM-11PM)': '23:30', 'La Barra Miraflores|Turno 3 (11PM-7AM)': '07:30',
-    'Food Shop|Turno 1 (7AM-3PM)': '15:30', 'Food Shop|Turno 2 (3PM-11PM)': '23:30',
+    'Food Shop|Turno 1 (7AM-3PM)': '15:30', 'Food Shop|Turno 2 (3PM-11PM)': '23:30', 'Food Shop|Turno 3 (11PM-7AM)': '07:30',
     'Zona Presidente|Turno único (3PM-11PM)': '23:30'
   },
   calendario: {},
@@ -466,6 +466,7 @@ function notifsFor(me) {
 function sync(me) {
   migrarInsumos();
   migrarLaBarra();
+  migrarFoodShopT3();
   var cfg = getConfig(), negs = visibleNegocios(me, cfg);
   var prods = getProductos().filter(function (r) { return r.activo; }).map(productoOut);
   if (scoped(me)) {
@@ -717,6 +718,19 @@ function migrarLaBarra() {
     Object.keys(l).forEach(function (k) { if (/Día completo/.test(k)) delete l[k]; });
     setConfigKey('turnos', t); setConfigKey('limites', l);
     props().setProperty('MIG_LABARRA_V1', '1');
+    cacheDrop();
+  });
+}
+/* Una sola vez: el Food Shop también cuenta el turno 3 (11PM-7AM) */
+function migrarFoodShopT3() {
+  if (props().getProperty('MIG_FSTURNO3_V1')) return;
+  withLock(function () {
+    if (props().getProperty('MIG_FSTURNO3_V1')) return;
+    var cfg = getConfig(), t = cfg.turnos || {}, l = cfg.limites || {};
+    t['Food Shop'] = CONFIG_DEF.turnos['Food Shop'];
+    l['Food Shop|Turno 3 (11PM-7AM)'] = '07:30';
+    setConfigKey('turnos', t); setConfigKey('limites', l);
+    props().setProperty('MIG_FSTURNO3_V1', '1');
     cacheDrop();
   });
 }
