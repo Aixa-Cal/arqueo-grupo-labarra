@@ -18,7 +18,7 @@ function makeEnv(opts){
   const triggers=[];
   const ctx={console,JSON,Math,Date:class extends Date{constructor(...a){a.length?super(...a):super(clock)} static now(){return clock}},
     SpreadsheetApp:{getActiveSpreadsheet:()=>ss,openById:()=>ss},
-    PropertiesService:{getScriptProperties:()=>({getProperty:k=>propStore[k]||null,setProperty:(k,v)=>{propStore[k]=v}})},
+    PropertiesService:{getScriptProperties:()=>({getProperty:k=>propStore[k]||null,setProperty:(k,v)=>{propStore[k]=v},deleteProperty:k=>{delete propStore[k]}})},
     CacheService:{getScriptCache:()=>({get:k=>cacheStore[k]===undefined?null:cacheStore[k],put:(k,v)=>{cacheStore[k]=v},remove:k=>{delete cacheStore[k]},removeAll:ks=>ks.forEach(k=>delete cacheStore[k])})},
     LockService:{getScriptLock:()=>({waitLock(){},releaseLock(){}})},
     MailApp:{sendEmail:m=>mails.push(m),getRemainingDailyQuota:()=>100-mails.length},

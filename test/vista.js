@@ -13,7 +13,7 @@ const call=(a,p,t)=>JSON.parse(env.ctx.api(JSON.stringify({a,p,t})));
  async function user(em,nombre,rol,neg,tel){const p=await page();await login(p,em,nombre);await p.waitForSelector('text=Solicitud enviada');call('setUser',{email:em,rol,estado:'aprobado',negocios:neg?[neg]:[],telefono:tel||''},TA);await p.click('[data-act=check-pending]').catch(()=>{});return p}
  async function iniciar(p){await p.waitForSelector('[data-act=neg]');await p.click('[data-act=neg]');await p.click('[data-act=turno][data-v="0"]');await p.click('#startBtn');await p.waitForSelector('#saveBtn')}
  // 1 y 2: La Barra
- const lb=await user('lb@g.com','María Pérez','colaborador','La Barra 1','8095551234');await iniciar(lb);
+ const lb=await user('lb@g.com','María Pérez','colaborador','La Barra Atala','8095551234');await iniciar(lb);
  await lb.evaluate(()=>{document.querySelectorAll('.pcard').forEach((c,i)=>{const id=c.card=c.id.replace('card-','');const e=document.getElementById('i-'+id+'-fin');if(e){e.value=String(4+i);e.dispatchEvent(new Event('input',{bubbles:true}))}})});
  await lb.evaluate(()=>window.scrollTo(0,0));await lb.waitForTimeout(200);await lb.screenshot({path:'shots/v1.png'});
  for(const i of [0,1,2,3])await lb.click('[data-act=ck][data-v="'+i+'"]');await lb.click('[data-act=caf][data-k=rell][data-v=si]');await lb.click('[data-act=caf][data-k=func][data-v=no]');await lb.fill('#ccaf','La máquina 2 no calienta');

@@ -29,7 +29,7 @@ const shot=(p,n)=>p.screenshot({path:'shots/'+n+'.png'});
   const ana=await newUser(b);await login(ana,'ana@gmail.com','Ana Pérez');await ana.waitForSelector('text=Solicitud enviada');
   // approve through api for speed
   const tok=await adm.evaluate(()=>localStorage.getItem('arq-tok'));
-  console.log(JSON.parse(env.ctx.api(JSON.stringify({a:'setUser',p:{email:'ana@gmail.com',rol:'colaborador',estado:'aprobado',negocios:['La Barra 1']},t:tok}))).ok);
+  console.log(JSON.parse(env.ctx.api(JSON.stringify({a:'setUser',p:{email:'ana@gmail.com',rol:'colaborador',estado:'aprobado',negocios:['La Barra Atala']},t:tok}))).ok);
   await ana.click('[data-act=check-pending]');await ana.waitForSelector('text=¿Qué vas a contar?');
   const days=async(iso,label)=>{
     env.setClock(new Date(iso).getTime());

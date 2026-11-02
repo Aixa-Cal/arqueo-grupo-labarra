@@ -4,7 +4,7 @@ const env=makeEnv({clock:U(1,22,0)});env.ctx.instalar();
 const call=(a,p,t)=>{const r=env.call(a,p,t);if(!r.ok)throw new Error(a+JSON.stringify(r));return r.data};
 function login(e,n){env.call('reqCode',{email:e});const c=env.mails[env.mails.length-1].body.match(/\d{6}/)[0];return env.call('verifyCode',{email:e,code:c,nombre:n}).data.token}
 const A=login('dueno@gmail.com');
-const staff={'La Barra 1':'a@g.com','La Barra 2':'b@g.com','La Barra 3':'c@g.com','Food Shop':'d@g.com','Zona Presidente':'e@g.com'};const TK={};
+const staff={'La Barra Atala':'a@g.com','La Barra Atalaya':'b@g.com','La Barra Miraflores':'c@g.com','Food Shop':'d@g.com','Zona Presidente':'e@g.com'};const TK={};
 Object.entries(staff).forEach(([n,e])=>{TK[n]=login(e,'Líder '+n);call('setUser',{email:e,rol:'lider',estado:'aprobado',negocios:[n]},A)});
 const P=call('sync',{},A).productos;const turnos=call('sync',{},A).config.turnos;let id=1;const last={};
 function cont(d,h,m,n,t,ventas){env.setClock(U(d,h,m));const list=P.filter(p=>p.negocios.includes(n)).slice(0,12);const sr=last[n]=last[n]||{};
@@ -12,9 +12,9 @@ function cont(d,h,m,n,t,ventas){env.setClock(U(d,h,m));const list=P.filter(p=>p.
   call('saveConteo',{id:cid,fecha:`2026-11-0${d}`,negocio:n,turno:t,items},TK[n]);list.forEach(p=>sr[p.id]=cid);
   if(ventas){const v={};list.forEach(p=>v[p.id]=5*p.factor?5:5);call('saveVentas',{id:cid,ventas:v},A)}return cid}
 // ayer: todos menos Zona Presidente
-['La Barra 1','La Barra 2','La Barra 3'].forEach(n=>cont(1,23,10,n,'Día completo',false));cont(1,15,10,'Food Shop','Turno 1 (7AM-3PM)',false);cont(1,23,10,'Food Shop','Turno 2 (3PM-11PM)',false);
+['La Barra Atala','La Barra Atalaya','La Barra Miraflores'].forEach(n=>cont(1,23,10,n,'Turno 1 (7AM-3PM)',false));cont(1,15,10,'Food Shop','Turno 1 (7AM-3PM)',false);cont(1,23,10,'Food Shop','Turno 2 (3PM-11PM)',false);
 // hoy 20:00
-cont(2,19,30,'La Barra 1','Día completo',true);cont(2,19,40,'La Barra 2','Día completo',false);
+cont(2,19,30,'La Barra Atala','Turno 1 (7AM-3PM)',true);cont(2,19,40,'La Barra Atalaya','Turno 1 (7AM-3PM)',false);
 env.setClock(U(2,20,0));
 (async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:2});const page=await ctx.newPage();const errs=[];page.on('pageerror',e=>errs.push(e.message));
  await page.exposeFunction('__api',s=>env.ctx.api(s));

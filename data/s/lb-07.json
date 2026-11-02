@@ -1,1 +1,1 @@
-{"nombre": "Pan cuadrado (lonjas de funda abierta)", "cat": "Pan", "unidad": "lonja", "factor": 1, "tol": 0.05, "costo": 0, "negocios": ["La Barra 1", "La Barra 2", "La Barra 3"], "orden": 7, "ejemplo": false}
+{"nombre": "Pan cuadrado (lonjas de funda abierta)", "cat": "Pan", "unidad": "lonja", "factor": 1, "tol": 0.05, "costo": 0, "negocios": ["La Barra Atala", "La Barra Atalaya", "La Barra Miraflores"], "orden": 7, "ejemplo": false}

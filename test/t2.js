@@ -6,7 +6,7 @@ const ok=(a,p,t)=>{const r=E.call(a,p,t);assert(r.ok,a+' '+JSON.stringify(r));re
 const bad=(a,p,t,code)=>{const r=E.call(a,p,t);assert(!r.ok,a+' debía fallar');if(code)assert.equal(r.error,code,JSON.stringify(r));return r};
 ok('setUser',{email:'fs@g.com',rol:'lider',estado:'aprobado',negocios:['Food Shop']},A);
 ok('setUser',{email:'zp@g.com',rol:'lider',estado:'aprobado',negocios:['Zona Presidente']},A);
-ok('setUser',{email:'b1@g.com',rol:'lider',estado:'aprobado',negocios:['La Barra 1']},A);
+ok('setUser',{email:'b1@g.com',rol:'lider',estado:'aprobado',negocios:['La Barra Atala']},A);
 const P=ok('sync',{},A).productos;
 const fsPL=P.find(p=>p.nombre==='Presidente Light 12 oz'&&p.negocios.includes('Food Shop')),zpPL=P.find(p=>p.nombre==='Presidente Light 12 oz'&&p.negocios.includes('Zona Presidente'));
 ok('saveProducto',{...fsPL,costo:50},A);ok('saveProducto',{...zpPL,costo:50},A);
@@ -68,9 +68,9 @@ bad('anularMov',{id:'m_merma001'},F,'permiso');ok('anularMov',{id:'m_merma001'},
 // traspaso a negocio sin el producto
 const noCat=P.find(p=>p.negocios.includes('Zona Presidente')&&!/Light|Dura/.test(p.nombre)&&p.nombre.includes('Brahma'));
 // lider LB1 no puede traspasar fuera de su negocio y producto inexistente en destino
-bad('addTraspaso',{id:'m_tras0002',negocio:'La Barra 1',destino:'Zona Presidente',items:[{pid:'lb-01',qty:2}]},B,'datos');
+bad('addTraspaso',{id:'m_tras0002',negocio:'La Barra Atala',destino:'Zona Presidente',items:[{pid:'lb-01',qty:2}]},B,'datos');
 // entrada con origen
-ok('addEntrada',{id:'e_cocina001',negocio:'La Barra 1',origen:'Cocina',items:[{pid:'lb-01',qty:30}]},B);
+ok('addEntrada',{id:'e_cocina001',negocio:'La Barra Atala',origen:'Cocina',items:[{pid:'lb-01',qty:30}]},B);
 assert.equal(ok('sync',{},B).entradas[0].origen,'Cocina');
 // avisos por traspaso sin confirmar
 ok('addTraspaso',{id:'m_tras0003',negocio:'Zona Presidente',destino:'Food Shop',items:[{pid:zpPL.id,qty:2}]},Z);

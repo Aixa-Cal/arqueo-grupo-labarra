@@ -40,7 +40,7 @@ async function contar(p,turnoIdx,opts){
   const A=call('verifyCode',{email:'dueno@gmail.com',code:'x'}).ok;
   // token de admin vía API
   call('reqCode',{email:'dueno@gmail.com'});const ac=env.mails[env.mails.length-1].body.match(/\d{6}/)[0];const TA=ok('verifyCode',{email:'dueno@gmail.com',code:ac}).token;
-  const tiendas=['La Barra 1','La Barra 2','La Barra 3','Food Shop','Zona Presidente','Car Wash'];
+  const tiendas=['La Barra Atala','La Barra Atalaya','La Barra Miraflores','Food Shop','Zona Presidente','Car Wash'];
   ok('saveConfig',{cfg:{calendario:{'Car Wash':[0,1,2,3,4,5,6]}}},TA);
   for(const [i,t] of tiendas.entries()){
     const em='u'+i+'@gmail.com';const p=await page(b);await login(p,em,'Usuario '+i);await p.waitForSelector('text=Solicitud enviada');
@@ -72,11 +72,11 @@ async function contar(p,turnoIdx,opts){
    const full=ok('getConteo',{id:pend[0].id},TL);const ventas={};(full.items||[]).forEach(i=>ventas[i.pid]=2);
    const r=call('saveVentas',{id:pend[0].id,ventas,ventasPor:'POS'},TL);assert(r.ok,JSON.stringify(r));
    const bad=call('rectificar',{id:pend[0].id,cambios:{}},TL);assert(!bad.ok,'líder no rectifica');
-   const other=call('saveVentas',{id:ok('sync',{},TA).conteos.find(c=>c.negocio==='La Barra 1').id,ventas:{},ventasPor:'x'},TL);assert(!other.ok,'líder no toca otro negocio');
+   const other=call('saveVentas',{id:ok('sync',{},TA).conteos.find(c=>c.negocio==='La Barra Atala').id,ventas:{},ventasPor:'x'},TL);assert(!other.ok,'líder no toca otro negocio');
    rep.push(['Líder Food Shop','solo su negocio, ventas ok, sin rectificar']);}
   // Día 2 por servidor en las demás tiendas: arqueo con ventas
   env.setClock(Date.UTC(2026,10,3,15,0,0));// martes
-  for(const t of ['La Barra 1','La Barra 2','La Barra 3','Zona Presidente','Car Wash']){
+  for(const t of ['La Barra Atala','La Barra Atalaya','La Barra Miraflores','Zona Presidente','Car Wash']){
     const em='u'+tiendas.indexOf(t)+'@gmail.com';call('reqCode',{email:em});const cd=env.mails[env.mails.length-1].body.match(/\d{6}/)[0];const T=ok('verifyCode',{email:em,code:cd}).token;
     const prev=ok('sync',{},TA).conteos.filter(c=>c.negocio===t).sort((a,b)=>b.ts-a.ts)[0];
     const full=ok('getConteo',{id:prev.id},TA);
@@ -85,7 +85,7 @@ async function contar(p,turnoIdx,opts){
     const items=prods.map(p=>{const pi=(full.items||[]).find(i=>i.pid===p.id);return {pid:p.id,ini:dbl?(pi?pi.fin:20):(pi?pi.fin:8),ent:0,fin:(pi?pi.fin:8)-2,src:pi?prev.id:''}}).filter(i=>i.src||dbl);
     if(!items.length){rep.push([t,'martes: sin productos que contar (esperado según calendario)']);continue}
     const cid='c_all'+t.replace(/\W/g,'');
-    const r=call('saveConteo',{id:cid,fecha:'2026-11-03',negocio:t,turno:t==='Zona Presidente'?'Turno único (3PM-11PM)':(cw?'Semanal':'Día completo'),items,cierre:cw?null:{chk:[true,true,true,true,true,true],nov:'no',txt:'',cafe:{rell:'si',func:'si',txt:''},fz:{ok:'si',txt:''}}},T);
+    const r=call('saveConteo',{id:cid,fecha:'2026-11-03',negocio:t,turno:t==='Zona Presidente'?'Turno único (3PM-11PM)':(cw?'Semanal':'Turno 1 (7AM-3PM)'),items,cierre:cw?null:{chk:[true,true,true,true,true,true],nov:'no',txt:'',cafe:{rell:'si',func:'si',txt:''},fz:{ok:'si',txt:''}}},T);
     if(!r.ok){rep.push([t,'martes error',r.msg]);assert(false,t+' '+JSON.stringify(r))}
     if(!cw){const v={};items.forEach(i=>v[i.pid]=2);const rv=call('saveVentas',{id:cid,ventas:v,ventasPor:'POS'},TA);assert(rv.ok,t+' ventas '+JSON.stringify(rv));
       const d=ok('getConteo',{id:cid},TA);assert(d.res&&d.res.length,t+' sin resultados');rep.push([t,'martes arqueo',JSON.stringify(d.resumen)])}

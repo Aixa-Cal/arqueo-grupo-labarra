@@ -1,1 +1,1 @@
-{"nombre": "Cerveza Dura", "cat": "Cervezas", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["La Barra 1", "La Barra 2", "La Barra 3"], "orden": 13, "ejemplo": false}
+{"nombre": "Cerveza Dura", "cat": "Cervezas", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["La Barra Atala", "La Barra Atalaya", "La Barra Miraflores"], "orden": 13, "ejemplo": false}

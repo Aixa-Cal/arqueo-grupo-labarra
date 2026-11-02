@@ -5,14 +5,14 @@ const env=makeEnv({clock:U(1,22,0)});env.ctx.instalar();
 const call=(a,p,t)=>{const r=env.call(a,p,t);if(!r.ok)throw new Error(a+' '+JSON.stringify(r));return r.data};
 function login(email,nombre){env.call('reqCode',{email});const c=env.mails[env.mails.length-1].body.match(/\d{6}/)[0];return env.call('verifyCode',{email,code:c,nombre}).data.token}
 const A=login('dueno@gmail.com');
-login('pedro@gmail.com','Pedro Ramírez');call('setUser',{email:'pedro@gmail.com',rol:'lider',estado:'aprobado',negocios:['La Barra 2']},A);
+login('pedro@gmail.com','Pedro Ramírez');call('setUser',{email:'pedro@gmail.com',rol:'lider',estado:'aprobado',negocios:['La Barra Atalaya']},A);
 login('gerencia@gmail.com','Gerencia');call('setUser',{email:'gerencia@gmail.com',rol:'gerencia',estado:'aprobado',negocios:[]},A);
 const P=call('sync',{},A).productos;P.forEach(p=>call('saveProducto',{...p,costo:({unid:25,kg:180,lb:80,lt:60}[p.unidad]||40)},A));
-const prods=call('sync',{},A).productos.filter(p=>p.negocios.includes('La Barra 2'));
+const prods=call('sync',{},A).productos.filter(p=>p.negocios.includes('La Barra Atalaya'));
 // conteo inicial de ayer (backend)
 const TP=login('pedro@gmail.com');
 const base=prods.map((p,i)=>({pid:p.id,ini:30+i,ent:0,fin:30+i,src:''}));
-call('saveConteo',{id:'c_base0001',fecha:'2026-11-01',negocio:'La Barra 2',turno:'Día completo',items:base},TP);
+call('saveConteo',{id:'c_base0001',fecha:'2026-11-01',negocio:'La Barra Atalaya',turno:'Turno 1 (7AM-3PM)',items:base},TP);
 env.setClock(U(2,23,10));
 const vend={};prods.forEach((p,i)=>vend[p.id]=3+(i*7)%9);
 const leakSet={};[2,9,14].forEach(i=>leakSet[prods[i].id]=1.35);
@@ -32,7 +32,7 @@ const leakSet={};[2,9,14].forEach(i=>leakSet[prods[i].id]=1.35);
     await page.fill('#lg-email',email);await pause(600);await page.click('[data-act=lg-send]');await page.waitForSelector('#lg-code');
     const c=env.mails[env.mails.length-1].body.match(/\d{6}/)[0];await page.fill('#lg-code',c);await pause(800);await page.click('[data-act=lg-verify]');await pause(1500)}
   // 1 líder
-  await loginUI('pedro@gmail.com');await cap('1. LÍDER (Pedro, La Barra 2) abre la app en su celular');await pause(1800);
+  await loginUI('pedro@gmail.com');await cap('1. LÍDER (Pedro, La Barra Atalaya) abre la app en su celular');await pause(1800);
   await page.screenshot({path:'/tmp/demo/s1.png'});
   await page.waitForSelector('[data-act=neg]').then(()=>page.click('[data-act=neg]')).catch(()=>{});
   await pause(800);

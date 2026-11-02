@@ -6,19 +6,19 @@ const ok=(a,p,t)=>{const r=E.call(a,p,t);assert(r.ok,a+' '+JSON.stringify(r));re
 const no=(a,p,t,m)=>{const r=E.call(a,p,t);assert(!r.ok,a+' debía fallar');if(m)assert.equal(r.error,m);return r};
 const A=login('dueno@gmail.com'),S=login('sup@g.com','Sara Sup'),C=login('col@g.com','Carlos'),F=login('fs@g.com','Fede');
 ok('setUser',{email:'sup@g.com',rol:'supervisor',estado:'aprobado',negocios:[],telefono:'809-555-1234'},A);
-ok('setUser',{email:'col@g.com',rol:'colaborador',estado:'aprobado',negocios:['La Barra 1'],telefono:'(829) 111 2222'},A);
+ok('setUser',{email:'col@g.com',rol:'colaborador',estado:'aprobado',negocios:['La Barra Atala'],telefono:'(829) 111 2222'},A);
 ok('setUser',{email:'fs@g.com',rol:'colaborador',estado:'aprobado',negocios:['Food Shop']},A);
 // contactos
 assert.deepEqual(ok('contactos',{},S).map(x=>x.telefono).sort(),['8091-555'.replace('8091-555','8095551234'),'8291112222'].sort());
 no('contactos',{},C,'permiso');
 // cafeteras
-const P=ok('sync',{},C).productos.filter(p=>p.negocios.includes('La Barra 1')).slice(0,3);
+const P=ok('sync',{},C).productos.filter(p=>p.negocios.includes('La Barra Atala')).slice(0,3);
 const it=P.map(p=>({pid:p.id,ini:10,ent:0,fin:10,src:''}));
 const ck=(cafe,nov,fz)=>({chk:[true,true,true,true,true,true],nov:nov||'no',txt:'',cafe,fz:fz===undefined?{ok:'si',txt:''}:fz});
-no('saveConteo',{id:'c_caf00001',fecha:'2026-11-02',negocio:'La Barra 1',turno:'Día completo',items:it,cierre:{chk:[true,true,true,true,true,true],nov:'no',txt:''}},C,'datos');
-no('saveConteo',{id:'c_caf00001',fecha:'2026-11-02',negocio:'La Barra 1',turno:'Día completo',items:it,cierre:ck({rell:'si',func:'no',txt:''})},C,'datos');
+no('saveConteo',{id:'c_caf00001',fecha:'2026-11-02',negocio:'La Barra Atala',turno:'Turno 1 (7AM-3PM)',items:it,cierre:{chk:[true,true,true,true,true,true],nov:'no',txt:''}},C,'datos');
+no('saveConteo',{id:'c_caf00001',fecha:'2026-11-02',negocio:'La Barra Atala',turno:'Turno 1 (7AM-3PM)',items:it,cierre:ck({rell:'si',func:'no',txt:''})},C,'datos');
 const n0=E.mails.length;
-ok('saveConteo',{id:'c_caf00001',fecha:'2026-11-02',negocio:'La Barra 1',turno:'Día completo',items:it,cierre:ck({rell:'no',func:'si',txt:'No había leche'})},C);
+ok('saveConteo',{id:'c_caf00001',fecha:'2026-11-02',negocio:'La Barra Atala',turno:'Turno 1 (7AM-3PM)',items:it,cierre:ck({rell:'no',func:'si',txt:'No había leche'})},C);
 assert(E.mails.slice(n0).some(m=>/Máquinas de café/.test(m.subject||m.body||'')),'aviso cafetera');
 assert(ok('sync',{},S).notifs.some(n=>n.tipo==='cafetera'),'supervisor recibe aviso de cafetera');
 assert(!ok('sync',{},S).notifs.some(n=>n.tipo==='acceso'),'supervisor no recibe solicitudes de acceso');
@@ -33,7 +33,7 @@ assert(ok('getConteo',{id:'c_fz000001'},A).cierre.fz.txt==='Freezer 2 no enfría
 // segundo conteo para arqueo y supervisor completa
 E.setClock(Date.UTC(2026,10,3,15,0,0));
 const it2=P.map(p=>({pid:p.id,ini:10,ent:0,fin:7,src:'c_caf00001'}));
-ok('saveConteo',{id:'c_caf00003',fecha:'2026-11-03',negocio:'La Barra 1',turno:'Día completo',items:it2,cierre:ck({rell:'si',func:'si',txt:''})},C);
+ok('saveConteo',{id:'c_caf00003',fecha:'2026-11-03',negocio:'La Barra Atala',turno:'Turno 1 (7AM-3PM)',items:it2,cierre:ck({rell:'si',func:'si',txt:''})},C);
 // supervisor ve conteos de cualquier negocio, registra ventas y rectifica
 assert(ok('sync',{},S).conteos.some(c=>c.id==='c_caf00003'));
 const v={};P.forEach(p=>v[p.id]=3);

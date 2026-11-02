@@ -1,1 +1,1 @@
-{"nombre": "Pan brioche", "cat": "Pan", "unidad": "unid", "factor": 1, "tol": 0.05, "costo": 0, "negocios": ["La Barra 1", "La Barra 2", "La Barra 3"], "orden": 3, "ejemplo": false}
+{"nombre": "Pan brioche", "cat": "Pan", "unidad": "unid", "factor": 1, "tol": 0.05, "costo": 0, "negocios": ["La Barra Atala", "La Barra Atalaya", "La Barra Miraflores"], "orden": 3, "ejemplo": false}

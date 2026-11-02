@@ -28,7 +28,7 @@ const fsProds=r.data.productos.filter(p=>p.negocios.includes('Food Shop'));conso
 // startCount first time
 r=E.call('startCount',{negocio:'Food Shop'},TA);assert(r.ok);assert.equal(Object.keys(r.data.ultimos).length,0);
 // leader cannot access other negocio
-r=E.call('startCount',{negocio:'La Barra 1'},TA);assert(!r.ok&&r.error==='permiso');
+r=E.call('startCount',{negocio:'La Barra Atala'},TA);assert(!r.ok&&r.error==='permiso');
 // entrada
 r=E.call('addEntrada',{id:'e_abc12345',negocio:'Food Shop',items:[{pid:'fs-032',qty:24}]},TA);assert(r.ok,JSON.stringify(r));
 // save conteo
@@ -70,7 +70,7 @@ r=E.call('reqCode',{email:'rosa@gmail.com'});let cd=E.mails[E.mails.length-1].bo
 r=E.call('verifyCode',{email:'rosa@gmail.com',code:cd,nombre:'Rosa Lider'});const TR=r.data.token;
 r=E.call('setUser',{email:'rosa@gmail.com',rol:'lider',estado:'aprobado',negocios:['Food Shop']},T);assert(r.ok,JSON.stringify(r));
 r=E.call('sync',{},TR);assert(r.ok);assert.equal(r.data.config.negocios.join(),'Food Shop');
-r=E.call('startCount',{negocio:'La Barra 1'},TR);assert(!r.ok&&r.error==='permiso');
+r=E.call('startCount',{negocio:'La Barra Atala'},TR);assert(!r.ok&&r.error==='permiso');
 r=E.call('getConteo',{id:'c_test0001'},TR);assert(r.ok&&r.data.res,'lider ve resultados de su negocio');
 r=E.call('getConteo',{id:'c_test0001'},TA);assert(r.ok&&!r.data.res,'colaborador no ve resultados');
 r=E.call('saveVentas',{id:'c_test0001',ventas:{'fs-032':14,'fs-033':2}},TR);assert(r.ok,JSON.stringify(r));
@@ -79,7 +79,7 @@ r=E.call('dash',{},TR);assert(!r.ok);
 // lider de otro negocio no toca el Food Shop
 r=E.call('reqCode',{email:'luis@gmail.com'});cd=E.mails[E.mails.length-1].body.match(/\d{6}/)[0];
 r=E.call('verifyCode',{email:'luis@gmail.com',code:cd,nombre:'Luis'});const TL=r.data.token;
-r=E.call('setUser',{email:'luis@gmail.com',rol:'lider',estado:'aprobado',negocios:['La Barra 1']},T);assert(r.ok);
+r=E.call('setUser',{email:'luis@gmail.com',rol:'lider',estado:'aprobado',negocios:['La Barra Atala']},T);assert(r.ok);
 r=E.call('saveVentas',{id:'c_test0001',ventas:{}},TL);assert(!r.ok&&r.error==='permiso');
 r=E.call('getConteo',{id:'c_test0001'},TL);assert(!r.ok);
 // «Había» no se puede falsear: el servidor lo toma del conteo de origen

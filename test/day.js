@@ -6,7 +6,7 @@ let seed=7;const rnd=()=>{seed=(seed*1664525+1013904223)%4294967296;return seed/
 const call=(a,p,t)=>{const r=env.call(a,p,t);if(!r.ok)throw new Error(a+' '+JSON.stringify(r));return r.data};
 function login(email,nombre){env.call('reqCode',{email});const c=env.mails[env.mails.length-1].body.match(/\d{6}/)[0];return env.call('verifyCode',{email,code:c,nombre}).data.token}
 const A=login('dueno@gmail.com');
-const staff=[['carla@gmail.com','Carla M.','La Barra 1'],['pedro@gmail.com','Pedro R.','La Barra 2'],['rosa@gmail.com','Rosa T.','La Barra 3'],['ana@gmail.com','Ana P.','Food Shop'],['luis@gmail.com','Luis G.','Zona Presidente']];
+const staff=[['carla@gmail.com','Carla M.','La Barra Atala'],['pedro@gmail.com','Pedro R.','La Barra Atalaya'],['rosa@gmail.com','Rosa T.','La Barra Miraflores'],['ana@gmail.com','Ana P.','Food Shop'],['luis@gmail.com','Luis G.','Zona Presidente']];
 const TK={};staff.forEach(([e,n,ng])=>{TK[ng]=login(e,n);call('setUser',{email:e,rol:'lider',estado:'aprobado',negocios:[ng]},A)});
 const G=login('gerencia@gmail.com','Gerencia');call('setUser',{email:'gerencia@gmail.com',rol:'gerencia',estado:'aprobado',negocios:[]},A);
 const sync=call('sync',{},A);const P0=sync.productos;const turnos=sync.config.turnos;
@@ -14,7 +14,7 @@ const costo=p=>({unid:25,kg:180,lb:80,lt:60}[p.unidad]||40);
 P0.forEach(p=>call('saveProducto',{...p,costo:costo(p)},A));
 const P=call('sync',{},A).productos;
 const stock={},last={};let id=1;const timeline=[];
-const leak={'La Barra 2':0.12,'Zona Presidente':0.08};
+const leak={'La Barra Atalaya':0.12,'Zona Presidente':0.08};
 function conteo(d,h,m,ng,t,leakOn,vh,vm,note){
   env.setClock(U(d,h,m));
   const list=P.filter(p=>p.negocios.includes(ng)),st=stock[ng]=stock[ng]||{},sr=last[ng]=last[ng]||{};
@@ -36,22 +36,22 @@ function conteo(d,h,m,ng,t,leakOn,vh,vm,note){
 }
 // día previo: conteos iniciales al cierre
 const base=[];
-['La Barra 1','La Barra 2','La Barra 3'].forEach(n=>conteo(2,23,10,n,'Día completo',false));
+['La Barra Atala','La Barra Atalaya','La Barra Miraflores'].forEach(n=>conteo(2,23,10,n,'Turno 1 (7AM-3PM)',false));
 conteo(2,23,10,'Food Shop','Turno 2 (3PM-11PM)',false);conteo(2,23,20,'Zona Presidente','Turno único (3PM-11PM)',false);
 timeline.length=0;
 // el día
 const day=[
  conteo(3,15,5,'Food Shop','Turno 1 (7AM-3PM)',true,15,50),
  conteo(3,23,15,'Food Shop','Turno 2 (3PM-11PM)',true,0,0),
- conteo(3,23,20,'La Barra 1','Día completo',true,9,10),
- conteo(3,23,25,'La Barra 2','Día completo',true,9,40),
- conteo(3,23,35,'La Barra 3','Día completo',true,10,5),
+ conteo(3,23,20,'La Barra Atala','Turno 1 (7AM-3PM)',true,9,10),
+ conteo(3,23,25,'La Barra Atalaya','Turno 1 (7AM-3PM)',true,9,40),
+ conteo(3,23,35,'La Barra Miraflores','Turno 1 (7AM-3PM)',true,10,5),
  conteo(3,23,40,'Zona Presidente','Turno único (3PM-11PM)',true,10,30),
 ];
 // administración carga ventas
 const ordered=[day[0],day[2],day[3],day[4],day[5],day[1]];
 ordered.forEach(x=>{
-  const dd=({'La Barra 1':[3,23,45],'La Barra 2':[3,23,48],'La Barra 3':[3,23,51],'Zona Presidente':[3,23,53],'Food Shop':[3,23,55]})[x.ng]; // ventas Food Shop T2 y demás: día siguiente 
+  const dd=({'La Barra Atala':[3,23,45],'La Barra Atalaya':[3,23,48],'La Barra Miraflores':[3,23,51],'Zona Presidente':[3,23,53],'Food Shop':[3,23,55]})[x.ng]; // ventas Food Shop T2 y demás: día siguiente 
   env.setClock(U(3,dd[1],dd[2]));
   if(x===day[0])env.setClock(U(3,16,0));
   const r=call('saveVentas',{id:x.cid,ventas:x.ventas},A);
@@ -63,7 +63,7 @@ const rc=call('getConteo',{id:day[4].cid},A);
 const w=rc.res.find(x=>x[11]!=='OK');
 if(w){const it=rc.items.find(i=>i.pid===w[0]);
   call('rectificar',{id:day[4].cid,cambios:{[w[0]]:{ini:it.ini,ent:it.ent,fin:it.fin+Math.max(w[9],0)}},motivo:'Rosa recontó el estante y encontró más unidades'},A);
-  timeline.push(`10:15  Administración rectifica ${w[1]} en La Barra 3 (recuento)`)}
+  timeline.push(`10:15  Administración rectifica ${w[1]} en La Barra Miraflores (recuento)`)}
 env.setClock(U(3,23,59));
 const d=call('dash',{desde:'2026-11-03',hasta:'2026-11-03'},G);
 fs.writeFileSync('/tmp/day.json',JSON.stringify({timeline,d}));
@@ -87,7 +87,7 @@ fs.writeFileSync('/tmp/day.json',JSON.stringify({timeline,d}));
   await g.click('[data-act=go][data-v=panel]');await g.waitForTimeout(800);await g.click('text=Hoy').catch(()=>{});await g.waitForTimeout(1200);await g.screenshot({path:'shots/d2-panel.png',fullPage:true});
   const a=await newUser();a.on('pageerror',e=>errs.push(e.message));await login(a,'dueno@gmail.com');await a.waitForTimeout(1200);
   await a.click('[data-act=go][data-v=res]');await a.waitForTimeout(1000);await a.screenshot({path:'shots/d3-resultados.png',fullPage:true});
-  await a.click('[data-act=det-open]:has-text("La Barra 2")');await a.waitForTimeout(1000);await a.screenshot({path:'shots/d4-detalle-lb2.png',fullPage:true});
+  await a.click('[data-act=det-open]:has-text("La Barra Atalaya")');await a.waitForTimeout(1000);await a.screenshot({path:'shots/d4-detalle-lb2.png',fullPage:true});
   const l=await newUser();l.on('pageerror',e=>errs.push(e.message));await login(l,'pedro@gmail.com');await l.waitForTimeout(1200);await l.screenshot({path:'shots/d5-lider.png'});
   console.log('ERRS',errs);await browser.close();
 })();

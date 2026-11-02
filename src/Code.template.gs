@@ -44,21 +44,26 @@ var INSUMOS_PRODUCTOS = [
 ];
 
 var CONFIG_DEF = {
-  negocios: ['La Barra 1', 'La Barra 2', 'La Barra 3', 'Food Shop', 'Zona Presidente', 'Car Wash'],
+  negocios: ['La Barra Atala', 'La Barra Atalaya', 'La Barra Miraflores', 'Food Shop', 'Zona Presidente', 'Car Wash'],
   turnos: {
-    'La Barra 1': ['Día completo'], 'La Barra 2': ['Día completo'], 'La Barra 3': ['Día completo'],
+    'La Barra Atala': ['Turno 1 (7AM-3PM)', 'Turno 2 (3PM-11PM)', 'Turno 3 (11PM-7AM)'],
+    'La Barra Atalaya': ['Turno 1 (7AM-3PM)', 'Turno 2 (3PM-11PM)'],
+    'La Barra Miraflores': ['Turno 1 (7AM-3PM)', 'Turno 2 (3PM-11PM)', 'Turno 3 (11PM-7AM)'],
     'Food Shop': ['Turno 1 (7AM-3PM)', 'Turno 2 (3PM-11PM)'],
     'Zona Presidente': ['Turno único (3PM-11PM)'],
     'Car Wash': []
   },
+  /* El turno 3 (11PM-7AM) se cuenta al terminar, a las 7AM, y lleva la fecha de ese día */
   limites: {
-    'La Barra 1|Día completo': '23:30', 'La Barra 2|Día completo': '23:30', 'La Barra 3|Día completo': '23:30',
+    'La Barra Atala|Turno 1 (7AM-3PM)': '15:30', 'La Barra Atala|Turno 2 (3PM-11PM)': '23:30', 'La Barra Atala|Turno 3 (11PM-7AM)': '07:30',
+    'La Barra Atalaya|Turno 1 (7AM-3PM)': '15:30', 'La Barra Atalaya|Turno 2 (3PM-11PM)': '23:30',
+    'La Barra Miraflores|Turno 1 (7AM-3PM)': '15:30', 'La Barra Miraflores|Turno 2 (3PM-11PM)': '23:30', 'La Barra Miraflores|Turno 3 (11PM-7AM)': '07:30',
     'Food Shop|Turno 1 (7AM-3PM)': '15:30', 'Food Shop|Turno 2 (3PM-11PM)': '23:30',
     'Zona Presidente|Turno único (3PM-11PM)': '23:30'
   },
   calendario: {},
   /* Categorías que no se cuentan todos los días: {negocio: {categoría: [días 0=dom…6=sáb]}} */
-  catDias: { 'La Barra 1': { 'Cervezas': [1] }, 'La Barra 2': { 'Cervezas': [1] }, 'La Barra 3': { 'Cervezas': [1] } },
+  catDias: { 'La Barra Atala': { 'Cervezas': [1] }, 'La Barra Atalaya': { 'Cervezas': [1] }, 'La Barra Miraflores': { 'Cervezas': [1] } },
   avisos: { acceso: true, pendiente: true, critico: true, falta: true }
 };
 
@@ -460,6 +465,7 @@ function notifsFor(me) {
 }
 function sync(me) {
   migrarInsumos();
+  migrarLaBarra();
   var cfg = getConfig(), negs = visibleNegocios(me, cfg);
   var prods = getProductos().filter(function (r) { return r.activo; }).map(productoOut);
   if (scoped(me)) {
@@ -529,6 +535,8 @@ function saveConteo(me, p) {
   var cfg = getConfig();
   if (cfg.negocios.indexOf(neg) < 0) fail('datos', 'Negocio desconocido.');
   if (!negOk(me, neg)) fail('permiso', 'Ese negocio no está asignado a tu usuario.');
+  var tl = (cfg.turnos || {})[neg] || [];
+  if (tl.length && tl.indexOf(turno) < 0) fail('datos', neg + ' no tiene ese turno.');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) fail('datos', 'Fecha inválida.');
   var h = hoy();
   if (fecha > fechaMas(h, 1)) fail('datos', 'La fecha no puede ser futura.');
@@ -682,6 +690,35 @@ function consumoDe(c, pm) {
     tot += real;
   });
   return { res: res, resumen: { ok: res.length, rev: 0, crit: 0, faltante: 0, sobrante: 0, decl: 0, consumo: true, total: r2(tot, 3) } };
+}
+/* Una sola vez: La Barra 1/2/3 pasan a llamarse Atala/Atalaya/Miraflores y estrenan sus turnos */
+var RENOMBRES = { 'La Barra 1': 'La Barra Atala', 'La Barra 2': 'La Barra Atalaya', 'La Barra 3': 'La Barra Miraflores' };
+function migrarLaBarra() {
+  if (props().getProperty('MIG_LABARRA_V1')) return;
+  withLock(function () {
+    if (props().getProperty('MIG_LABARRA_V1')) return;
+    var cols = { Productos: ['negocios'], Usuarios: ['negocios'], Conteos: ['negocio'], Entradas: ['negocio'], Movimientos: ['negocio', 'destino'], Notificaciones: ['negocio'], Config: ['value'] };
+    Object.keys(cols).forEach(function (name) {
+      var s = sheet(name), last = s.getLastRow();
+      if (last < 2) return;
+      cols[name].forEach(function (c) {
+        var ix = H[name].indexOf(c) + 1, rg = s.getRange(2, ix, last - 1, 1), v = rg.getValues(), ch = false;
+        v.forEach(function (r) {
+          var t = String(r[0]), n = t;
+          Object.keys(RENOMBRES).forEach(function (k) { n = n.split(k).join(RENOMBRES[k]); });
+          if (n !== t) { r[0] = n; ch = true; }
+        });
+        if (ch) rg.setValues(v);
+      });
+    });
+    var cfg = getConfig(), t = cfg.turnos || {}, l = cfg.limites || {};
+    Object.keys(CONFIG_DEF.turnos).forEach(function (n) { if (/^La Barra/.test(n)) t[n] = CONFIG_DEF.turnos[n]; });
+    Object.keys(CONFIG_DEF.limites).forEach(function (k) { if (/^La Barra/.test(k)) l[k] = CONFIG_DEF.limites[k]; });
+    Object.keys(l).forEach(function (k) { if (/Día completo/.test(k)) delete l[k]; });
+    setConfigKey('turnos', t); setConfigKey('limites', l);
+    props().setProperty('MIG_LABARRA_V1', '1');
+    cacheDrop();
+  });
 }
 /* Una sola vez: productos del Car Wash y su conteo semanal */
 function migrarInsumos() {

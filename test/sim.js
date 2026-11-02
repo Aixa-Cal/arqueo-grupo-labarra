@@ -3,7 +3,7 @@ const E=makeEnv({clock:Date.UTC(2026,10,2,12,0,0)});E.ctx.instalar();
 let seed=42;const rnd=()=>{seed=(seed*1664525+1013904223)%4294967296;return seed/4294967296};
 function login(email,nombre){E.call('reqCode',{email});const c=E.mails[E.mails.length-1].body.match(/\d{6}/)[0];const r=E.call('verifyCode',{email,code:c,nombre});if(!r.ok)throw new Error(JSON.stringify(r));return r.data.token}
 const A=login('dueno@gmail.com');
-const staff=[['lider.lb1@gmail.com','Carla (LB1)','La Barra 1'],['lider.lb2@gmail.com','Pedro (LB2)','La Barra 2'],['lider.lb3@gmail.com','Rosa (LB3)','La Barra 3'],['lider.fs@gmail.com','Ana (Food Shop)','Food Shop'],['lider.zp@gmail.com','Luis (Zona Pres.)','Zona Presidente']];
+const staff=[['lider.lb1@gmail.com','Carla (LB1)','La Barra Atala'],['lider.lb2@gmail.com','Pedro (LB2)','La Barra Atalaya'],['lider.lb3@gmail.com','Rosa (LB3)','La Barra Miraflores'],['lider.fs@gmail.com','Ana (Food Shop)','Food Shop'],['lider.zp@gmail.com','Luis (Zona Pres.)','Zona Presidente']];
 const TK={};staff.forEach(([e,n,ng])=>{TK[ng]=login(e,n);const r=E.call('setUser',{email:e,rol:'lider',estado:'aprobado',negocios:[ng]},A);if(!r.ok)throw new Error(JSON.stringify(r))});
 const G=login('gerencia@gmail.com','Gerencia');E.call('setUser',{email:'gerencia@gmail.com',rol:'gerencia',estado:'aprobado',negocios:[]},A);
 const prods=E.call('sync',{},A).data.productos;
@@ -15,7 +15,7 @@ const turnos=E.call('sync',{},A).data.config.turnos;
 // estado de stock por negocio
 const stock={};const fechas=['2026-11-02','2026-11-03','2026-11-04'];
 // shrink config: negocio -> {pid prefix count, pct}
-const leak={'La Barra 2':0.12,'Zona Presidente':0.08};
+const leak={'La Barra Atalaya':0.12,'Zona Presidente':0.08};
 let id=1;const log={cont:0,rect:0,faltaron:[]};
 const tiempo={};
 fechas.forEach((f,di)=>{
