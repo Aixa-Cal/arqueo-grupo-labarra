@@ -82,4 +82,8 @@ r=E.call('verifyCode',{email:'luis@gmail.com',code:cd,nombre:'Luis'});const TL=r
 r=E.call('setUser',{email:'luis@gmail.com',rol:'lider',estado:'aprobado',negocios:['La Barra 1']},T);assert(r.ok);
 r=E.call('saveVentas',{id:'c_test0001',ventas:{}},TL);assert(!r.ok&&r.error==='permiso');
 r=E.call('getConteo',{id:'c_test0001'},TL);assert(!r.ok);
+// «Había» no se puede falsear: el servidor lo toma del conteo de origen
+r=E.call('getConteo',{id:'c_test0001'},T);const prevFin=r.data.items.find(x=>x.pid==='fs-032').fin;
+r=E.call('saveConteo',{id:'c_test0099',fecha:'2026-11-02',negocio:'Food Shop',turno:'Turno 2 (3PM-11PM)',items:[{pid:'fs-032',ini:999,ent:0,fin:1,src:'c_test0001'}]},TA);assert(r.ok,JSON.stringify(r));
+r=E.call('getConteo',{id:'c_test0099'},T);assert.equal(r.data.items.find(x=>x.pid==='fs-032').ini,prevFin,'ini corregido por el servidor');
 console.log('ALL OK');

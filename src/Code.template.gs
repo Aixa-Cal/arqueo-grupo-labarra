@@ -518,6 +518,24 @@ function saveConteo(me, p) {
     return [String(it.pid), r2(ini, 3), r2(ent, 3), r2(fin, 3), String(it.src || '')];
   });
   if (!items.length) fail('datos', 'No hay productos contados.');
+  /* «Había» es lo que dejó el turno anterior: el personal no lo puede cambiar. Se toma del conteo de origen. */
+  if (me.rol !== 'admin') {
+    var srcCache = {};
+    items.forEach(function (it) {
+      var sid = it[4];
+      if (!sid) return;
+      if (!srcCache[sid]) {
+        var sr = findRowById('Conteos', sid), m = {};
+        if (sr) {
+          var so = readRowObj('Conteos', sr);
+          if (so.negocio !== neg) fail('datos', 'El conteo de origen no es de este negocio.');
+          so.items.forEach(function (x) { m[x[0]] = x[3]; });
+        }
+        srcCache[sid] = m;
+      }
+      if (srcCache[sid][it[0]] != null) it[1] = r2(srcCache[sid][it[0]], 3);
+    });
+  }
   var inicial = items.every(function (it) { return !it[4]; });   // ningún producto tiene conteo previo: es el punto de partida
   return withLock(function () {
     if (findRowById('Conteos', id)) return { id: id, repetido: true };

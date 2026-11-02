@@ -18,3 +18,4 @@ main#view>*{min-width:0}
 .hoyrow{padding:10px 0}
 .savemsg{min-height:1.2em}
 [hidden]{display:none!important}
+input.ro{background:var(--line);color:var(--muted);border-style:dashed}
