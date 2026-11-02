@@ -108,6 +108,8 @@ async function login(page,email,name){
   await shot(adm,'12-admin-ventas-tramo');
   await adm.setInputFiles('input[type=file]','/home/claude/an/rep.csv');
   await adm.waitForSelector('text=filas leídas');
+  await adm.setInputFiles('input[data-add]','/home/claude/an/rep.csv');
+  await adm.waitForSelector('text=rep.csv + rep.csv');
   await shot(adm,'13-admin-ventas-csv');
   await adm.click('[data-act=vs-calc]');
   await adm.waitForSelector('text=Faltante estimado',{timeout:5000});

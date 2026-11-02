@@ -740,37 +740,56 @@ function waNum(t){var d=String(t||"").replace(/\D/g,"");return d.length===10?"1"
 function waBtns(r){
   if(!(role()==="admin"||role()==="supervisor"))return "";
   var gente=(S.contactos||[]).filter(function(c){return (c.rol==="lider"||c.rol==="colaborador")&&(c.negocios||[]).indexOf(r.n)>-1&&(!(c.turnos||[]).length||c.turnos.indexOf(String(r.t).replace(/^Turno (\d).*$/,"$1"))>-1)});
-  if(!gente.length)return isAdmin()?'<small class="hint">Sin teléfonos de '+esc(r.n)+'. Agrégalos en Equipo para avisar por WhatsApp.</small>':"";
+  if(!gente.length)return "";
   var url=location.origin+location.pathname;
   return '<div class="wabox">'+gente.map(function(c){
     var msg="Hola "+c.nombre.split(" ")[0]+", aún no aparece el conteo de "+r.n+" · "+r.t+" de hoy"+(r.lim?" (límite "+r.lim+")":"")+". Por favor cuéntalo y confirma el cierre del turno en: "+url;
     return '<a class="btn small wa" target="_blank" rel="noopener" href="https://wa.me/'+waNum(c.telefono)+'?text='+encodeURIComponent(msg)+'">WhatsApp · '+esc(c.nombre.split(" ")[0])+'</a>'}).join("")+'</div>';
 }
+var DOWS=["dom","lun","mar","mié","jue","vie","sáb"];
+function fechaCorta(fe){var d=new Date(fe+"T12:00:00");return DOWS[d.getDay()]+" "+(+fe.slice(8))+"/"+(+fe.slice(5,7))}
+function diaLbl(fe){var h=today();return (fe===h?"Hoy · ":fe===addDays(h,-1)?"Ayer · ":"")+fechaCorta(fe)}
+function porDia(rows,fn){
+  var g={},ord=[];rows.forEach(function(r){if(!g[r.fe]){g[r.fe]=[];ord.push(r.fe)}g[r.fe].push(r)});
+  ord.sort(function(a,b){return a<b?1:-1});
+  return ord.map(function(fe){
+    var body=g[fe].map(fn).join(""),h=today();
+    if(fe===h||ord.length===1)return '<div class="dayh"><b>'+esc(diaLbl(fe))+'</b><span>'+g[fe].length+'</span></div>'+body;
+    return '<details class="dayd"><summary class="dayh"><b>'+esc(diaLbl(fe))+'</b><span>'+g[fe].length+'</span></summary>'+body+'</details>';
+  }).join("");
+}
 function pendHTML(){
   var rows=porCompletar(),h=today();
-  var nSin=0,nVen=0,nOk=0;
-  rows.forEach(function(r){if(r.k==="atraso"||r.k==="falta")nSin++;else if(r.k==="ventas")nVen++;else nOk++});
-  var resumen='<div class="stat"><div class="sbox'+(nSin?" bad":"")+'"><b>'+nSin+'</b><span>Sin contar</span></div><div class="sbox'+(nVen?" bad":"")+'"><b>'+nVen+'</b><span>Esperando ventas</span></div></div>';
-  var html=rows.map(function(r){
-    var c=r.c,dia=r.fe===h?"":" · "+fmtFecha(r.fe);
-    var title='<b>'+esc(r.n)+' · '+esc(r.t)+'</b>';
-    if(r.k==="ventas"){
-      var late=Date.now()-c.ts>12*3600000;
-      return '<div class="pitem"><div>'+title+'<small>Contó '+esc(c.resp)+dia+' · <span'+(late?' class="hi"':"")+'>'+haceTxt(c.ts)+'</span></small><small><span class="st wait">Falta cargar ventas para arquear</span></small></div><button class="btn small" data-act="vs-open" data-id="'+esc(c.id)+'">Registrar ventas</button></div>';
-    }
-    if(r.k==="ok"){
-      var rs=c.resumen||{};
-      return '<button class="pitem" style="width:100%;text-align:left" data-act="det-open" data-id="'+esc(c.id)+'"><div>'+title+'<small><span class="st ok">✓ Arqueado</span>'+dia+'</small></div><div>'+(rs.crit?'<span class="pill crit">'+rs.crit+' crítico</span>':(rs.rev?'<span class="pill rev">'+rs.rev+' revisar</span>':'<span class="pill ok">Todo OK</span>'))+'</div></button>';
-    }
-    if(r.k==="ini"){
-      return '<div class="pitem"><div>'+title+'<small><span class="st ok">✓ Conteo inicial</span>'+dia+' · no necesita ventas</small></div></div>';
-    }
-    if(r.k==="atraso")return '<div class="pitem"><div>'+title+'<small><span class="st late">Atrasado: sin contar</span>'+dia+(r.lim&&!r.past?' · límite '+r.lim:"")+'</small>'+waBtns(r)+'</div></div>';
-    return '<div class="pitem"><div>'+title+'<small><span class="st wait">Sin contar · hasta '+(r.lim||"fin del día")+'</span></small>'+waBtns(r)+'</div></div>';
-  }).join("");
+  var falta=rows.filter(function(r){return r.k==="atraso"||r.k==="falta"});
+  var vent=rows.filter(function(r){return r.k==="ventas"});
+  var okr=rows.filter(function(r){return r.k==="ok"||r.k==="ini"});
+  var resumen='<div class="stat"><div class="sbox'+(falta.length?" bad":"")+'"><b>'+falta.length+'</b><span>Sin contar</span></div><div class="sbox'+(vent.length?" bad":"")+'"><b>'+vent.length+'</b><span>Esperando ventas</span></div></div>';
+  var rowFalta=function(r){
+    var late=r.k==="atraso";
+    return '<div class="pitem"><div><b>'+esc(r.n)+'</b><small>'+esc(r.t)+(r.lim&&!r.past?' · límite '+r.lim:"")+'</small>'+waBtns(r)+'</div><span class="st '+(late?"late":"wait")+'">'+(late?"Atrasado":"Por contar")+'</span></div>';
+  };
+  var rowVent=function(r){
+    var c=r.c,late=Date.now()-c.ts>12*3600000;
+    return '<div class="pitem"><div><b>'+esc(r.n)+'</b><small>'+esc(r.t)+'</small><small>Contó '+esc(c.resp)+' · <span'+(late?' class="hi"':"")+'>'+haceTxt(c.ts)+'</span></small></div><button class="btn small" data-act="vs-open" data-id="'+esc(c.id)+'">Registrar ventas</button></div>';
+  };
+  var rowOk=function(r){
+    var c=r.c,rs=c.resumen||{};
+    if(r.k==="ini")return '<div class="pitem"><div><b>'+esc(r.n)+'</b><small>'+esc(r.t)+' · conteo inicial</small></div><span class="st ok">Inicial</span></div>';
+    return '<button class="pitem" style="width:100%;text-align:left" data-act="det-open" data-id="'+esc(c.id)+'"><div><b>'+esc(r.n)+'</b><small>'+esc(r.t)+'</small></div>'+(rs.crit?'<span class="pill crit">'+rs.crit+' crítico</span>':(rs.rev?'<span class="pill rev">'+rs.rev+' revisar</span>':'<span class="pill ok">Todo OK</span>'))+'</button>';
+  };
+  var html="";
+  if(falta.length){
+    var sinTel={};
+    if(isAdmin())falta.forEach(function(r){var g=(S.contactos||[]).some(function(c){return (c.rol==="lider"||c.rol==="colaborador")&&(c.negocios||[]).indexOf(r.n)>-1});if(!g)sinTel[r.n]=1});
+    var nt=Object.keys(sinTel);
+    html+='<section class="psec"><h2>Falta contar <span>'+falta.length+'</span></h2>'+(nt.length?'<p class="hint">Para avisar por WhatsApp agrega teléfonos en Equipo: '+nt.map(esc).join(", ")+'.</p>':"")+porDia(falta,rowFalta)+'</section>';
+  }
+  if(vent.length)html+='<section class="psec"><h2>Falta cargar ventas <span>'+vent.length+'</span></h2>'+porDia(vent,rowVent)+'</section>';
+  if(okr.length)html+='<details class="psec fold"><summary>Al día <span>'+okr.length+'</span></summary>'+porDia(okr,rowOk)+'</details>';
   if(!rows.length)html='<div class="panel center"><div class="big">✓</div><h3>Todo al día</h3><p class="sub">No hay turnos configurados con conteo hoy.</p></div>';
-  return '<div><h1>Por completar</h1><p class="sub">Cada conteo se arquea con sus propias ventas: no espera a los demás. Aquí ves qué falta por contar y qué falta por arquear.</p></div>'+
-    resumen+'<div class="plist">'+html+'</div>'+
+  else if(!falta.length&&!vent.length)html='<div class="panel center"><div class="big">✓</div><h3>Todo al día</h3><p class="sub">No falta ningún conteo ni ventas por cargar.</p></div>'+html;
+  return '<div><h1>Por completar</h1><p class="sub">Lo que falta por contar y por arquear, con su fecha.</p></div>'+
+    resumen+html+
     '<button class="btn ghost" data-act="campo-on">Hacer un conteo o registrar entrada</button>';
 }
 
@@ -841,10 +860,11 @@ async function openVentas(id){
     render();
   }catch(e){S.vs=null;toast(errMsg(e));render()}
 }
-function applyCsv(key,text,fname){
+function applyCsv(key,text,fname,add){
   var vs=S.vs,rows=parseCitrus(text);
-  if(!rows.length){toast("No encontré ventas en ese archivo. Debe ser el reporte «Ventas por producto» de Citrus en CSV.");return}
-  vs.csv[key]={name:fname,rows:rows};recomputeTramo(key);
+  if(!rows.length){toast("No encontré ventas en ese archivo. Debe ser el reporte «Ventas por producto» de Citrus en CSV.");return false}
+  var old=add&&vs.csv[key];
+  vs.csv[key]=old?{name:old.name+" + "+fname,rows:old.rows.concat(rows)}:{name:fname,rows:rows};recomputeTramo(key);return true;
 }
 function recomputeTramo(key){
   var vs=S.vs,csv=vs.csv[key],t=vs.tramos.filter(function(x){return x.key===key})[0];
@@ -899,7 +919,7 @@ function ventasHTML(){
         '<input inputmode="decimal" autocomplete="off" placeholder="Vendido" aria-label="Vendido de '+esc(it.nombre)+'" data-vq="'+esc(it.pid)+'" value="'+esc(vs.vals[it.pid]==null?"":vs.vals[it.pid])+'"></div>';
     }).join("");
     body+='<div class="panel"><div><h3>'+esc(tramoLabel(t,c))+'</h3><p class="sub">'+items.length+' productos. Todo el reporte debe cubrir exactamente ese período.</p></div>'+
-      '<label class="fileb"><input type="file" accept=".csv,.txt,text/csv,text/plain" data-csv="'+esc(t.key)+'">'+(csv?"Cambiar archivo CSV":"Subir CSV de Citrus")+'</label>'+stats+uns+
+      '<label class="fileb"><input type="file" multiple accept=".csv,.txt,text/csv,text/plain" data-csv="'+esc(t.key)+'">'+(csv?"Cambiar archivo(s) CSV":"Subir CSV de Citrus")+'</label>'+(csv?'<label class="fileb ghost"><input type="file" multiple accept=".csv,.txt,text/csv,text/plain" data-csv="'+esc(t.key)+'" data-add="1">Agregar otro archivo (otra caja)</label>':'<p class="hint">Si el período tiene más de una caja (por ejemplo la de madrugada), sube todos los archivos juntos o agrégalos uno por uno: se suman.</p>')+stats+uns+
       '<div><div class="lbl">Unidades vendidas por producto</div>'+rows+'</div></div>';
   });
   var srch='<input id="vq" class="srch" type="search" placeholder="Buscar producto…" autocomplete="off" value="'+esc(vs.q)+'">';
@@ -1056,10 +1076,15 @@ async function rectSave(){
 
 /* ---------- avisos ---------- */
 function avisosHTML(){
-  var list=S.notifs.length?S.notifs.map(function(n){
-    return '<button class="ni'+(n.leido?"":" unread")+'" data-act="notif" data-id="'+esc(n.id)+'"><span class="dot"></span><span><b>'+esc(n.titulo)+'</b><small>'+esc(n.texto)+'</small><small>'+fmtFecha(new Date(n.ts).toISOString().slice(0,10))+' '+hora(n.ts)+'</small></span></button>';
-  }).join(""):'<div class="panel"><p class="sub">No hay avisos por ahora.</p></div>';
-  return '<div class="top"><h1>Avisos</h1>'+(unread()?'<button class="btn small ghost" data-act="read-all">Marcar leídos</button>':"")+'</div><div class="plist">'+list+'</div>';
+  var g={},ord=[];
+  S.notifs.forEach(function(n){var fe=new Date(n.ts).toISOString().slice(0,10);if(!g[fe]){g[fe]=[];ord.push(fe)}g[fe].push(n)});
+  var list=ord.length?ord.map(function(fe){
+    return '<div class="dayh"><b>'+esc(diaLbl(fe))+'</b></div>'+g[fe].map(function(n){
+      return '<button class="ni'+(n.leido?"":" unread")+'" data-act="notif" data-id="'+esc(n.id)+'"><span class="dot"></span><span class="nbody"><b>'+esc(n.titulo)+'</b><small>'+esc(n.texto)+'</small></span><span class="when">'+hora(n.ts)+'</span></button>';
+    }).join("");
+  }).join(""):'<div class="panel center"><div class="big">✓</div><h3>Sin avisos</h3><p class="sub">Cuando pase algo importante, aparecerá aquí.</p></div>';
+  var u=unread();
+  return '<div class="top"><div><h1>Avisos</h1>'+(u?'<p class="sub">'+u+' sin leer</p>':"")+'</div>'+(u?'<button class="btn small ghost" data-act="read-all">Marcar leídos</button>':"")+'</div><div class="plist">'+list+'</div>';
 }
 async function openNotif(id){
   var n=S.notifs.filter(function(x){return x.id===id})[0];if(!n)return;
@@ -1273,13 +1298,18 @@ document.addEventListener("change",function(ev){
   else if(t.id==="rdest"){S.rec.destino=t.value;updateRecBtn()}
   else if(ds.asg&&S.vs){S.vs.assign[ds.asg]=t.value||undefined;if(!t.value)delete S.vs.assign[ds.asg];recomputeTramo(ds.tr);var y=window.pageYOffset;render();window.scrollTo(0,y)}
   else if(ds.csv&&S.vs&&t.files&&t.files[0]){
-    var file=t.files[0],key=ds.csv,fr=new FileReader();
-    fr.onload=function(){
-      var buf=fr.result,txt;
-      try{txt=new TextDecoder("utf-8",{fatal:true}).decode(buf)}catch(e){txt=new TextDecoder("windows-1252").decode(buf)}
-      applyCsv(key,txt,file.name);render();
+    var files=[].slice.call(t.files),key=ds.csv,add=!!ds.add,i=0;
+    var next=function(){
+      if(i>=files.length){render();return}
+      var file=files[i++],fr=new FileReader();
+      fr.onload=function(){
+        var buf=fr.result,txt;
+        try{txt=new TextDecoder("utf-8",{fatal:true}).decode(buf)}catch(e){txt=new TextDecoder("windows-1252").decode(buf)}
+        applyCsv(key,txt,file.name,add||i>1);next();
+      };
+      fr.readAsArrayBuffer(file);
     };
-    fr.readAsArrayBuffer(file);
+    next();
   }
 });
 async function guarded(fn){try{await fn()}catch(e){toast(errMsg(e))}}

@@ -60,13 +60,18 @@ document.addEventListener("change",function(ev){
   else if(t.id==="rdest"){S.rec.destino=t.value;updateRecBtn()}
   else if(ds.asg&&S.vs){S.vs.assign[ds.asg]=t.value||undefined;if(!t.value)delete S.vs.assign[ds.asg];recomputeTramo(ds.tr);var y=window.pageYOffset;render();window.scrollTo(0,y)}
   else if(ds.csv&&S.vs&&t.files&&t.files[0]){
-    var file=t.files[0],key=ds.csv,fr=new FileReader();
-    fr.onload=function(){
-      var buf=fr.result,txt;
-      try{txt=new TextDecoder("utf-8",{fatal:true}).decode(buf)}catch(e){txt=new TextDecoder("windows-1252").decode(buf)}
-      applyCsv(key,txt,file.name);render();
+    var files=[].slice.call(t.files),key=ds.csv,add=!!ds.add,i=0;
+    var next=function(){
+      if(i>=files.length){render();return}
+      var file=files[i++],fr=new FileReader();
+      fr.onload=function(){
+        var buf=fr.result,txt;
+        try{txt=new TextDecoder("utf-8",{fatal:true}).decode(buf)}catch(e){txt=new TextDecoder("windows-1252").decode(buf)}
+        applyCsv(key,txt,file.name,add||i>1);next();
+      };
+      fr.readAsArrayBuffer(file);
     };
-    fr.readAsArrayBuffer(file);
+    next();
   }
 });
 async function guarded(fn){try{await fn()}catch(e){toast(errMsg(e))}}

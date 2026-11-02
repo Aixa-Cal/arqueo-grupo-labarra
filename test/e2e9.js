@@ -19,7 +19,7 @@ const login=(e,n)=>{call('reqCode',{email:e});const c=env.mails[env.mails.length
   await p.fill('#lg-email','ana@g.com');await p.click('[data-act=lg-send]');await p.waitForSelector('#lg-code');
   await p.fill('#lg-code',env.mails[env.mails.length-1].body.match(/\d{6}/)[0]);await p.click('[data-act=lg-verify]');
   await p.waitForSelector('text=Por completar');await p.waitForTimeout(800);
-  const rows=await p.$$eval('.pitem',els=>els.filter(e=>/Food Shop/.test(e.textContent)).map(e=>({t:e.querySelector('b').textContent,wa:[...e.querySelectorAll('a.wa')].map(a=>a.textContent)})));
+  const rows=await p.$$eval('.pitem',els=>els.filter(e=>/Food Shop/.test(e.textContent)).map(e=>({t:e.querySelector('b').textContent+' · '+e.querySelector('small').textContent,wa:[...e.querySelectorAll('a.wa')].map(a=>a.textContent)})));
   console.log(JSON.stringify(rows));
   const g=t=>rows.find(x=>x.t.includes(t));
   assert.deepEqual(g('Turno 1').wa,['WhatsApp · Sol']);
