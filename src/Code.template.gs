@@ -466,7 +466,7 @@ function notifsFor(me) {
 function sync(me) {
   migrarInsumos();
   migrarLaBarra();
-  migrarFoodShopT3();
+  migrarFoodShopT3(); migrarMiller();
   var cfg = getConfig(), negs = visibleNegocios(me, cfg);
   var prods = getProductos().filter(function (r) { return r.activo; }).map(productoOut);
   if (scoped(me)) {
@@ -731,6 +731,19 @@ function migrarFoodShopT3() {
     delete l['Food Shop|Turno 3 (11PM-7AM)'];
     setConfigKey('turnos', t); setConfigKey('limites', l);
     props().setProperty('MIG_FSDOS_V1', '1');
+    cacheDrop();
+  });
+}
+/* Una sola vez: Miller 12 oz y Miller 22 oz en el Food Shop */
+function migrarMiller() {
+  if (props().getProperty('MIG_MILLER_V1')) return;
+  withLock(function () {
+    if (props().getProperty('MIG_MILLER_V1')) return;
+    [['fs-170', 'Miller 12 oz', 88], ['fs-171', 'Miller 22 oz', 89]].forEach(function (p) {
+      if (findRowById('Productos', p[0])) return;
+      appendObj('Productos', { id: p[0], nombre: p[1], cat: 'Cervezas', unidad: 'unid', factor: 1, tol: 0.02, costo: 0, critico: 0, negocios: ['Food Shop'], orden: p[2], activo: 1 });
+    });
+    props().setProperty('MIG_MILLER_V1', '1');
     cacheDrop();
   });
 }
