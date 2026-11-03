@@ -1,1 +1,1 @@
-{"nombre": "Snack de maní con pasas, 35 g", "cat": "Barras y frutos secos", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop"], "orden": 153, "ejemplo": false}
+{"nombre": "Snack de maní con pasas, 35 g", "cat": "Barras y frutos secos", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 153, "ejemplo": false}

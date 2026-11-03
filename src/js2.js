@@ -13,7 +13,8 @@ function prodsFor(neg){
 }
 function newDraft(){return {negocio:"",turno:"",fecha:today(),vals:{},base:null,id:null,fcat:null,fmode:""}}
 var CIERRE=["Revisé las áreas","Rellené lo necesario","El turno completó sus limpiezas","Dejé los equipos cargando y en orden","Cerré el sistema e hice el cierre de caja","Dejé los baños limpios y los safacones listos"];
-function conCierre(neg){return !!neg&&INSUMOS.indexOf(neg)<0}
+var SOLO_CAL=["Food Shop General"];
+function conCierre(neg){return !!neg&&INSUMOS.indexOf(neg)<0&&neg!=="Food Shop General"}
 function conCafe(neg){return esLB(neg)||neg==="Food Shop"}
 function conFreezer(neg){return neg==="Food Shop"}
 function cierreDe(d){var c=d.cierre||(d.cierre={chk:[],nov:"",txt:""});if(!c.cafe)c.cafe={rell:"",func:"",txt:""};if(!c.fz)c.fz={ok:"",txt:""};return c}
@@ -88,7 +89,8 @@ function elegirHTML(){
   var d=S.draft;
   var negs=S.cfg.negocios.map(function(n,i){
     var ts=turnosFor(n),k=ts.filter(function(t){return turnoDone(n,t,d.fecha)}).length;
-    return '<button class="neg'+(d.negocio===n?" on":"")+(ts.length&&k===ts.length?" done":"")+'" data-act="neg" data-v="'+i+'">'+esc(n)+'<small>'+(ts.length?(k+" de "+ts.length+" hoy"):"Sin conteos")+'</small></button>';
+    var solo=SOLO_CAL.indexOf(n)>-1&&!isFullDay(n,d.fecha);
+    return '<button class="neg'+(d.negocio===n?" on":"")+(ts.length&&k===ts.length?" done":"")+'"'+(solo?' disabled':'')+' data-act="neg" data-v="'+i+'">'+esc(n)+'<small>'+(solo?"Solo "+((S.cfg.calendario&&S.cfg.calendario[n]||[]).map(function(x){return ["domingos","lunes","martes","miércoles","jueves","viernes","sábados"][x]}).join(", ")):(ts.length?(k+" de "+ts.length+" hoy"):"Sin conteos"))+'</small></button>';
   }).join("");
   if(!S.cfg.negocios.length)negs='<p class="banner">Todavía no tienes negocios asignados. Pide a administración que te asigne uno en Equipo.</p>';
   var ts=turnosFor(d.negocio),tchips=ts.map(function(t,i){
@@ -147,7 +149,7 @@ function contarHTML(){
     (esLB(d.negocio)?'<div class="banner"><b>Entró:</b> lo que recibiste de la principal o sacaste del cuarto frío.<br><b>Quedan:</b> lo que dejas, contando todo: lo que está en la sandwichera y lo que está almacenado.</div>':'')+
     '<details class="help"><summary>¿Qué pongo en cada casilla?</summary><ul>'+(conDoble()?'<li><b>Había:</b> lo que hay al empezar el turno (cuéntalo).</li>':'')+'<li><b>Entró:</b> '+(esLB(d.negocio)?'lo que recibiste de la principal o sacaste del cuarto frío en tu turno (lo registrado en Movimientos).':'la mercancía que llegó en tu turno (lo registrado en Movimientos).')+'</li><li><b>Quedan:</b> '+(esLB(d.negocio)?'lo que dejas al cerrar, incluido lo de la sandwichera y lo almacenado.':'lo que cuentas ahora mismo.')+'</li></ul></details>'+
     '<div class="plist">'+cards+'</div><p class="banner" id="fempty" hidden>Ningún producto coincide con el filtro.</p>'+
-    (INSUMOS.indexOf(d.negocio)>-1?'<div class="panel"><div class="field"><label class="lbl" for="cnota">¿Qué te hace falta? (opcional)</label><textarea id="cnota" rows="3" maxlength="300" placeholder="Ej. Falta cera, 2 esponjas y una lija 3000">'+esc(d.nota||"")+'</textarea><p class="hint">Administración recibe este aviso. Escribe lo que necesites, esté o no en la lista.</p></div></div>':cierreHTML());
+    (INSUMOS.indexOf(d.negocio)>-1?'<div class="panel"><div class="field"><label class="lbl" for="cnota">¿Qué te hace falta? (opcional)</label><textarea id="cnota" rows="3" maxlength="300" placeholder="Ej. Falta cera, 2 esponjas y una lija 3000">'+esc(d.nota||"")+'</textarea><p class="hint">Administración recibe este aviso. Escribe lo que necesites, esté o no en la lista.</p></div></div>':(conCierre(d.negocio)?cierreHTML():''));
 }
 function cardHTML(p){
   var v=S.draft.vals[p.id]||(S.draft.vals[p.id]={ini:"",ent:"",fin:"",src:""});

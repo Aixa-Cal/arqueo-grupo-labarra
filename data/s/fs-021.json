@@ -1,1 +1,1 @@
-{"nombre": "Agua Dasani 20 oz", "cat": "Jugos, agua y mezcladores", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop"], "orden": 57, "ejemplo": false}
+{"nombre": "Agua Dasani 20 oz", "cat": "Jugos, agua y mezcladores", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 57, "ejemplo": false}

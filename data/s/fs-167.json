@@ -1,1 +1,1 @@
-{"nombre": "Chicharrón El Chef", "cat": "Papitas y salsas", "orden": 132.5, "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop"], "ejemplo": false, "critico": true}
+{"nombre": "Chicharrón El Chef", "cat": "Papitas y salsas", "orden": 132.5, "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "ejemplo": false, "critico": true}

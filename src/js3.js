@@ -14,6 +14,7 @@ function porCompletar(){
   var sel=S.pFecha&&S.pFecha<=h?S.pFecha:"";if(sel)days=[sel];
   days.forEach(function(fe){
     S.cfg.negocios.forEach(function(n){
+      if(!isFullDay(n,fe))return;
       turnosFor(n).forEach(function(t){
         var c=S.conteos.filter(function(x){return x.negocio===n&&x.turno===t&&x.fecha===fe&&x.estado!=="anulado"})[0];
         var lim=limiteDe(n,t);

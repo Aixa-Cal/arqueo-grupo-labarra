@@ -28,6 +28,9 @@ var SEED_ALIAS = /*__SEED_ALIAS__*/[];
 var DOBLE = ['Zona Presidente'];
 /* Negocios sin POS: se controla el consumo por conteo, sin ventas */
 var INSUMOS = ['Car Wash'];
+/* Conteo general semanal del Food Shop (martes, lo hace supervisión): sin checklist de cierre, café ni freezers */
+var SIN_CIERRE = ['Food Shop General'];
+var CAT_CONSUMO = 'Insumos para café';   // dentro de ese conteo se controla solo el consumo, sin ventas
 var INSUMOS_PRODUCTOS = [
   { id: 'cw-001', nombre: 'Shampoo (libras)', u: 'lb' },
   { id: 'cw-002', nombre: 'Desengrasante (libras)', u: 'lb' },
@@ -44,12 +47,13 @@ var INSUMOS_PRODUCTOS = [
 ];
 
 var CONFIG_DEF = {
-  negocios: ['La Barra Atala', 'La Barra Atalaya', 'La Barra Miraflores', 'Food Shop', 'Zona Presidente', 'Car Wash'],
+  negocios: ['La Barra Atala', 'La Barra Atalaya', 'La Barra Miraflores', 'Food Shop', 'Food Shop General', 'Zona Presidente', 'Car Wash'],
   turnos: {
     'La Barra Atala': ['Turno 1 (7AM-3PM)', 'Turno 2 (3PM-11PM)', 'Turno 3 (11PM-7AM)'],
     'La Barra Atalaya': ['Turno 1 (7AM-3PM)', 'Turno 2 (3PM-11PM)'],
     'La Barra Miraflores': ['Turno 1 (7AM-3PM)', 'Turno 2 (3PM-11PM)', 'Turno 3 (11PM-7AM)'],
     'Food Shop': ['Turno 1 (7AM-3PM)', 'Turno 2 (3PM-11PM)'],
+    'Food Shop General': ['Semanal'],
     'Zona Presidente': ['Turno único (3PM-11PM)'],
     'Car Wash': []
   },
@@ -59,9 +63,10 @@ var CONFIG_DEF = {
     'La Barra Atalaya|Turno 1 (7AM-3PM)': '15:30', 'La Barra Atalaya|Turno 2 (3PM-11PM)': '23:30',
     'La Barra Miraflores|Turno 1 (7AM-3PM)': '15:30', 'La Barra Miraflores|Turno 2 (3PM-11PM)': '23:30', 'La Barra Miraflores|Turno 3 (11PM-7AM)': '07:30',
     'Food Shop|Turno 1 (7AM-3PM)': '15:30', 'Food Shop|Turno 2 (3PM-11PM)': '23:30',
+    'Food Shop General|Semanal': '23:30',
     'Zona Presidente|Turno único (3PM-11PM)': '23:30'
   },
-  calendario: {},
+  calendario: { 'Food Shop General': [2] },
   /* Categorías que no se cuentan todos los días: {negocio: {categoría: [días 0=dom…6=sáb]}} */
   catDias: { 'La Barra Atala': { 'Cervezas': [1] }, 'La Barra Atalaya': { 'Cervezas': [1] }, 'La Barra Miraflores': { 'Cervezas': [1] } },
   avisos: { acceso: true, pendiente: true, critico: true, falta: true }
@@ -466,7 +471,7 @@ function notifsFor(me) {
 function sync(me) {
   migrarInsumos();
   migrarLaBarra();
-  migrarFoodShopT3(); migrarMiller();
+  migrarFoodShopT3(); migrarMiller(); migrarFoodShopGeneral();
   var cfg = getConfig(), negs = visibleNegocios(me, cfg);
   var prods = getProductos().filter(function (r) { return r.activo; }).map(productoOut);
   if (scoped(me)) {
@@ -542,6 +547,10 @@ function saveConteo(me, p) {
   var h = hoy();
   if (fecha > fechaMas(h, 1)) fail('datos', 'La fecha no puede ser futura.');
   if (scoped(me) && fecha < fechaMas(h, -2)) fail('datos', 'Solo puedes guardar conteos de hoy. Pide ayuda a administración.');
+  if (SIN_CIERRE.indexOf(neg) > -1 && me.rol !== 'admin') {
+    var calS = cfg.calendario && cfg.calendario[neg];
+    if (calS && calS.length && calS.indexOf(new Date(fecha + 'T12:00:00Z').getUTCDay()) < 0) fail('datos', neg + ' solo se cuenta los días programados.');
+  }
   var id = String(p.id || '');
   if (!/^c_[A-Za-z0-9]{6,40}$/.test(id)) fail('datos', 'Identificador inválido.');
   if (!turno) fail('datos', 'Falta el turno.');
@@ -579,7 +588,7 @@ function saveConteo(me, p) {
       id: id, fecha: fecha, negocio: neg, turno: turno, resp: me.nombre, email: me.email, ts: now(), estado: inicial ? 'inicial' : (INSUMOS.indexOf(neg) > -1 ? 'arqueado' : 'contado'),
       items: items, ventas: {}, res: [], resumen: {}, sin: (p.sin || []).slice(0, 200).map(String), ventasPor: '', ventasTs: 0, rect: 0, nota: String(p.nota || '').slice(0, 300), cierre: null
     };
-    if (INSUMOS.indexOf(neg) < 0) {
+    if (INSUMOS.indexOf(neg) < 0 && SIN_CIERRE.indexOf(neg) < 0) {
       var ck = p.cierre;
       if (!ck || !ck.chk || ck.chk.length !== 6 || ck.chk.some(function (x) { return x !== true; })) fail('datos', 'Completa el cierre del turno.');
       if (ck.nov !== 'si' && ck.nov !== 'no') fail('datos', 'Indica si hubo novedad.');
@@ -672,6 +681,7 @@ function computeArqueo(c, pm) {
     if (!pr || !it[4]) return;   // sin conteo previo: queda como inventario inicial, no se arquea
     var ven = Number(c.ventas[it[0]]) || 0, sal = (sals[it[0]] && sals[it[0]].q) || 0;
     var k = calcItem(pr, it[1], it[2], it[3], ven, sal);
+    if (pr.cat === CAT_CONSUMO) k = { real: r2(it[1] + it[2] - it[3]), esp: r2(it[1] + it[2] - it[3]), dif: 0, pct: 0, estado: 'OK', valor: 0 };   // insumos: solo consumo
     res.push([it[0], pr.nombre, pr.unidad, it[1], it[2], it[3], ven, k.real, k.esp, k.dif, k.pct, k.estado, k.valor, r2(sal, 3)]);
     rs.decl += sal * (pr.costo || 0);
     if (k.estado === 'OK') rs.ok++; else if (k.estado === 'REVISAR') rs.rev++; else rs.crit++;
@@ -744,6 +754,36 @@ function migrarMiller() {
       appendObj('Productos', { id: p[0], nombre: p[1], cat: 'Cervezas', unidad: 'unid', factor: 1, tol: 0.02, costo: 0, critico: 0, negocios: ['Food Shop'], orden: p[2], activo: 1 });
     });
     props().setProperty('MIG_MILLER_V1', '1');
+    cacheDrop();
+  });
+}
+/* Una sola vez: conteo general semanal del Food Shop (martes) con los insumos de café */
+var CAFE_INSUMOS = [["Vasos Nescafé #8", "unid"], ["Vasos Nescafé #6", "unid"], ["Tapas Nescafé #6", "unid"], ["Tapas Nescafé #8", "unid"], ["Café en grano - Nescafé", "unid"], ["Polvo French Vanilla - Nescafé", "unid"], ["Polvo Latte - Nescafé", "unid"], ["Polvo Chocolate - Nescafé", "unid"], ["Bastones de azúcar Nescafé", "unid"], ["Removedores Nescafé", "unid"], ["Vasos Santo Domingo #8", "unid"], ["Vasos Santo Domingo #6", "unid"], ["Tapas Santo Domingo #6", "unid"], ["Tapas Santo Domingo #8", "unid"], ["Café en grano - Santo Domingo", "unid"], ["Polvo Capuccino - Santo Domingo", "unid"], ["Polvo Caramel Capuccino - Santo Domingo", "unid"], ["Polvo Chocolate - Santo Domingo", "unid"], ["Bastones de azúcar Santo Domingo", "unid"], ["Removedores Santo Domingo", "unid"]];
+function migrarFoodShopGeneral() {
+  if (props().getProperty('MIG_FSGEN_V1')) return;
+  withLock(function () {
+    if (props().getProperty('MIG_FSGEN_V1')) return;
+    var s = sheet('Productos'), n = s.getLastRow() - 1, col = H.Productos.indexOf('negocios') + 1;
+    if (n > 0) {
+      var rg = s.getRange(2, col, n, 1), vals = rg.getValues(), cambio = false;
+      vals = vals.map(function (r) {
+        var a; try { a = JSON.parse(r[0] || '[]'); } catch (e) { a = []; }
+        if (a.indexOf('Food Shop') > -1 && a.indexOf('Food Shop General') < 0) { a.push('Food Shop General'); cambio = true; return [JSON.stringify(a)]; }
+        return [r[0]];
+      });
+      if (cambio) rg.setValues(vals);
+    }
+    CAFE_INSUMOS.forEach(function (p, i) {
+      var id = 'cf-' + (i < 9 ? '0' : '') + (i + 1);
+      if (findRowById('Productos', id)) return;
+      appendObj('Productos', { id: id, nombre: p[0], cat: CAT_CONSUMO, unidad: p[1], factor: 1, tol: 0.05, costo: 0, critico: 0, negocios: ['Food Shop General'], orden: 200 + i, activo: 1 });
+    });
+    var cfg = getConfig(), ng = cfg.negocios || [], t = cfg.turnos || {}, l = cfg.limites || {}, cal = cfg.calendario || {};
+    if (ng.indexOf('Food Shop General') < 0) { var ix = ng.indexOf('Food Shop'); ng.splice(ix > -1 ? ix + 1 : ng.length, 0, 'Food Shop General'); setConfigKey('negocios', ng); }
+    if (!(t['Food Shop General'] && t['Food Shop General'].length)) { t['Food Shop General'] = ['Semanal']; setConfigKey('turnos', t); }
+    if (!l['Food Shop General|Semanal']) { l['Food Shop General|Semanal'] = '23:30'; setConfigKey('limites', l); }
+    if (!Array.isArray(cal['Food Shop General'])) { cal['Food Shop General'] = [2]; setConfigKey('calendario', cal); }
+    props().setProperty('MIG_FSGEN_V1', '1');
     cacheDrop();
   });
 }

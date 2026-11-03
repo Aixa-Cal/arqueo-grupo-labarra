@@ -1,1 +1,1 @@
-{"nombre": "Ice Peach Nectarine — botella plástica", "cat": "Bebidas Ice", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop"], "orden": 119, "ejemplo": false}
+{"nombre": "Ice Peach Nectarine — botella plástica", "cat": "Bebidas Ice", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 119, "ejemplo": false}

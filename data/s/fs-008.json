@@ -1,1 +1,1 @@
-{"nombre": "Four Loko Gold 355 ml", "cat": "Bebidas alcohólicas listas para tomar", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop"], "orden": 44, "ejemplo": false}
+{"nombre": "Four Loko Gold 355 ml", "cat": "Bebidas alcohólicas listas para tomar", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 44, "ejemplo": false}

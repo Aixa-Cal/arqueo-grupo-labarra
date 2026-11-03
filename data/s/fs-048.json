@@ -1,1 +1,1 @@
-{"nombre": "Coors Original 12 oz", "cat": "Cervezas", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop"], "orden": 84, "ejemplo": false}
+{"nombre": "Coors Original 12 oz", "cat": "Cervezas", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 84, "ejemplo": false}

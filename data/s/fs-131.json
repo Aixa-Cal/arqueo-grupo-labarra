@@ -1,1 +1,1 @@
-{"nombre": "Pinito Black Ice", "cat": "Ambientadores", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop"], "orden": 167, "ejemplo": false}
+{"nombre": "Pinito Black Ice", "cat": "Ambientadores", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 167, "ejemplo": false}

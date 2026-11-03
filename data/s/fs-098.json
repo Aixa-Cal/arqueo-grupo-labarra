@@ -1,1 +1,1 @@
-{"nombre": "Milky Way — chocolate", "cat": "Chocolates", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop"], "orden": 134, "ejemplo": false}
+{"nombre": "Milky Way — chocolate", "cat": "Chocolates", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 134, "ejemplo": false}

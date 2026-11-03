@@ -1,1 +1,1 @@
-{"nombre": "Heineken 0.0 330 ml", "cat": "Cervezas", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop"], "orden": 85, "ejemplo": false}
+{"nombre": "Heineken 0.0 330 ml", "cat": "Cervezas", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 85, "ejemplo": false}

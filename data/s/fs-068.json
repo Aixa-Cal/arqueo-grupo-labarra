@@ -1,1 +1,1 @@
-{"nombre": "Buchanan's Master", "cat": "Ron, vodka y whisky", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop"], "orden": 104, "ejemplo": false}
+{"nombre": "Buchanan's Master", "cat": "Ron, vodka y whisky", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 104, "ejemplo": false}

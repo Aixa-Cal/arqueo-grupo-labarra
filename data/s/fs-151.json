@@ -1,1 +1,1 @@
-{"nombre": "Marlboro rojo especial de 20", "cat": "Cigarrillos", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop"], "orden": 187, "ejemplo": false}
+{"nombre": "Marlboro rojo especial de 20", "cat": "Cigarrillos", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 187, "ejemplo": false}
