@@ -165,6 +165,13 @@ function readAll(name) {
   var vals = s.getRange(2, 1, last - 1, H[name].length).getValues();
   return vals.map(function (r, i) { var o = fromRow(name, r); o._row = i + 2; return o; });
 }
+/* Solo las últimas n filas (las hojas crecen: nunca se lee toda la historia en cada sincronización) */
+function readTail(name, n) {
+  var s = sheet(name), last = s.getLastRow();
+  if (last < 2) return [];
+  var from = Math.max(2, last - n + 1);
+  return s.getRange(from, 1, last - from + 1, H[name].length).getValues().map(function (r, i) { var o = fromRow(name, r); o._row = from + i; return o; });
+}
 function appendObj(name, o) { sheet(name).appendRow(toRow(name, o)); }
 function writeRow(name, rowIdx, o) {
   sheet(name).getRange(rowIdx, 1, 1, H[name].length).setValues([toRow(name, o)]);
@@ -543,7 +550,7 @@ function startCount(me, p) {
   });
   if (GEN_LB.indexOf(neg) > -1) {   // conteo semanal de la tienda: «Entró» = lo que Maria sacó del almacén para ella
     var base = neg.replace(/ General$/, '');
-    readAll('Almacen').forEach(function (x) { if (x.tipo === 'salida' && x.destino === base && x.ts > cut) ents.push({ ts: x.ts, items: x.items }); });
+    readTail('Almacen', 400).forEach(function (x) { if (x.tipo === 'salida' && x.destino === base && x.ts > cut) ents.push({ ts: x.ts, items: x.items }); });
   }
   return { ultimos: ult, entradas: ents, salidas: sals, enTransito: enTransito };
 }
@@ -835,7 +842,7 @@ function autorizarDrive() { almFolder(); Logger.log('Drive autorizado'); }
 function almacenFor(me) {
   if (!almOk(me)) return [];
   var cut = now() - 45 * 86400000;
-  return readAll('Almacen').filter(function (a) { return a.ts > cut; })
+  return readTail('Almacen', 400).filter(function (a) { return a.ts > cut; })
     .map(function (a) { return { id: a.id, fecha: a.fecha, tipo: a.tipo, destino: a.destino, items: a.items, nota: a.nota, nf: (a.fotos || []).length, resp: a.resp, ts: a.ts, estado: a.estado, hechoPor: a.hechoPor, hechoTs: a.hechoTs }; })
     .sort(function (x, y) { return y.ts - x.ts; });
 }
