@@ -1,1 +1,1 @@
-{"nombre": "Papel de Baño Inodoro", "cat": "Almacén", "unidad": "unid", "factor": 1, "tol": 0.05, "costo": 0, "negocios": ["La Barra Atala General", "La Barra Atalaya General", "La Barra Miraflores General"], "orden": 362, "ejemplo": false}
+{"nombre": "Papel de Baño Inodoro", "cat": "Almacén", "unidad": "unid", "factor": 1, "tol": 0.05, "costo": 0, "negocios": ["La Barra Atala General", "La Barra Atalaya General", "La Barra Miraflores General", "Almacén"], "orden": 362, "ejemplo": false}

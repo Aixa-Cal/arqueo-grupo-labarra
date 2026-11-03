@@ -21,6 +21,7 @@ function makeEnv(opts){
     PropertiesService:{getScriptProperties:()=>({getProperty:k=>propStore[k]||null,setProperty:(k,v)=>{propStore[k]=v},deleteProperty:k=>{delete propStore[k]}})},
     CacheService:{getScriptCache:()=>({get:k=>cacheStore[k]===undefined?null:cacheStore[k],put:(k,v)=>{cacheStore[k]=v},remove:k=>{delete cacheStore[k]},removeAll:ks=>ks.forEach(k=>delete cacheStore[k])})},
     LockService:{getScriptLock:()=>({waitLock(){},releaseLock(){}})},
+    DriveApp:(()=>{const files={};let n=0;const folder={createFile:b=>{const id='f'+(++n);files[id]=b;return {getId:()=>id}}};return {getFoldersByName:()=>({hasNext:()=>true,next:()=>folder}),createFolder:()=>folder,getFileById:id=>({getBlob:()=>files[id]})}})(),
     MailApp:{sendEmail:m=>mails.push(m),getRemainingDailyQuota:()=>100-mails.length},
     Session:{getEffectiveUser:()=>({getEmail:()=>'dueno@gmail.com'})},
     ScriptApp:{getService:()=>({getUrl:()=>'https://script.google.com/macros/s/X/exec'}),getProjectTriggers:()=>triggers,deleteTrigger(){},newTrigger:()=>({timeBased:()=>({everyHours:()=>({create(){triggers.push({getHandlerFunction:()=>'revisarPendientes'})}})})})},
@@ -35,7 +36,9 @@ function makeEnv(opts){
       computeHmacSha256Signature:(s,k)=>Array.from(crypto.createHmac('sha256',k).update(s).digest()).map(x=>x>127?x-256:x),
       base64EncodeWebSafe:x=>(typeof x==='string'?Buffer.from(x):Buffer.from(x.map(b=>b&255))).toString('base64url'),
       base64DecodeWebSafe:s=>Array.from(Buffer.from(s,'base64url')),
-      newBlob:b=>({getDataAsString:()=>Buffer.from(b.map(x=>x&255)).toString()})
+      newBlob:(b,t,n)=>({getDataAsString:()=>Buffer.from(b.map(x=>x&255)).toString(),getBytes:()=>b,name:n}),
+      base64Decode:s=>Array.from(Buffer.from(s,'base64')).map(x=>x>127?x-256:x),
+      base64Encode:b=>Buffer.from(b.map(x=>x&255)).toString('base64')
     }};
   vm.createContext(ctx);
   vm.runInContext(fs.readFileSync(__dirname+'/../dist/Code.gs','utf8'),ctx);

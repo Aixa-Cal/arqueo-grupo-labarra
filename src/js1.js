@@ -11,7 +11,7 @@ var DIAS=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"],DIAS_L=["Domingo","Lunes"
 var S={
   tok:null,auth:"load",me:null,loginEmail:"",loginNuevo:false,loginName:"",loginCode:"",loginBusy:false,
   hoy:"",cfg:{negocios:[],turnos:{},limites:{},calendario:{},catDias:{},avisos:{},todosNegocios:[]},
-  productos:[],conteos:[],entradas:[],movs:[],motivos:[],notifs:[],pend:0,
+  almacen:[],productos:[],conteos:[],entradas:[],movs:[],motivos:[],notifs:[],pend:0,
   view:"",campo:false,step:"elegir",draft:null,saved:null,saving:false,
   rec:{modo:"entrada",negocio:"",nota:"",lines:[],q:"",saving:false,origen:"Proveedor",motivo:"",detalle:"",destino:"",tr:{}},
   vs:null,detail:null,fNeg:"",fRango:"7",fEstado:"",fDesde:"",fHasta:"",pFecha:"",
@@ -85,10 +85,12 @@ async function enter(data){
   S.auth="app";S.err="";
   S.view=defaultView();
   await refresh(true);
+  if((role()==="lider"||role()==="colaborador")&&almSolo())S.view="alm";
   if(role()!=="gerencia"){restoreDraft();render()}
   startPoll();
 }
 function defaultView(){
+  if((role()==="lider"||role()==="colaborador")&&almSolo())return "alm";
   if(role()==="admin"||role()==="lider"||role()==="supervisor")return "pend";
   if(role()==="gerencia")return "panel";
   return "contar";
@@ -125,7 +127,7 @@ async function refresh(force){
   S.syncing=true;
   try{
     var d=await api("sync");
-    S.me=d.me;S.hoy=d.hoy;S.cfg=d.config;S.productos=d.productos;S.conteos=d.conteos;S.entradas=d.entradas;S.movs=d.movs||[];S.motivos=d.motivos||[];S.notifs=d.notifs;S.pend=d.pendientes;S.ready=true;S.err="";S.lastSync=Date.now();
+    S.me=d.me;S.hoy=d.hoy;S.cfg=d.config;S.productos=d.productos;S.almacen=d.almacen||[];S.conteos=d.conteos;S.entradas=d.entradas;S.movs=d.movs||[];S.motivos=d.motivos||[];S.notifs=d.notifs;S.pend=d.pendientes;S.ready=true;S.err="";S.lastSync=Date.now();
     if(!S.contactos&&(role()==="admin"||role()==="supervisor")&&S.me.estado==="aprobado")api("contactos").then(function(c){S.contactos=c;if(S.view==="pend"&&!quiet())render()}).catch(function(){});
     if(S.me.estado!=="aprobado"){S.auth=S.me.estado==="bloqueado"?"blocked":"pending";render();return}
     if(!force&&quiet()){updateChrome()}else render();
@@ -177,10 +179,12 @@ function render(){
 }
 function navItems(){
   var r=role();
-  if(r==="supervisor")return [["pend","Pendientes",ICO.ventas,S.pend],["contar","Contar",ICO.contar],["recibir","Movimientos",ICO.recibir,movPend()],["res","Resultados",ICO.res],["avisos","Avisos",ICO.bell]];
+  if((r==="lider"||r==="colaborador")&&almSolo())return [["alm","Almacén",ICO.recibir,almPend()]];
+  if(r==="supervisor")return [["pend","Pendientes",ICO.ventas,S.pend],["alm","Almacén",ICO.recibir,almPend()],["contar","Contar",ICO.contar],["recibir","Movimientos",ICO.recibir,movPend()],["res","Resultados",ICO.res],["avisos","Avisos",ICO.bell]];
+  if(r==="lider"&&almOk())return [["pend","Pendientes",ICO.ventas,S.pend],["contar","Contar",ICO.contar],["alm","Almacén",ICO.recibir,almPend()],["recibir","Movimientos",ICO.recibir,movPend()],["res","Resultados",ICO.res]];
   if(r==="lider")return [["pend","Pendientes",ICO.ventas,S.pend],["contar","Contar",ICO.contar],["recibir","Movimientos",ICO.recibir,movPend()],["res","Resultados",ICO.res]];
   if(r==="colaborador"||(r==="admin"&&S.campo))return [["contar","Contar",ICO.contar],["recibir","Movimientos",ICO.recibir,movPend()],["mios","Mis conteos",ICO.res]];
-  if(r==="admin")return [["pend","Pendientes",ICO.ventas,S.pend],["res","Resultados",ICO.res],["panel","Panel",ICO.panel],["cat","Catálogo",ICO.cat],["eq","Equipo",ICO.eq]];
+  if(r==="admin")return [["pend","Pendientes",ICO.ventas,S.pend],["alm","Almacén",ICO.recibir,almPend()],["res","Resultados",ICO.res],["panel","Panel",ICO.panel],["cat","Catálogo",ICO.cat],["eq","Equipo",ICO.eq]];
   return [["panel","Panel",ICO.panel],["res","Resultados",ICO.res],["avisos","Avisos",ICO.bell]];
 }
 var ICO={
@@ -216,6 +220,7 @@ function routeHTML(){
   switch(S.view){
     case "contar":return extra+contarRoot();
     case "recibir":return extra+recibirHTML();
+    case "alm":return almHTML();
     case "mios":return extra+miosHTML();
     case "pend":return pendHTML();
     case "res":return resultadosHTML();

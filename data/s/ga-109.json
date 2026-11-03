@@ -1,1 +1,1 @@
-{"nombre": "Caja de Pechuga de Pollo", "cat": "Almacén", "unidad": "unid", "factor": 1, "tol": 0.05, "costo": 0, "negocios": ["La Barra Atala General", "La Barra Atalaya General", "La Barra Miraflores General"], "orden": 408, "ejemplo": false}
+{"nombre": "Caja de Pechuga de Pollo", "cat": "Almacén", "unidad": "unid", "factor": 1, "tol": 0.05, "costo": 0, "negocios": ["La Barra Atala General", "La Barra Atalaya General", "La Barra Miraflores General", "Almacén"], "orden": 408, "ejemplo": false}

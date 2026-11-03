@@ -12,12 +12,13 @@ var H = {
   Conteos: ['id', 'fecha', 'negocio', 'turno', 'resp', 'email', 'ts', 'estado', 'items', 'ventas', 'res', 'resumen', 'sin', 'ventasPor', 'ventasTs', 'rect', 'nota', 'cierre'],
   Entradas: ['id', 'fecha', 'negocio', 'resp', 'email', 'ts', 'nota', 'items', 'anulada', 'origen'],
   Movimientos: ['id', 'fecha', 'tipo', 'negocio', 'destino', 'motivo', 'detalle', 'resp', 'email', 'ts', 'items', 'estado', 'recPor', 'recTs', 'recItems', 'anulada'],
+  Almacen: ['id', 'fecha', 'tipo', 'destino', 'items', 'nota', 'fotos', 'resp', 'email', 'ts', 'estado', 'hechoPor', 'hechoTs'],
   Notificaciones: ['id', 'ts', 'para', 'tipo', 'titulo', 'texto', 'negocio', 'ref', 'leidoPor'],
   Bitacora: ['ts', 'email', 'accion', 'detalle'],
   Equivalencias: ['clave', 'pid', 'original'],
   Config: ['key', 'value']
 };
-var JSONC = { Usuarios: ['negocios', 'turnos'], Productos: ['negocios'], Conteos: ['items', 'ventas', 'res', 'resumen', 'sin', 'cierre'], Entradas: ['items'], Movimientos: ['items', 'recItems'], Notificaciones: ['leidoPor'] };
+var JSONC = { Usuarios: ['negocios', 'turnos'], Productos: ['negocios'], Conteos: ['items', 'ventas', 'res', 'resumen', 'sin', 'cierre'], Entradas: ['items'], Movimientos: ['items', 'recItems'], Almacen: ['items', 'fotos'], Notificaciones: ['leidoPor'] };
 var NUMC = ['factor', 'tol', 'costo', 'critico', 'orden', 'activo', 'ts', 'rect', 'anulada', 'ventasTs', 'recTs'];
 var TEXTC = ['id', 'fecha', 'email', 'turno', 'negocio', 'clave', 'pid', 'nombre', 'resp', 'ref'];
 
@@ -49,13 +50,14 @@ var INSUMOS_PRODUCTOS = [
 ];
 
 var CONFIG_DEF = {
-  negocios: ['La Barra Atala', 'La Barra Atalaya', 'La Barra Miraflores', 'Food Shop', 'Food Shop General', 'La Barra Atala General', 'La Barra Atalaya General', 'La Barra Miraflores General', 'Zona Presidente', 'Car Wash'],
+  negocios: ['La Barra Atala', 'La Barra Atalaya', 'La Barra Miraflores', 'Food Shop', 'Food Shop General', 'Almacén', 'La Barra Atala General', 'La Barra Atalaya General', 'La Barra Miraflores General', 'Zona Presidente', 'Car Wash'],
   turnos: {
     'La Barra Atala': ['Turno 1 (7AM-3PM)', 'Turno 2 (3PM-11PM)', 'Turno 3 (11PM-7AM)'],
     'La Barra Atalaya': ['Turno 1 (7AM-3PM)', 'Turno 2 (3PM-11PM)'],
     'La Barra Miraflores': ['Turno 1 (7AM-3PM)', 'Turno 2 (3PM-11PM)', 'Turno 3 (11PM-7AM)'],
     'Food Shop': ['Turno 1 (7AM-3PM)', 'Turno 2 (3PM-11PM)'],
     'Food Shop General': ['Semanal'],
+    'Almacén': [],
     'La Barra Atala General': ['Semanal'], 'La Barra Atalaya General': ['Semanal'], 'La Barra Miraflores General': ['Semanal'],
     'Zona Presidente': ['Turno único (3PM-11PM)'],
     'Car Wash': []
@@ -405,6 +407,9 @@ function dispatch(a, p, t) {
     case 'addTraspaso': return addTraspaso(me, p);
     case 'recibirTraspaso': return recibirTraspaso(me, p);
     case 'anularMov': need(me, ['admin']); return anularMov(me, p);
+    case 'saveAlmacen': return saveAlmacen(me, p);
+    case 'marcarAlmacen': need(me, ['admin', 'supervisor']); return marcarAlmacen(me, p);
+    case 'getFoto': return getFoto(me, p);
     case 'getConteo': return getConteo(me, p);
     case 'saveVentas': need(me, ['admin', 'supervisor', 'lider']); return saveVentas(me, p);
     case 'rectificar': need(me, ['admin', 'supervisor']); return rectificar(me, p);
@@ -475,7 +480,7 @@ function notifsFor(me) {
 function sync(me) {
   migrarInsumos();
   migrarLaBarra();
-  migrarFoodShopT3(); migrarMiller(); migrarFoodShopGeneral(); migrarLaBarraGeneral();
+  migrarFoodShopT3(); migrarMiller(); migrarFoodShopGeneral(); migrarLaBarraGeneral(); migrarAlmacen();
   var cfg = getConfig(), negs = visibleNegocios(me, cfg);
   var prods = getProductos().filter(function (r) { return r.activo; }).map(productoOut);
   if (scoped(me)) {
@@ -496,7 +501,7 @@ function sync(me) {
     me: publicMe(me), hoy: hoy(), ahora: now(),
     config: { negocios: negs, turnos: cfg.turnos, limites: cfg.limites, calendario: cfg.calendario, catDias: cfg.catDias || {}, avisos: cfg.avisos, todosNegocios: cfg.negocios },
     productos: prods, conteos: conteos, entradas: entradas.map(function (e) { return { id: e.id, fecha: e.fecha, negocio: e.negocio, resp: e.resp, ts: e.ts, nota: e.nota, items: e.items, origen: e.origen || 'Proveedor' }; }), movs: movs, motivos: MOTIVOS,
-    notifs: notifsFor(me), pendientes: pend.length
+    almacen: almacenFor(me), notifs: notifsFor(me), pendientes: pend.length
   };
 }
 
@@ -536,6 +541,10 @@ function startCount(me, p) {
     }
     if (m.negocio === neg && m.ts > cut) sals.push({ ts: m.ts, tipo: m.tipo, motivo: m.motivo, destino: m.destino, items: m.items });
   });
+  if (GEN_LB.indexOf(neg) > -1) {   // conteo semanal de la tienda: «Entró» = lo que Maria sacó del almacén para ella
+    var base = neg.replace(/ General$/, '');
+    readAll('Almacen').forEach(function (x) { if (x.tipo === 'salida' && x.destino === base && x.ts > cut) ents.push({ ts: x.ts, items: x.items }); });
+  }
   return { ultimos: ult, entradas: ents, salidas: sals, enTransito: enTransito };
 }
 
@@ -811,6 +820,101 @@ function migrarLaBarraGeneral() {
     });
     setConfigKey('negocios', ng); setConfigKey('turnos', t); setConfigKey('limites', l); setConfigKey('calendario', cal);
     props().setProperty('MIG_LBGEN_V1', '1');
+    cacheDrop();
+  });
+}
+
+/* ============================ Almacén: recepción de mercancía y salidas (Maria → Griselda → Citrus) ============================ */
+var ALM = 'Almacén', ALM_DESTINOS = ['Producción (cocina)', 'La Barra Atala', 'La Barra Atalaya', 'La Barra Miraflores', 'Food Shop', 'Zona Presidente', 'Car Wash'];
+function almOk(me) { return me.rol === 'admin' || me.rol === 'gerencia' || me.rol === 'supervisor' || (me.negocios || []).indexOf(ALM) > -1; }
+function almFolder() {
+  var it = DriveApp.getFoldersByName('Arqueo La Barra - Fotos de almacén');
+  return it.hasNext() ? it.next() : DriveApp.createFolder('Arqueo La Barra - Fotos de almacén');
+}
+function autorizarDrive() { almFolder(); Logger.log('Drive autorizado'); }
+function almacenFor(me) {
+  if (!almOk(me)) return [];
+  var cut = now() - 45 * 86400000;
+  return readAll('Almacen').filter(function (a) { return a.ts > cut; })
+    .map(function (a) { return { id: a.id, fecha: a.fecha, tipo: a.tipo, destino: a.destino, items: a.items, nota: a.nota, nf: (a.fotos || []).length, resp: a.resp, ts: a.ts, estado: a.estado, hechoPor: a.hechoPor, hechoTs: a.hechoTs }; })
+    .sort(function (x, y) { return y.ts - x.ts; });
+}
+function saveAlmacen(me, p) {
+  need(me, ['admin', 'supervisor', 'lider', 'colaborador']);
+  if (!almOk(me)) fail('permiso', 'No tienes acceso a Almacén.');
+  var tipo = String(p.tipo || ''), id = String(p.id || '');
+  if (tipo !== 'recepcion' && tipo !== 'salida') fail('datos', 'Tipo inválido.');
+  if (!/^a_[A-Za-z0-9]{6,40}$/.test(id)) fail('datos', 'Identificador inválido.');
+  var destino = String(p.destino || ''), nota = String(p.nota || '').trim().slice(0, 400);
+  var fotos = (p.fotos || []).slice(0, 4);
+  var items = [];
+  if (tipo === 'salida') {
+    if (ALM_DESTINOS.indexOf(destino) < 0) fail('datos', 'Elige a dónde va.');
+    items = movItems(p);
+  } else {
+    if (!fotos.length) fail('datos', 'Toma la foto de la mercancía con la factura.');
+    destino = '';
+  }
+  return withLock(function () {
+    if (findRowById('Almacen', id)) return { id: id, repetido: true };
+    var ids = [];
+    if (fotos.length) {
+      var folder = almFolder();
+      fotos.forEach(function (b64, i) {
+        var raw = String(b64 || '').replace(/^data:image\/\w+;base64,/, '');
+        if (raw.length > 3000000) fail('datos', 'Una foto es muy pesada.');
+        var f = folder.createFile(Utilities.newBlob(Utilities.base64Decode(raw), 'image/jpeg', id + '_' + (i + 1) + '.jpg'));
+        ids.push(f.getId());
+      });
+    }
+    appendObj('Almacen', { id: id, fecha: hoy(), tipo: tipo, destino: destino, items: items, nota: nota, fotos: ids, resp: me.nombre, email: me.email, ts: now(), estado: 'nuevo', hechoPor: '', hechoTs: 0 });
+    bit(me.email, 'almacen-' + tipo, (destino ? destino + ' · ' : '') + (items.length ? itemsTexto(items) : ids.length + ' foto(s)'));
+    if (tipo === 'recepcion') notify('almacen', 'Llegó mercancía', me.nombre + ' recibió mercancía y subió la foto con la factura.' + (nota ? ' ' + nota : ''), { para: 'admin', ref: 'alm|' + id, email: false });
+    else notify('almacen', 'Salida para ' + destino, me.nombre + ': ' + itemsTexto(items) + '. Falta hacerla en Citrus.', { para: 'admin', ref: 'alm|' + id, email: false });
+    return { id: id };
+  });
+}
+function marcarAlmacen(me, p) {
+  return withLock(function () {
+    var row = findRowById('Almacen', p.id);
+    if (!row) fail('datos', 'No encontré ese registro.');
+    var a = readRowObj('Almacen', row);
+    if (a.estado === 'hecho') return { id: a.id, repetido: true };
+    a.estado = 'hecho'; a.hechoPor = me.nombre; a.hechoTs = now();
+    writeRow('Almacen', row, a);
+    bit(me.email, 'almacen-hecho', a.id + ' ' + a.tipo);
+    return { id: a.id };
+  });
+}
+function getFoto(me, p) {
+  if (!almOk(me)) fail('permiso', 'No tienes acceso a Almacén.');
+  var row = findRowById('Almacen', p.id);
+  if (!row) fail('datos', 'No encontré ese registro.');
+  var a = readRowObj('Almacen', row), n = parseInt(p.n, 10) || 0, fid = (a.fotos || [])[n];
+  if (!fid) fail('datos', 'No hay foto.');
+  var blob = DriveApp.getFileById(fid).getBlob();
+  return { foto: 'data:image/jpeg;base64,' + Utilities.base64Encode(blob.getBytes()) };
+}
+function migrarAlmacen() {
+  if (props().getProperty('MIG_ALM_V1')) return;
+  withLock(function () {
+    if (props().getProperty('MIG_ALM_V1')) return;
+    var s = sheet('Productos'), last = s.getLastRow();
+    if (last >= 2) {
+      var col = colIdx('Productos', 'negocios') + 1, ci = colIdx('Productos', 'cat') + 1;
+      var cats = s.getRange(2, ci, last - 1, 1).getValues(), rg = s.getRange(2, col, last - 1, 1), vals = rg.getValues();
+      vals = vals.map(function (r, i) {
+        if (cats[i][0] !== CAT_ALMACEN) return [r[0]];
+        var a; try { a = JSON.parse(r[0] || '[]'); } catch (e) { a = []; }
+        if (a.indexOf(ALM) < 0) a.push(ALM);
+        return [JSON.stringify(a)];
+      });
+      rg.setValues(vals);
+    }
+    var cfg = getConfig(), ng = cfg.negocios || [], t = cfg.turnos || {};
+    if (ng.indexOf(ALM) < 0) { ng.push(ALM); setConfigKey('negocios', ng); }
+    if (!t[ALM]) { t[ALM] = []; setConfigKey('turnos', t); }
+    props().setProperty('MIG_ALM_V1', '1');
     cacheDrop();
   });
 }

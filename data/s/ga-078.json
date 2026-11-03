@@ -1,1 +1,1 @@
-{"nombre": "Removedores de Café", "cat": "Almacén", "unidad": "unid", "factor": 1, "tol": 0.05, "costo": 0, "negocios": ["La Barra Atala General", "La Barra Atalaya General", "La Barra Miraflores General"], "orden": 377, "ejemplo": false}
+{"nombre": "Removedores de Café", "cat": "Almacén", "unidad": "unid", "factor": 1, "tol": 0.05, "costo": 0, "negocios": ["La Barra Atala General", "La Barra Atalaya General", "La Barra Miraflores General", "Almacén"], "orden": 377, "ejemplo": false}

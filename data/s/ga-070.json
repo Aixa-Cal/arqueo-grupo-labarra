@@ -1,1 +1,1 @@
-{"nombre": "Pechuguitas", "cat": "Almacén", "unidad": "unid", "factor": 1, "tol": 0.05, "costo": 0, "negocios": ["La Barra Atala General", "La Barra Atalaya General", "La Barra Miraflores General"], "orden": 369, "ejemplo": false}
+{"nombre": "Pechuguitas", "cat": "Almacén", "unidad": "unid", "factor": 1, "tol": 0.05, "costo": 0, "negocios": ["La Barra Atala General", "La Barra Atalaya General", "La Barra Miraflores General", "Almacén"], "orden": 369, "ejemplo": false}

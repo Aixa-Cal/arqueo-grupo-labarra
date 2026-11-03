@@ -1,1 +1,1 @@
-{"nombre": "Funda para Basura", "cat": "Almacén", "unidad": "unid", "factor": 1, "tol": 0.05, "costo": 0, "negocios": ["La Barra Atala General", "La Barra Atalaya General", "La Barra Miraflores General"], "orden": 326, "ejemplo": false}
+{"nombre": "Funda para Basura", "cat": "Almacén", "unidad": "unid", "factor": 1, "tol": 0.05, "costo": 0, "negocios": ["La Barra Atala General", "La Barra Atalaya General", "La Barra Miraflores General", "Almacén"], "orden": 326, "ejemplo": false}

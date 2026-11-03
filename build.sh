@@ -4,7 +4,7 @@ set -e
 cd "$(dirname "$0")"
 python3 src/build.py
 cd src
-cat skeleton_head.html css.base css.extra css.extra2 skeleton_mid.html js1.js js2.js js3.js js4.js js5.js skeleton_end.html > ../dist/Index.html
+cat skeleton_head.html css.base css.extra css.extra2 skeleton_mid.html js1.js js2.js js3.js js4.js js6.js js5.js skeleton_end.html > ../dist/Index.html
 cd ..
 python3 - <<'P'
 import re

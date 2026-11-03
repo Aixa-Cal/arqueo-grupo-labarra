@@ -88,6 +88,7 @@ function hoyHTML(){
 function elegirHTML(){
   var d=S.draft;
   var negs=S.cfg.negocios.map(function(n,i){
+    if(n==="Almacén")return "";
     var ts=turnosFor(n),k=ts.filter(function(t){return turnoDone(n,t,d.fecha)}).length;
     var solo=SOLO_CAL.indexOf(n)>-1&&!isFullDay(n,d.fecha);
     return '<button class="neg'+(d.negocio===n?" on":"")+(ts.length&&k===ts.length?" done":"")+'"'+(solo?' disabled':'')+' data-act="neg" data-v="'+i+'">'+esc(n)+'<small>'+(solo?"Solo "+((S.cfg.calendario&&S.cfg.calendario[n]||[]).map(function(x){return ["domingos","lunes","martes","miércoles","jueves","viernes","sábados"][x]}).join(", ")):(ts.length?(k+" de "+ts.length+" hoy"):"Sin conteos"))+'</small></button>';
@@ -259,7 +260,7 @@ function entrantesHTML(){
 function modoDe(){return S.rec.modo||"entrada"}
 function recibirHTML(){
   var r=S.rec,modo=modoDe();
-  var negs=S.cfg.negocios.map(function(n,i){return '<button class="neg'+(r.negocio===n?" on":"")+'" data-act="rneg" data-v="'+i+'">'+esc(n)+'</button>'}).join("");
+  var negs=S.cfg.negocios.map(function(n,i){if(esVirtual(n))return "";return '<button class="neg'+(r.negocio===n?" on":"")+'" data-act="rneg" data-v="'+i+'">'+esc(n)+'</button>'}).join("");
   var modos=[["entrada","Entrada"],["merma","Merma"],["traspaso","Traspaso"]].map(function(x){return '<button class="'+(modo===x[0]?"on":"")+'" data-act="rmodo" data-v="'+x[0]+'">'+x[1]+'</button>'}).join("");
   var campos="",titulo="Registrar entrada",sub="Anota la mercancía que llega o que metes para abastecer el turno. Se suma sola en «Entró» del próximo conteo.",lblLista="Lo que entró";
   if(modo==="entrada"){
@@ -280,7 +281,7 @@ function recibirHTML(){
   }else{
     titulo="Registrar traspaso";lblLista="Lo que envías";
     sub="Producto que sale de un negocio hacia otro. El otro negocio debe confirmar lo que recibió.";
-    var otros=S.cfg.todosNegocios.filter(function(n){return n!==r.negocio});
+    var otros=S.cfg.todosNegocios.filter(function(n){return n!==r.negocio&&!esVirtual(n)});
     var dd='<option value="">— ¿A cuál negocio? —</option>'+otros.map(function(n){return '<option value="'+esc(n)+'"'+(r.destino===n?" selected":"")+'>'+esc(n)+'</option>'}).join("");
     campos='<div class="field"><label class="lbl" for="rdest">Lo recibe</label><select id="rdest">'+dd+'</select></div>'+
       '<div class="field"><label class="lbl" for="rnota">Nota (opcional)</label><input id="rnota" autocomplete="off" value="'+esc(r.nota)+'" placeholder="Ej. Cervezas para el evento"></div>';
