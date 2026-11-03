@@ -13,8 +13,8 @@ function prodsFor(neg){
 }
 function newDraft(){return {negocio:"",turno:"",fecha:today(),vals:{},base:null,id:null,fcat:null,fmode:""}}
 var CIERRE=["Revisé las áreas","Rellené lo necesario","El turno completó sus limpiezas","Dejé los equipos cargando y en orden","Cerré el sistema e hice el cierre de caja","Dejé los baños limpios y los safacones listos"];
-var SOLO_CAL=["Food Shop General"];
-function conCierre(neg){return !!neg&&INSUMOS.indexOf(neg)<0&&neg!=="Food Shop General"}
+var SOLO_CAL=["Food Shop General","La Barra Atala General","La Barra Atalaya General","La Barra Miraflores General"];
+function conCierre(neg){return !!neg&&INSUMOS.indexOf(neg)<0&&SOLO_CAL.indexOf(neg)<0}
 function conCafe(neg){return esLB(neg)||neg==="Food Shop"}
 function conFreezer(neg){return neg==="Food Shop"}
 function cierreDe(d){var c=d.cierre||(d.cierre={chk:[],nov:"",txt:""});if(!c.cafe)c.cafe={rell:"",func:"",txt:""};if(!c.fz)c.fz={ok:"",txt:""};return c}

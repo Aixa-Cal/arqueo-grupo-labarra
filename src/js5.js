@@ -122,6 +122,7 @@ document.addEventListener("click",function(ev){
     /* ventas */
     "csv-lista":function(){csvLista(S.conteos.filter(function(c){return (!S.fNeg||c.negocio===S.fNeg)&&(!S.fEstado||c.estado===S.fEstado)&&inRange(c.fecha)}))},
     "p-hoy":function(){S.pFecha="";render()},
+    "csv-citrus":function(){if(S.detail&&S.detail.c)csvCitrus(S.detail.c)},
     "csv-det":function(){if(S.detail&&S.detail.c)csvDet(S.detail.c)},
     "vs-open":function(){openVentas(id)},
     "vs-back":function(){S.vs=null;render();window.scrollTo(0,0)},

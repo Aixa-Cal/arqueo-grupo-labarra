@@ -29,8 +29,10 @@ var DOBLE = ['Zona Presidente'];
 /* Negocios sin POS: se controla el consumo por conteo, sin ventas */
 var INSUMOS = ['Car Wash'];
 /* Conteo general semanal del Food Shop (martes, lo hace supervisión): sin checklist de cierre, café ni freezers */
-var SIN_CIERRE = ['Food Shop General'];
-var CAT_CONSUMO = 'Insumos para café';   // dentro de ese conteo se controla solo el consumo, sin ventas
+var GEN_LB = ['La Barra Atala General', 'La Barra Atalaya General', 'La Barra Miraflores General'];   // conteo semanal de almacén de La Barra (Griselda)
+var SIN_CIERRE = ['Food Shop General'].concat(GEN_LB);
+function SOLO_CONSUMO(n) { return INSUMOS.indexOf(n) > -1 || GEN_LB.indexOf(n) > -1; }
+var CAT_CONSUMO = 'Insumos para café', CAT_ALMACEN = 'Almacén';   // dentro de ese conteo se controla solo el consumo, sin ventas
 var INSUMOS_PRODUCTOS = [
   { id: 'cw-001', nombre: 'Shampoo (libras)', u: 'lb' },
   { id: 'cw-002', nombre: 'Desengrasante (libras)', u: 'lb' },
@@ -47,13 +49,14 @@ var INSUMOS_PRODUCTOS = [
 ];
 
 var CONFIG_DEF = {
-  negocios: ['La Barra Atala', 'La Barra Atalaya', 'La Barra Miraflores', 'Food Shop', 'Food Shop General', 'Zona Presidente', 'Car Wash'],
+  negocios: ['La Barra Atala', 'La Barra Atalaya', 'La Barra Miraflores', 'Food Shop', 'Food Shop General', 'La Barra Atala General', 'La Barra Atalaya General', 'La Barra Miraflores General', 'Zona Presidente', 'Car Wash'],
   turnos: {
     'La Barra Atala': ['Turno 1 (7AM-3PM)', 'Turno 2 (3PM-11PM)', 'Turno 3 (11PM-7AM)'],
     'La Barra Atalaya': ['Turno 1 (7AM-3PM)', 'Turno 2 (3PM-11PM)'],
     'La Barra Miraflores': ['Turno 1 (7AM-3PM)', 'Turno 2 (3PM-11PM)', 'Turno 3 (11PM-7AM)'],
     'Food Shop': ['Turno 1 (7AM-3PM)', 'Turno 2 (3PM-11PM)'],
     'Food Shop General': ['Semanal'],
+    'La Barra Atala General': ['Semanal'], 'La Barra Atalaya General': ['Semanal'], 'La Barra Miraflores General': ['Semanal'],
     'Zona Presidente': ['Turno único (3PM-11PM)'],
     'Car Wash': []
   },
@@ -64,9 +67,10 @@ var CONFIG_DEF = {
     'La Barra Miraflores|Turno 1 (7AM-3PM)': '15:30', 'La Barra Miraflores|Turno 2 (3PM-11PM)': '23:30', 'La Barra Miraflores|Turno 3 (11PM-7AM)': '07:30',
     'Food Shop|Turno 1 (7AM-3PM)': '15:30', 'Food Shop|Turno 2 (3PM-11PM)': '23:30',
     'Food Shop General|Semanal': '23:30',
+    'La Barra Atala General|Semanal': '23:30', 'La Barra Atalaya General|Semanal': '23:30', 'La Barra Miraflores General|Semanal': '23:30',
     'Zona Presidente|Turno único (3PM-11PM)': '23:30'
   },
-  calendario: { 'Food Shop General': [2] },
+  calendario: { 'Food Shop General': [2], 'La Barra Atala General': [1], 'La Barra Atalaya General': [1], 'La Barra Miraflores General': [2] },
   /* Categorías que no se cuentan todos los días: {negocio: {categoría: [días 0=dom…6=sáb]}} */
   catDias: { 'La Barra Atala': { 'Cervezas': [1] }, 'La Barra Atalaya': { 'Cervezas': [1] }, 'La Barra Miraflores': { 'Cervezas': [1] } },
   avisos: { acceso: true, pendiente: true, critico: true, falta: true }
@@ -471,7 +475,7 @@ function notifsFor(me) {
 function sync(me) {
   migrarInsumos();
   migrarLaBarra();
-  migrarFoodShopT3(); migrarMiller(); migrarFoodShopGeneral();
+  migrarFoodShopT3(); migrarMiller(); migrarFoodShopGeneral(); migrarLaBarraGeneral();
   var cfg = getConfig(), negs = visibleNegocios(me, cfg);
   var prods = getProductos().filter(function (r) { return r.activo; }).map(productoOut);
   if (scoped(me)) {
@@ -585,7 +589,7 @@ function saveConteo(me, p) {
     var dup = readRecentConteos(4).filter(function (c) { return c.negocio === neg && c.turno === turno && c.fecha === fecha && c.estado !== 'anulado'; });
     if (dup.length) fail('duplicado', 'Ya hay un conteo de ' + neg + ' · ' + turno + ' del ' + fecha + '. Si hubo un error, pide a administración que lo anule o rectifique.');
     var o = {
-      id: id, fecha: fecha, negocio: neg, turno: turno, resp: me.nombre, email: me.email, ts: now(), estado: inicial ? 'inicial' : (INSUMOS.indexOf(neg) > -1 ? 'arqueado' : 'contado'),
+      id: id, fecha: fecha, negocio: neg, turno: turno, resp: me.nombre, email: me.email, ts: now(), estado: inicial ? 'inicial' : (SOLO_CONSUMO(neg) ? 'arqueado' : 'contado'),
       items: items, ventas: {}, res: [], resumen: {}, sin: (p.sin || []).slice(0, 200).map(String), ventasPor: '', ventasTs: 0, rect: 0, nota: String(p.nota || '').slice(0, 300), cierre: null
     };
     if (INSUMOS.indexOf(neg) < 0 && SIN_CIERRE.indexOf(neg) < 0) {
@@ -611,7 +615,7 @@ function saveConteo(me, p) {
       }
     }
     ensureHeaders('Conteos');
-    if (!inicial && INSUMOS.indexOf(neg) > -1) {
+    if (!inicial && SOLO_CONSUMO(neg)) {
       var cons = consumoDe(o, productMap());
       o.res = cons.res; o.resumen = cons.resumen; o.ventasPor = 'Sin ventas (consumo)'; o.ventasTs = now();
     }
@@ -620,7 +624,7 @@ function saveConteo(me, p) {
     if (o.cierre && o.cierre.fz && o.cierre.fz.ok === 'no') notify('freezer', 'Freezers con problema: ' + neg, me.nombre + ' · ' + turno + ': ' + o.cierre.fz.txt, { para: 'admin,gerencia', negocio: neg, ref: 'conteo|' + id, email: true });
     if (o.cierre && o.cierre.nov === 'si') notify('novedad', 'Novedad en el cierre: ' + neg, me.nombre + ' · ' + turno + ': ' + o.cierre.txt, { para: 'admin,gerencia', negocio: neg, ref: 'conteo|' + id, email: true });
     if (inicial) return { id: id, inicial: true };
-    if (INSUMOS.indexOf(neg) > -1) {
+    if (SOLO_CONSUMO(neg)) {
       if (o.nota) notify('faltan-insumos', 'Insumos que hacen falta: ' + neg, me.nombre + ': ' + o.nota, { para: 'admin,gerencia', negocio: neg, ref: 'conteo|' + id, email: true });
       return { id: id, consumo: true };
     }
@@ -681,7 +685,7 @@ function computeArqueo(c, pm) {
     if (!pr || !it[4]) return;   // sin conteo previo: queda como inventario inicial, no se arquea
     var ven = Number(c.ventas[it[0]]) || 0, sal = (sals[it[0]] && sals[it[0]].q) || 0;
     var k = calcItem(pr, it[1], it[2], it[3], ven, sal);
-    if (pr.cat === CAT_CONSUMO) k = { real: r2(it[1] + it[2] - it[3]), esp: r2(it[1] + it[2] - it[3]), dif: 0, pct: 0, estado: 'OK', valor: 0 };   // insumos: solo consumo
+    if (pr.cat === CAT_CONSUMO || pr.cat === CAT_ALMACEN) k = { real: r2(it[1] + it[2] - it[3]), esp: r2(it[1] + it[2] - it[3]), dif: 0, pct: 0, estado: 'OK', valor: 0 };   // insumos: solo consumo
     res.push([it[0], pr.nombre, pr.unidad, it[1], it[2], it[3], ven, k.real, k.esp, k.dif, k.pct, k.estado, k.valor, r2(sal, 3)]);
     rs.decl += sal * (pr.costo || 0);
     if (k.estado === 'OK') rs.ok++; else if (k.estado === 'REVISAR') rs.rev++; else rs.crit++;
@@ -784,6 +788,29 @@ function migrarFoodShopGeneral() {
     if (!l['Food Shop General|Semanal']) { l['Food Shop General|Semanal'] = '23:30'; setConfigKey('limites', l); }
     if (!Array.isArray(cal['Food Shop General'])) { cal['Food Shop General'] = [2]; setConfigKey('calendario', cal); }
     props().setProperty('MIG_FSGEN_V1', '1');
+    cacheDrop();
+  });
+}
+
+/* Una sola vez: conteo semanal de almacén de La Barra (lunes Atala/Atalaya, martes Miraflores) */
+var ALMACEN_LB = ["Aceite (manteca)", "Aceite Oliva", "Alitas de Pollo", "Axión Lavaplatos", "Azúcar", "Azúcar de Sobre para Café", "Botella de Agua", "Brillo Verde", "Café Maquina", "Caja Familiar", "Caramel Cappuccino", "Carne Angus", "Carne de Chicken Hamburguesa", "Cebolla", "Cereza", "China", "Chinola", "Cinta Adhesiva", "Ciruelas Pasas S/semilla", "Cloro Galón", "Cocoa Amarga", "Desengrasante", "Desinfectante", "Fresa Empacada", "Funda de Papel Sándwiches", "Funda Azul Jugos", "Funda para Basura", "Fundas Blancas Pequeñas", "Fundas de Hielo", "Guantes de Latex", "Talonario de Comanda", "Azucar Splenda", "Desembolsos", "Guineos Maduros", "Huevos", "Jamón de Cerdo", "Jamón de Pavo", "Kétchup Lata", "Kétchup Sobre Caja 500 Unid.", "Leche Cardinal", "Leche para Café 3% Grasa", "Leche Listamilk Salsa de Queso", "Lechosa", "Lechuga Repollada", "Limón", "Lulo", "Mango", "Margarina Manicera Tarro", "Mascarilla", "Mayonesa Galón", "Melón", "Mostaza Galón", "Grapas Grapadora", "Pan Cuadrado", "Pan de Agua", "Pan Frances", "Pan Hamburguesa", "Pan Integral", "Papas para Freír Libras", "Papel de Baño Manos E Inodoro", "Papel de Impresora Caja", "Papel de Impresora Pedidos Ya", "Papel de Baño Inodoro", "Gel Antibacterial", "Gorros Desechables", "Granadillo", "Fundas Blancas Grandes/ Azul", "Guanábana", "Papel Encerado", "Pechuguitas", "Pepinillos Verdes", "Salsa Buffalo", "Piña", "Puerro", "Queso Cheddar", "Queso Danés", "Refresco Coca Cola Botella", "Removedores de Café", "Repollo", "Salami Genoa", "Salami Induveca", "Carne de Chimi", "Salsa Bbq", "Salsa Cheddar", "Salsa China", "Salsa Honey Mustard", "Salsa Rosada", "Servilletas Blancas", "Pierna Empacada", "Pollo Empacado", "Crema Empacada", "Sorbetes", "Palillos Cortos", "Palillos Largos", "Cocoa Sobrino", "Tamarindo", "Tortilla Wrap", "Tenedores", "Toallas", "Tocineta", "Tomate", "Tapas p/vasos 16 Onzas", "Vasos 16 Onzas", "Vasos 7 Onzas", "Vinagre", "Zapote", "Canela", "Pimienta", "Caja de Pechuga de Pollo", "Caja de Alas de Pollo", "Salsa de Ajo", "Plato Papa Suprema", "Plato Barra Club", "Plato Peq. Papas Fritas", "Barquito Papas Fritas", "Jabon de Cuaba", "Servilletas Marrones", "Sandia Limon", "Envase de Aderezo", "Tapas de Aderezo", "Zanahoria", "Albahaca", "Zumo de Chinola", "Zumo de Limon", "Talonario Inventario"];
+function migrarLaBarraGeneral() {
+  if (props().getProperty('MIG_LBGEN_V1')) return;
+  withLock(function () {
+    if (props().getProperty('MIG_LBGEN_V1')) return;
+    ALMACEN_LB.forEach(function (n, i) {
+      var id = 'ga-' + ('00' + (i + 1)).slice(-3);
+      if (findRowById('Productos', id)) return;
+      appendObj('Productos', { id: id, nombre: n, cat: CAT_ALMACEN, unidad: 'unid', factor: 1, tol: 0.05, costo: 0, critico: 0, negocios: GEN_LB, orden: 300 + i, activo: 1 });
+    });
+    var cfg = getConfig(), ng = cfg.negocios || [], t = cfg.turnos || {}, l = cfg.limites || {}, cal = cfg.calendario || {};
+    var dias = { 'La Barra Atala General': [1], 'La Barra Atalaya General': [1], 'La Barra Miraflores General': [2] };
+    GEN_LB.forEach(function (g) {
+      if (ng.indexOf(g) < 0) { var ix = ng.indexOf('Food Shop General'); ng.splice(ix > -1 ? ix + 1 : ng.length, 0, g); }
+      t[g] = ['Semanal']; l[g + '|Semanal'] = '23:30'; cal[g] = dias[g];
+    });
+    setConfigKey('negocios', ng); setConfigKey('turnos', t); setConfigKey('limites', l); setConfigKey('calendario', cal);
+    props().setProperty('MIG_LBGEN_V1', '1');
     cacheDrop();
   });
 }

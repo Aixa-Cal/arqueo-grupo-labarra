@@ -559,8 +559,8 @@ function prodsFor(neg){
 }
 function newDraft(){return {negocio:"",turno:"",fecha:today(),vals:{},base:null,id:null,fcat:null,fmode:""}}
 var CIERRE=["Revisé las áreas","Rellené lo necesario","El turno completó sus limpiezas","Dejé los equipos cargando y en orden","Cerré el sistema e hice el cierre de caja","Dejé los baños limpios y los safacones listos"];
-var SOLO_CAL=["Food Shop General"];
-function conCierre(neg){return !!neg&&INSUMOS.indexOf(neg)<0&&neg!=="Food Shop General"}
+var SOLO_CAL=["Food Shop General","La Barra Atala General","La Barra Atalaya General","La Barra Miraflores General"];
+function conCierre(neg){return !!neg&&INSUMOS.indexOf(neg)<0&&SOLO_CAL.indexOf(neg)<0}
 function conCafe(neg){return esLB(neg)||neg==="Food Shop"}
 function conFreezer(neg){return neg==="Food Shop"}
 function cierreDe(d){var c=d.cierre||(d.cierre={chk:[],nov:"",txt:""});if(!c.cafe)c.cafe={rell:"",func:"",txt:""};if(!c.fz)c.fz={ok:"",txt:""};return c}
@@ -1261,6 +1261,48 @@ function csvDown(name,rows){
   a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();
   setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1500);
 }
+
+/* Excel (.xlsx) mínimo sin librerías: zip sin comprimir + hoja con texto en línea */
+var CRCT=null;
+function crc32(u8){if(!CRCT){CRCT=[];for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;CRCT[n]=c>>>0}}var c=0xFFFFFFFF;for(var i=0;i<u8.length;i++)c=CRCT[(c^u8[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0}
+function zipStore(files){
+  var enc=new TextEncoder(),parts=[],cen=[],off=0;
+  function u16(n){return [n&255,(n>>8)&255]}function u32(n){return [n&255,(n>>8)&255,(n>>16)&255,(n>>>24)&255]}
+  files.forEach(function(f){
+    var nm=enc.encode(f[0]),d=enc.encode(f[1]),cr=crc32(d);
+    var lh=[].concat(u32(0x04034b50),u16(20),u16(0x0800),u16(0),u16(0),u16(0x21),u32(cr),u32(d.length),u32(d.length),u16(nm.length),u16(0));
+    parts.push(new Uint8Array(lh),nm,d);
+    cen.push([].concat(u32(0x02014b50),u16(20),u16(20),u16(0x0800),u16(0),u16(0),u16(0x21),u32(cr),u32(d.length),u32(d.length),u16(nm.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(off)),Array.prototype.slice.call(nm));
+    off+=lh.length+nm.length+d.length;
+  });
+  var cs=0,cd=[];cen.forEach(function(a){cs+=a.length;cd.push(new Uint8Array(a))});
+  var end=new Uint8Array([].concat(u32(0x06054b50),u16(0),u16(0),u16(files.length),u16(files.length),u32(cs),u32(off),u16(0)));
+  return new Blob(parts.concat(cd,[end]),{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+}
+function xmlE(v){return String(v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function xlsxDown(name,sheet,rows){
+  var cols="ABCDEFGHIJ";
+  var sd=rows.map(function(r,ri){return '<row r="'+(ri+1)+'">'+r.map(function(v,ci){
+    var ref=cols[ci]+(ri+1);if(v===""||v==null)return "";
+    return typeof v==="number"?'<c r="'+ref+'"><v>'+v+'</v></c>':'<c r="'+ref+'" t="inlineStr"><is><t>'+xmlE(v)+'</t></is></c>'}).join("")+'</row>'}).join("");
+  var X='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+  var b=zipStore([
+    ["[Content_Types].xml",X+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>'],
+    ["_rels/.rels",X+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+    ["xl/workbook.xml",X+'<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="'+xmlE(sheet)+'" sheetId="1" r:id="rId1"/></sheets></workbook>'],
+    ["xl/_rels/workbook.xml.rels",X+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>'],
+    ["xl/worksheets/sheet1.xml",X+'<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>'+sd+'</sheetData></worksheet>']
+  ]);
+  var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1500);
+}
+/* Archivo para importar existencias en Citrus (plantilla «Importar Inventario») */
+function csvCitrus(c){
+  var rows=[["Nombre","Costo","Cantidad","Series","Lote","Fecha Expiración"]];
+  c.items.forEach(function(it){var p=prodById(it.pid);rows.push([it.nombre,(p&&+p.costo)||0,+it.fin||0,"","",""])});
+  xlsxDown("Citrus_Inventario_"+slug(c.negocio.replace(/ General$/,""))+"_"+c.fecha+".xlsx","Lista de Inventario",rows);
+}
+function esGeneralLB(n){return /^La Barra .* General$/.test(n||"")}
 function estTxt(e){return {inicial:"Conteo inicial",contado:"Esperando ventas",arqueado:"Arqueado",anulado:"Anulado"}[e]||e}
 function slug(s){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z0-9]+/g,"_").replace(/^_|_$/g,"")}
 function csvDet(c){
@@ -1346,6 +1388,7 @@ function detalleHTML(){
   }
   var cierreH=c.cierre?'<div class="panel"><div class="lbl">Cierre del turno</div><p>✓ Áreas, relleno, limpiezas, equipos, caja, baños y safacones confirmados.</p><p><b>Novedad:</b> '+(c.cierre.nov==="si"?esc(c.cierre.txt):"No")+'</p>'+(c.cierre.fz?'<p><b>Freezers:</b> '+(c.cierre.fz.ok==="si"?"✓ todos funcionan":"✗ NO funcionan")+(c.cierre.fz.txt?' — '+esc(c.cierre.fz.txt):"")+'</p>':"")+(c.cierre.cafe?'<p><b>Máquinas de café:</b> rellenadas '+(c.cierre.cafe.rell==="si"?"✓ sí":"✗ NO")+' · funcionan bien '+(c.cierre.cafe.func==="si"?"✓ sí":"✗ NO")+(c.cierre.cafe.txt?' — '+esc(c.cierre.cafe.txt):"")+'</p>':"")+'</div>':"";
   var histH=(c.hist&&c.hist.length)?'<div class="panel"><div class="lbl">Historial de cambios</div>'+c.hist.map(function(h){var a=h.accion==="rectificar"?"Rectificó el conteo":h.accion==="anular"?"Anuló el conteo":h.accion==="ventas-cambio"?"Cambió las ventas":"Registró las ventas";return '<div class="pitem"><div><b>'+esc(a)+'</b><small>'+esc(h.quien)+' · '+fmtFecha(new Date(h.ts).toISOString().slice(0,10))+' '+hora(h.ts)+'</small>'+(h.detalle?'<small>'+esc(h.detalle)+'</small>':"")+'</div></div>'}).join("")+'</div>':"";
+  if(c.estado!=="anulado"&&esGeneralLB(c.negocio))acts+='<button class="btn" data-act="csv-citrus">Descargar para subir a Citrus (Excel)</button>';
   if(c.estado!=="anulado")acts+='<button class="btn ghost" data-act="csv-det">Descargar este arqueo (Excel/CSV)</button>';
   return head+kp+table+notaH+cierreH+histH+sin+acts+'<div style="height:8px"></div>';
 }
@@ -1649,6 +1692,7 @@ document.addEventListener("click",function(ev){
     /* ventas */
     "csv-lista":function(){csvLista(S.conteos.filter(function(c){return (!S.fNeg||c.negocio===S.fNeg)&&(!S.fEstado||c.estado===S.fEstado)&&inRange(c.fecha)}))},
     "p-hoy":function(){S.pFecha="";render()},
+    "csv-citrus":function(){if(S.detail&&S.detail.c)csvCitrus(S.detail.c)},
     "csv-det":function(){if(S.detail&&S.detail.c)csvDet(S.detail.c)},
     "vs-open":function(){openVentas(id)},
     "vs-back":function(){S.vs=null;render();window.scrollTo(0,0)},
