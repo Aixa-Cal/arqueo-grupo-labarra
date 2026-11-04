@@ -31,7 +31,9 @@ const tok=(e,n)=>{env.call('reqCode',{email:e});const c=env.mails[env.mails.leng
   env.call('setUser',{email:'gris@g.com',rol:'supervisor',estado:'aprobado',negocios:[]},A);
   const b=await chromium.launch();
   const m=await newUser(b);await login(m,'maria@g.com');
-  await m.waitForTimeout(2500);console.log((await m.innerText('body')).slice(0,400),errors);await shot(m,'alm1');
+  await m.waitForSelector('text=Guardar checklist');await m.fill('[data-ckt=aceite]','320');await m.click('[data-act=ck-tog] >> nth=0');await shot(m,'ck1');await m.click('[data-act=ck-save]');await m.waitForSelector('#toast:not([hidden])');console.log('T1',await m.innerText('#toast'));await m.waitForTimeout(2500);console.log('TOAST',await m.innerText('#toast'),errors);
+  await m.click('[data-act=alm-modo][data-v=prod]');await m.selectOption('#prsel','Lulo');await m.fill('[data-prr]','10');await m.fill('[data-pro]','5');await shot(m,'pr1');await m.click('[data-act=pr-save]');await m.waitForTimeout(2500);console.log('END',(await m.innerText('body')).slice(-500).replace(/\n/g,' | '),errors);
+  await m.click('[data-act=alm-modo][data-v=recepcion]');
   require('child_process').execSync("python3 -c \"from PIL import Image;Image.new('RGB',(900,600),(200,120,60)).save('/tmp/f.jpg')\"");
   await m.setInputFiles('[data-almfoto]','/tmp/f.jpg');await m.waitForSelector('.alth img');
   await m.fill('#alnota','Factura 1234');await shot(m,'alm2');
@@ -41,7 +43,7 @@ const tok=(e,n)=>{env.call('reqCode',{email:e});const c=env.mails[env.mails.leng
   await m.click('[data-act=alm-save]');await m.waitForSelector('text=Salida para La Barra Atala');
   const g=await newUser(b);await login(g,'gris@g.com');
   await g.waitForSelector('text=Pendientes');await g.click('[data-act=go][data-v=alm]');
-  await g.waitForSelector('text=Ver foto');await g.click('[data-act=alm-foto]');await g.waitForSelector('.alfoto');await shot(g,'alm4');
+  await g.waitForTimeout(2000);console.log('G',(await g.innerText('body')).slice(0,700).replace(/\n/g,' | '));await g.waitForSelector('text=Ver foto');await g.click('[data-act=alm-foto]');await g.waitForSelector('.alfoto');await shot(g,'alm4');
   await g.click('text=Ya lo hice en Citrus');await g.waitForSelector('text=Hecho en Citrus');
   console.log('errores',errors);await b.close();
 })();

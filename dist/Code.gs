@@ -13,12 +13,13 @@ var H = {
   Entradas: ['id', 'fecha', 'negocio', 'resp', 'email', 'ts', 'nota', 'items', 'anulada', 'origen'],
   Movimientos: ['id', 'fecha', 'tipo', 'negocio', 'destino', 'motivo', 'detalle', 'resp', 'email', 'ts', 'items', 'estado', 'recPor', 'recTs', 'recItems', 'anulada'],
   Almacen: ['id', 'fecha', 'tipo', 'destino', 'items', 'nota', 'fotos', 'resp', 'email', 'ts', 'estado', 'hechoPor', 'hechoTs'],
+  Produccion: ['id', 'fecha', 'tipo', 'datos', 'resp', 'email', 'ts'],
   Notificaciones: ['id', 'ts', 'para', 'tipo', 'titulo', 'texto', 'negocio', 'ref', 'leidoPor'],
   Bitacora: ['ts', 'email', 'accion', 'detalle'],
   Equivalencias: ['clave', 'pid', 'original'],
   Config: ['key', 'value']
 };
-var JSONC = { Usuarios: ['negocios', 'turnos'], Productos: ['negocios'], Conteos: ['items', 'ventas', 'res', 'resumen', 'sin', 'cierre'], Entradas: ['items'], Movimientos: ['items', 'recItems'], Almacen: ['items', 'fotos'], Notificaciones: ['leidoPor'] };
+var JSONC = { Usuarios: ['negocios', 'turnos'], Productos: ['negocios'], Conteos: ['items', 'ventas', 'res', 'resumen', 'sin', 'cierre'], Entradas: ['items'], Movimientos: ['items', 'recItems'], Almacen: ['items', 'fotos'], Produccion: ['datos'], Notificaciones: ['leidoPor'] };
 var NUMC = ['factor', 'tol', 'costo', 'critico', 'orden', 'activo', 'ts', 'rect', 'anulada', 'ventasTs', 'recTs'];
 var TEXTC = ['id', 'fecha', 'email', 'turno', 'negocio', 'clave', 'pid', 'nombre', 'resp', 'ref'];
 
@@ -417,6 +418,8 @@ function dispatch(a, p, t) {
     case 'saveAlmacen': return saveAlmacen(me, p);
     case 'marcarAlmacen': need(me, ['admin', 'supervisor']); return marcarAlmacen(me, p);
     case 'getFoto': return getFoto(me, p);
+    case 'saveChecklist': return saveChecklist(me, p);
+    case 'saveProd': return saveProd(me, p);
     case 'getConteo': return getConteo(me, p);
     case 'saveVentas': need(me, ['admin', 'supervisor', 'lider']); return saveVentas(me, p);
     case 'rectificar': need(me, ['admin', 'supervisor']); return rectificar(me, p);
@@ -508,7 +511,7 @@ function sync(me) {
     me: publicMe(me), hoy: hoy(), ahora: now(),
     config: { negocios: negs, turnos: cfg.turnos, limites: cfg.limites, calendario: cfg.calendario, catDias: cfg.catDias || {}, avisos: cfg.avisos, todosNegocios: cfg.negocios },
     productos: prods, conteos: conteos, entradas: entradas.map(function (e) { return { id: e.id, fecha: e.fecha, negocio: e.negocio, resp: e.resp, ts: e.ts, nota: e.nota, items: e.items, origen: e.origen || 'Proveedor' }; }), movs: movs, motivos: MOTIVOS,
-    almacen: almacenFor(me), notifs: notifsFor(me), pendientes: pend.length
+    almacen: almacenFor(me), produccion: produccionFor(me), notifs: notifsFor(me), pendientes: pend.length
   };
 }
 
@@ -923,6 +926,71 @@ function migrarAlmacen() {
     if (!t[ALM]) { t[ALM] = []; setConfigKey('turnos', t); }
     props().setProperty('MIG_ALM_V1', '1');
     cacheDrop();
+  });
+}
+
+/* ============================ Producción de Maria: checklist diario y rendimiento ============================ */
+var PROD_DEF = ['Lulo', 'Fresa (se empaca)', 'Granadillo', 'Chinola', 'Limón', 'Zapote', 'Tamarindo', 'Lechosa', 'Piña', 'Melón', 'Cereza', 'Guanábana', 'Mango',
+  'Caja de pechuga de pollo → pechuguitas', 'Caja de alitas → alitas', 'Barra de queso danés', 'Barra de queso cheddar', 'Queso rebanado (danés)', 'Queso rebanado (cheddar)',
+  'Jamón rebanado de cerdo', 'Salami Induveca', 'Caja de pechuga de pollo → bolsas de pollo', 'Masa de cerdo → bolsas de pierna'];
+var TEMP_RANGOS = { aceite: [275, 300, 'Aceite de freidores (°F)'], camara: [0, 5, 'Cámaras (°C)'], congelador: [-100, -18, 'Congeladores (°C)'] };
+function produccionFor(me) {
+  if (!almOk(me)) return [];
+  var cut = fechaMas(hoy(), -21);
+  return readTail('Produccion', 300).filter(function (a) { return a.fecha >= cut; })
+    .map(function (a) { return { id: a.id, fecha: a.fecha, tipo: a.tipo, datos: a.datos, resp: a.resp, ts: a.ts }; })
+    .sort(function (x, y) { return y.ts - x.ts; });
+}
+function saveChecklist(me, p) {
+  need(me, ['admin', 'supervisor', 'lider', 'colaborador']);
+  if (!almOk(me)) fail('permiso', 'No tienes acceso a Almacén.');
+  var fecha = hoy(), id = 'k_' + fecha;
+  var chk = (p.chk || []).slice(0, 60).map(function (x) { return x ? 1 : 0; });
+  var temps = {}, fuera = [];
+  Object.keys(TEMP_RANGOS).forEach(function (k) {
+    var v = num((p.temps || {})[k]);
+    if (v == null) return;
+    temps[k] = v;
+    var r = TEMP_RANGOS[k];
+    if (v < r[0] || v > r[1]) fuera.push(r[2] + ': ' + v);
+  });
+  var datos = { chk: chk, temps: temps, nota: String(p.nota || '').trim().slice(0, 400) };
+  return withLock(function () {
+    var row = findRowById('Produccion', id);
+    var rec = { id: id, fecha: fecha, tipo: 'checklist', datos: datos, resp: me.nombre, email: me.email, ts: now() };
+    if (row) writeRow('Produccion', row, rec); else appendObj('Produccion', rec);
+    bit(me.email, 'checklist', fecha + ' · ' + chk.filter(Boolean).length + '/' + chk.length);
+    if (fuera.length) notify('temperatura', 'Temperatura fuera de rango', me.nombre + ' reportó: ' + fuera.join('; ') + '.', { para: 'admin,gerencia', ref: 'prod|' + id, email: false });
+    return { id: id, fuera: fuera.length };
+  });
+}
+function mediana(a) { var s = a.slice().sort(function (x, y) { return x - y; }), m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; }
+function saveProd(me, p) {
+  need(me, ['admin', 'supervisor', 'lider', 'colaborador']);
+  if (!almOk(me)) fail('permiso', 'No tienes acceso a Almacén.');
+  var id = String(p.id || '');
+  if (!/^p_[A-Za-z0-9]{6,40}$/.test(id)) fail('datos', 'Identificador inválido.');
+  var lineas = (p.lineas || []).map(function (l) {
+    var prod = String(l.prod || ''), rec = num(l.rec), obt = num(l.obt);
+    if (PROD_DEF.indexOf(prod) < 0) fail('datos', 'Producto desconocido.');
+    if (rec == null || rec <= 0 || obt == null || obt < 0) fail('datos', 'Revisa las cantidades de ' + prod + '.');
+    return { prod: prod, rec: r2(rec, 3), obt: r2(obt, 3) };
+  });
+  if (!lineas.length) fail('datos', 'No hay producción anotada.');
+  return withLock(function () {
+    if (findRowById('Produccion', id)) return { id: id, repetido: true };
+    var hist = readTail('Produccion', 400).filter(function (x) { return x.tipo === 'prod'; });
+    var bajos = [];
+    lineas.forEach(function (l) {
+      l.rend = r2(l.obt / l.rec, 4);
+      var prev = [];
+      hist.forEach(function (h) { (h.datos.lineas || []).forEach(function (x) { if (x.prod === l.prod && x.rend > 0) prev.push(x.rend); }); });
+      if (prev.length >= 3) { var med = mediana(prev.slice(-10)); l.med = r2(med, 4); if (l.rend < med * 0.8) { l.bajo = 1; bajos.push(l.prod + ': ' + Math.round(l.rend * 100) + '% (normal ' + Math.round(med * 100) + '%)'); } }
+    });
+    appendObj('Produccion', { id: id, fecha: hoy(), tipo: 'prod', datos: { lineas: lineas }, resp: me.nombre, email: me.email, ts: now() });
+    bit(me.email, 'produccion', lineas.length + ' línea(s)');
+    if (bajos.length) notify('rendimiento', 'Rendimiento bajo en producción', me.nombre + ': ' + bajos.join('; ') + '.', { para: 'admin,gerencia', ref: 'prod|' + id, email: false });
+    return { id: id, bajos: bajos.length };
   });
 }
 /* Una sola vez: productos del Car Wash y su conteo semanal */
