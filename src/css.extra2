@@ -65,3 +65,4 @@ input.ro{background:var(--line);color:var(--muted);border-style:dashed}
 
 .nav .in.n6{grid-template-columns:repeat(6,1fr);gap:2px}.nav .in.n6 button{font-size:10px;padding-left:0;padding-right:0}
 .althw{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.alth{position:relative}.alth img{width:92px;height:92px;object-fit:cover;border-radius:10px}.alth .rx{position:absolute;top:-6px;right:-6px}.alfoto{display:block;width:100%;max-width:420px;border-radius:10px;margin:6px 0}
+.chips2{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.chips2 .tchip.on{background:#B3261E;color:#fff;border-color:#B3261E}

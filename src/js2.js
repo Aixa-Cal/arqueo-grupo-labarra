@@ -69,7 +69,7 @@ function contarRoot(){
   if(!S.draft)S.draft=newDraft();
   if(S.step==="contar")return contarHTML();
   if(S.step==="listo")return listoHTML();
-  return elegirHTML();
+  return ctCard()+elegirHTML();
 }
 function hoyHTML(){
   var f=today(),rows="";

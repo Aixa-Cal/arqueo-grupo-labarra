@@ -127,7 +127,7 @@ async function refresh(force){
   S.syncing=true;
   try{
     var d=await api("sync");
-    S.me=d.me;S.hoy=d.hoy;S.cfg=d.config;S.productos=d.productos;S.almacen=d.almacen||[];S.produccion=d.produccion||[];S.conteos=d.conteos;S.entradas=d.entradas;S.movs=d.movs||[];S.motivos=d.motivos||[];S.notifs=d.notifs;S.pend=d.pendientes;S.ready=true;S.err="";S.lastSync=Date.now();
+    S.me=d.me;S.hoy=d.hoy;S.cfg=d.config;S.productos=d.productos;S.almacen=d.almacen||[];S.produccion=d.produccion||[];S.checkTurno=d.checkTurno||[];S.conteos=d.conteos;S.entradas=d.entradas;S.movs=d.movs||[];S.motivos=d.motivos||[];S.notifs=d.notifs;S.pend=d.pendientes;S.ready=true;S.err="";S.lastSync=Date.now();
     if(!S.contactos&&(role()==="admin"||role()==="supervisor")&&S.me.estado==="aprobado")api("contactos").then(function(c){S.contactos=c;if(S.view==="pend"&&!quiet())render()}).catch(function(){});
     if(S.me.estado!=="aprobado"){S.auth=S.me.estado==="bloqueado"?"blocked":"pending";render();return}
     if(!force&&quiet()){updateChrome()}else render();
@@ -221,6 +221,7 @@ function routeHTML(){
     case "contar":return extra+contarRoot();
     case "recibir":return extra+recibirHTML();
     case "alm":return almHTML();
+    case "ct":return ctPantalla();
     case "mios":return extra+miosHTML();
     case "pend":return pendHTML();
     case "res":return resultadosHTML();

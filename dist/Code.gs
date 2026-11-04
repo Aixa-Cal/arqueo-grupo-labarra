@@ -14,12 +14,13 @@ var H = {
   Movimientos: ['id', 'fecha', 'tipo', 'negocio', 'destino', 'motivo', 'detalle', 'resp', 'email', 'ts', 'items', 'estado', 'recPor', 'recTs', 'recItems', 'anulada'],
   Almacen: ['id', 'fecha', 'tipo', 'destino', 'items', 'nota', 'fotos', 'resp', 'email', 'ts', 'estado', 'hechoPor', 'hechoTs'],
   Produccion: ['id', 'fecha', 'tipo', 'datos', 'resp', 'email', 'ts'],
+  CheckTurno: ['id', 'fecha', 'negocio', 'turno', 'datos', 'resp', 'email', 'ts'],
   Notificaciones: ['id', 'ts', 'para', 'tipo', 'titulo', 'texto', 'negocio', 'ref', 'leidoPor'],
   Bitacora: ['ts', 'email', 'accion', 'detalle'],
   Equivalencias: ['clave', 'pid', 'original'],
   Config: ['key', 'value']
 };
-var JSONC = { Usuarios: ['negocios', 'turnos'], Productos: ['negocios'], Conteos: ['items', 'ventas', 'res', 'resumen', 'sin', 'cierre'], Entradas: ['items'], Movimientos: ['items', 'recItems'], Almacen: ['items', 'fotos'], Produccion: ['datos'], Notificaciones: ['leidoPor'] };
+var JSONC = { Usuarios: ['negocios', 'turnos'], Productos: ['negocios'], Conteos: ['items', 'ventas', 'res', 'resumen', 'sin', 'cierre'], Entradas: ['items'], Movimientos: ['items', 'recItems'], Almacen: ['items', 'fotos'], Produccion: ['datos'], CheckTurno: ['datos'], Notificaciones: ['leidoPor'] };
 var NUMC = ['factor', 'tol', 'costo', 'critico', 'orden', 'activo', 'ts', 'rect', 'anulada', 'ventasTs', 'recTs'];
 var TEXTC = ['id', 'fecha', 'email', 'turno', 'negocio', 'clave', 'pid', 'nombre', 'resp', 'ref'];
 
@@ -420,6 +421,7 @@ function dispatch(a, p, t) {
     case 'getFoto': return getFoto(me, p);
     case 'saveChecklist': return saveChecklist(me, p);
     case 'saveProd': return saveProd(me, p);
+    case 'saveCheckTurno': return saveCheckTurno(me, p);
     case 'getConteo': return getConteo(me, p);
     case 'saveVentas': need(me, ['admin', 'supervisor', 'lider']); return saveVentas(me, p);
     case 'rectificar': need(me, ['admin', 'supervisor']); return rectificar(me, p);
@@ -511,7 +513,7 @@ function sync(me) {
     me: publicMe(me), hoy: hoy(), ahora: now(),
     config: { negocios: negs, turnos: cfg.turnos, limites: cfg.limites, calendario: cfg.calendario, catDias: cfg.catDias || {}, avisos: cfg.avisos, todosNegocios: cfg.negocios },
     productos: prods, conteos: conteos, entradas: entradas.map(function (e) { return { id: e.id, fecha: e.fecha, negocio: e.negocio, resp: e.resp, ts: e.ts, nota: e.nota, items: e.items, origen: e.origen || 'Proveedor' }; }), movs: movs, motivos: MOTIVOS,
-    almacen: almacenFor(me), produccion: produccionFor(me), notifs: notifsFor(me), pendientes: pend.length
+    almacen: almacenFor(me), produccion: produccionFor(me), checkTurno: checkTurnoFor(me), notifs: notifsFor(me), pendientes: pend.length
   };
 }
 
@@ -991,6 +993,42 @@ function saveProd(me, p) {
     bit(me.email, 'produccion', lineas.length + ' línea(s)');
     if (bajos.length) notify('rendimiento', 'Rendimiento bajo en producción', me.nombre + ': ' + bajos.join('; ') + '.', { para: 'admin,gerencia', ref: 'prod|' + id, email: false });
     return { id: id, bajos: bajos.length };
+  });
+}
+
+/* ============================ Checklist corto del turno (La Barra): freidora y equipos con carga ============================ */
+var CT_EQUIPOS = { vf: 'Verifone con carga', fl: 'Flota con carga' };
+function checkTurnoFor(me) {
+  var cut = fechaMas(hoy(), -2);
+  return readTail('CheckTurno', 200).filter(function (a) { return a.fecha >= cut && (!scoped(me) || negOk(me, a.negocio)); })
+    .map(function (a) { return { id: a.id, fecha: a.fecha, negocio: a.negocio, turno: a.turno, datos: a.datos, resp: a.resp, ts: a.ts }; })
+    .sort(function (x, y) { return y.ts - x.ts; });
+}
+function saveCheckTurno(me, p) {
+  need(me, ['admin', 'supervisor', 'lider', 'colaborador']);
+  var neg = String(p.negocio || ''), turno = String(p.turno || ''), cfg = getConfig();
+  if (!/^La Barra/.test(neg) || / General$/.test(neg) || cfg.negocios.indexOf(neg) < 0) fail('datos', 'Negocio inválido.');
+  if (!negOk(me, neg)) fail('permiso', 'Ese negocio no está asignado a tu usuario.');
+  if (((cfg.turnos || {})[neg] || []).indexOf(turno) < 0) fail('datos', 'Turno inválido.');
+  var fry = num(p.fry), nev = num(p.nev);
+  if (fry == null) fail('datos', 'Anota la temperatura de la freidora.');
+  var chk = {}, sin = [];
+  ['fryok', 'vf', 'fl', 'sand', 'plancha', 'mesa', 'lic', 'agua', 'hielo'].forEach(function (k) { chk[k] = (p.chk || {})[k] ? 1 : 0; });
+  Object.keys(CT_EQUIPOS).forEach(function (k) { if (!chk[k]) sin.push(CT_EQUIPOS[k]); });
+  var arr = function (a) { return (a || []).slice(0, 40).map(function (x) { return String(x).slice(0, 60); }); };
+  var datos = { fry: fry, nev: nev, chk: chk, falta: arr(p.falta), fruta: arr(p.fruta), nota: String(p.nota || '').trim().slice(0, 300) };
+  var fecha = hoy(), id = 'ct_' + fecha + '_' + neg.replace(/\W+/g, '') + '_' + turno.replace(/^Turno (\d).*$/, '$1');
+  var fuera = [];
+  if (fry < 275 || fry > 300) fuera.push('Freidora ' + fry + ' °F (debe estar 275–300)');
+  if (nev != null && (nev < 0 || nev > 8)) fuera.push('Neveras de la juguera ' + nev + ' °C (debe estar 0–8)');
+  return withLock(function () {
+    var row = findRowById('CheckTurno', id), rec = { id: id, fecha: fecha, negocio: neg, turno: turno, datos: datos, resp: me.nombre, email: me.email, ts: now() };
+    if (row) writeRow('CheckTurno', row, rec); else appendObj('CheckTurno', rec);
+    bit(me.email, 'check-turno', neg + ' · ' + turno + ' · freidora ' + fry);
+    var para = 'admin,gerencia,nl:' + neg;
+    if (fuera.length) notify('temperatura', 'Temperatura fuera de rango en ' + neg, me.nombre + ' (' + turno + '): ' + fuera.join('; ') + '.', { para: para, negocio: neg, ref: 'ct|' + id, email: false });
+    if (sin.length) notify('equipos', 'Equipos sin carga en ' + neg, me.nombre + ' (' + turno + '): ' + sin.join(', ') + '.', { para: para, negocio: neg, ref: 'ct|' + id, email: false });
+    return { id: id, fuera: fuera.length, sin: sin.length };
   });
 }
 /* Una sola vez: productos del Car Wash y su conteo semanal */

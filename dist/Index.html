@@ -267,6 +267,7 @@ input.ro{background:var(--line);color:var(--muted);border-style:dashed}
 
 .nav .in.n6{grid-template-columns:repeat(6,1fr);gap:2px}.nav .in.n6 button{font-size:10px;padding-left:0;padding-right:0}
 .althw{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.alth{position:relative}.alth img{width:92px;height:92px;object-fit:cover;border-radius:10px}.alth .rx{position:absolute;top:-6px;right:-6px}.alfoto{display:block;width:100%;max-width:420px;border-radius:10px;margin:6px 0}
+.chips2{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.chips2 .tchip.on{background:#B3261E;color:#fff;border-color:#B3261E}
 </style>
 </head>
 <body>
@@ -407,7 +408,7 @@ async function refresh(force){
   S.syncing=true;
   try{
     var d=await api("sync");
-    S.me=d.me;S.hoy=d.hoy;S.cfg=d.config;S.productos=d.productos;S.almacen=d.almacen||[];S.produccion=d.produccion||[];S.conteos=d.conteos;S.entradas=d.entradas;S.movs=d.movs||[];S.motivos=d.motivos||[];S.notifs=d.notifs;S.pend=d.pendientes;S.ready=true;S.err="";S.lastSync=Date.now();
+    S.me=d.me;S.hoy=d.hoy;S.cfg=d.config;S.productos=d.productos;S.almacen=d.almacen||[];S.produccion=d.produccion||[];S.checkTurno=d.checkTurno||[];S.conteos=d.conteos;S.entradas=d.entradas;S.movs=d.movs||[];S.motivos=d.motivos||[];S.notifs=d.notifs;S.pend=d.pendientes;S.ready=true;S.err="";S.lastSync=Date.now();
     if(!S.contactos&&(role()==="admin"||role()==="supervisor")&&S.me.estado==="aprobado")api("contactos").then(function(c){S.contactos=c;if(S.view==="pend"&&!quiet())render()}).catch(function(){});
     if(S.me.estado!=="aprobado"){S.auth=S.me.estado==="bloqueado"?"blocked":"pending";render();return}
     if(!force&&quiet()){updateChrome()}else render();
@@ -501,6 +502,7 @@ function routeHTML(){
     case "contar":return extra+contarRoot();
     case "recibir":return extra+recibirHTML();
     case "alm":return almHTML();
+    case "ct":return ctPantalla();
     case "mios":return extra+miosHTML();
     case "pend":return pendHTML();
     case "res":return resultadosHTML();
@@ -623,7 +625,7 @@ function contarRoot(){
   if(!S.draft)S.draft=newDraft();
   if(S.step==="contar")return contarHTML();
   if(S.step==="listo")return listoHTML();
-  return elegirHTML();
+  return ctCard()+elegirHTML();
 }
 function hoyHTML(){
   var f=today(),rows="";
@@ -1665,6 +1667,64 @@ function prodListaHTML(){
     return '<div class="pitem"><div><b>'+fmtFecha(x.fecha)+' '+hora(x.ts)+' · Producción</b>'+(x.datos.lineas||[]).map(function(l){return '<small>'+esc(l.prod)+': recibió '+fmt(l.rec)+' → obtuvo '+fmt(l.obt)+' ('+Math.round(l.rend*100)+'%)'+(l.bajo?' <span style="color:#B3261E">· rendimiento bajo</span>':"")+'</small>'}).join("")+'<small>'+esc(x.resp)+'</small></div></div>'}).join("");
 }
 function pendTxt(){var p=almVe()?(S.almacen||[]).filter(function(x){return x.estado==="nuevo"}).length:0;return p?'<div class="banner">Pendientes de Almacén: <b>'+p+'</b></div>':""}
+
+/* ===== Checklist corto del turno (La Barra): freidora y equipos ===== */
+var CTI=[["fryok","Freidora limpia y aceite en condiciones"],["vf","Verifone con carga"],["fl","Flota con carga"],["sand","Sándwichera en funciones y limpia"],["plancha","Plancha limpia y funcionando"],["mesa","Mesa fría enfriando y limpia"]];
+var CTJ=[["lic","Licuadoras funcionan"],["agua","Agua potable disponible"],["hielo","Hielo tapado y con pinzas"]];
+var CTF=["Aceites y salsas","Proteínas","Quesos y embutidos","Panes y tortillas","Papas","Vegetales","Sal y pimienta"];
+var CTR=["Fresa","Ciruela","China","Chinola","Limón","Zapote","Tamarindo","Lechosa","Piña","Melón","Cereza","Guanábana","Guineo","Mango","Leche batida","Sandía limón","Cocoa Sobrino","Leche","Azúcar","Zumo de chinola","Zumo de limón"];
+function ctNegs(){return S.cfg.negocios.filter(function(n){return /^La Barra/.test(n)&&!/ General$/.test(n)})}
+function ctOk(){return ctNegs().length>0}
+function CT(){
+  if(!S.ct){var n=ctNegs();S.ct={neg:n.length===1?n[0]:"",turno:"",fry:"",nev:"",chk:{},falta:[],fruta:[],nota:"",saving:false}}
+  return S.ct;
+}
+function ctHecho(neg,turno){return (S.checkTurno||[]).filter(function(x){return x.fecha===today()&&x.negocio===neg&&x.turno===turno})[0]}
+function ctForm(){
+  var c=CT(),ns=ctNegs();
+  var negs=ns.length>1?'<div class="lbl">Sucursal</div><div class="negs">'+ns.map(function(n,i){return '<button class="neg'+(c.neg===n?" on":"")+'" data-act="ct-neg" data-v="'+i+'">'+esc(n)+'</button>'}).join("")+'</div>':"";
+  var ts=c.neg?turnosFor(c.neg):[];
+  var tch=c.neg?'<div class="lbl" style="margin-top:10px">Turno</div><div class="tchips">'+ts.map(function(t,i){var h=ctHecho(c.neg,t);return '<button class="tchip'+(c.turno===t?" on":"")+'" data-act="ct-turno" data-v="'+i+'">'+(h?"✓ ":"")+esc(t)+'</button>'}).join("")+'</div>':"";
+  if(!c.neg||!c.turno)return negs+tch;
+  var fb=c.fry!==""&&(+c.fry<275||+c.fry>300),nb=c.nev!==""&&(+c.nev<0||+c.nev>8);
+  var tick=function(l){return l.map(function(x){return '<button type="button" class="chk'+(c.chk[x[0]]?" on":"")+'" data-act="ct-tog" data-v="'+x[0]+'" aria-pressed="'+(c.chk[x[0]]?"true":"false")+'"><span class="bx">'+(c.chk[x[0]]?"✓":"")+'</span>'+esc(x[1])+'</button>'}).join("")};
+  var chips=function(arr,sel,act){return '<div class="chips2">'+arr.map(function(n,i){var on=sel.indexOf(n)>-1;return '<button type="button" class="tchip'+(on?" on":"")+'" data-act="'+act+'" data-v="'+i+'">'+(on?"✗ ":"")+esc(n)+'</button>'}).join("")+'</div>'};
+  return negs+tch+
+   '<div class="lbl" style="margin-top:14px">Freidora (obligatorio)</div><div class="rline"><div><b>Temperatura</b><small id="ctfs">Debe estar 275–300 °F'+(fb?' · <span style="color:#B3261E">fuera de rango</span>':"")+'</small></div><input inputmode="decimal" autocomplete="off" placeholder="°F" aria-label="Temperatura de la freidora" data-ctn="fry" value="'+esc(c.fry)+'"></div>'+
+   '<div class="lbl" style="margin-top:14px">Equipos</div>'+tick(CTI)+
+   '<div class="lbl" style="margin-top:14px">Juguera</div><div class="rline"><div><b>Neveras</b><small id="ctns">Debe estar 0–8 °C'+(nb?' · <span style="color:#B3261E">fuera de rango</span>':"")+'</small></div><input inputmode="decimal" autocomplete="off" placeholder="°C" aria-label="Temperatura de las neveras" data-ctn="nev" value="'+esc(c.nev)+'"></div>'+tick(CTJ)+
+   '<div class="lbl" style="margin-top:14px">¿Qué falta en la sándwichera? <small>(toca solo lo que NO hay)</small></div>'+chips(CTF,c.falta,"ct-falta")+
+   '<div class="lbl" style="margin-top:14px">¿Qué falta en la juguera? <small>(toca solo lo que NO hay)</small></div>'+chips(CTR,c.fruta,"ct-fruta")+
+   '<div class="field"><label class="lbl" for="ctnota">Novedad (opcional)</label><input id="ctnota" autocomplete="off" value="'+esc(c.nota)+'" placeholder="Ej. La flota no carga"></div>'+
+   '<button class="btn" data-act="ct-save"'+(ctListo()&&!c.saving?"":" disabled")+'>'+(c.saving?"Guardando…":"Guardar checklist")+'</button>';
+}
+function ctListo(){var c=CT();return !!(c.neg&&c.turno&&c.fry!==""&&!isNaN(parseFloat(c.fry)))}
+function ctBtn(){var b=document.querySelector("[data-act=ct-save]");if(b)b.disabled=!(ctListo()&&!CT().saving)}
+function ctListaHTML(){
+  var l=(S.checkTurno||[]).slice(0,12);
+  if(!l.length)return '<p class="hint">Todavía no hay checklists.</p>';
+  return l.map(function(x){var d=x.datos,bad=(d.fry<275||d.fry>300),sin=[];if(!d.chk.vf)sin.push("Verifone");if(!d.chk.fl)sin.push("Flota");
+    return '<div class="pitem"><div><b>'+fmtFecha(x.fecha)+' · '+esc(x.negocio)+'</b><small>'+esc(x.turno)+' · '+esc(x.resp)+' · '+hora(x.ts)+'</small><small>Freidora '+d.fry+' °F'+(bad?' <span style="color:#B3261E">· fuera de rango</span>':' ✓')+(d.nev!=null&&d.nev!==""?' · Neveras '+d.nev+' °C':"")+'</small>'+(sin.length?'<small><span style="color:#B3261E">Sin carga: '+sin.join(", ")+'</span></small>':"")+((d.falta||[]).length||(d.fruta||[]).length?'<small>Falta: '+esc((d.falta||[]).concat(d.fruta||[]).join(", "))+'</small>':"")+(d.nota?'<small>Novedad: '+esc(d.nota)+'</small>':"")+'</div></div>'}).join("");
+}
+function ctPantalla(){
+  return '<div class="panel"><div><h1>Checklist del turno</h1><p class="sub">Lo esencial al empezar el turno. Dura un minuto.</p></div>'+ctForm()+'</div>'+
+    '<div><div class="lbl" style="margin-bottom:8px">Últimos checklists</div><div class="plist">'+ctListaHTML()+'</div></div>'+
+    '<button class="btn ghost" data-act="ct-volver">Volver</button>';
+}
+function ctCard(){
+  if(!ctOk())return "";
+  var ns=ctNegs(),hoyN=0,tot=0;
+  ns.forEach(function(n){turnosFor(n).forEach(function(t){tot++;if(ctHecho(n,t))hoyN++})});
+  return '<button type="button" class="panel" style="width:100%;text-align:left;cursor:pointer" data-act="ct-open"><b>🔥 Checklist del turno</b><small style="display:block">Freidora y equipos con carga · '+hoyN+' de '+tot+' hechos hoy</small></button>';
+}
+async function ctGuardar(){
+  var c=CT();if(c.saving||!ctListo())return;c.saving=true;render();
+  try{
+    var r=await api("saveCheckTurno",{negocio:c.neg,turno:c.turno,fry:parseFloat(c.fry),nev:c.nev===""?null:parseFloat(c.nev),chk:c.chk,falta:c.falta,fruta:c.fruta,nota:(c.nota||"").trim()});
+    var neg=c.neg;S.ct=null;S.ct=CT();S.ct.neg=neg;
+    toast(r.fuera||r.sin?"Guardado. Se avisó lo que está fuera de rango o sin carga":"Checklist guardado");await refresh(true);render();
+  }catch(e){c.saving=false;render();toast(errMsg(e))}
+}
 function almListo(){var a=AL();return a.modo==="recepcion"?a.fotos.length>0:!!(a.destino&&a.lines.some(function(l){var q=num(l.qty);return q&&q>0}))}
 function almBtn(){var b=document.querySelector("[data-act=alm-save]");if(b)b.disabled=!(almListo()&&!AL().saving)}
 function almItemsTxt(items){return (items||[]).map(function(i){var p=prodById(i.pid);return esc(p?p.nombre:i.pid)+" "+fmt(i.qty)}).join(" · ")}
@@ -1686,10 +1746,13 @@ function almListaHTML(){
 function almHTML(){
   var a=AL();if(!a.modo)a.modo=almVe()?"recepcion":"ck";
   var rec=a.modo==="recepcion";
-  var modos=[["ck","Checklist"],["prod","Producción"],["recepcion","Llegó mercancía"],["salida","Saqué producto"]].map(function(x){return '<button class="'+(a.modo===x[0]?"on":"")+'" data-act="alm-modo" data-v="'+x[0]+'">'+x[1]+'</button>'}).join("");
+  var modos=(almVe()?[["turno","Checklist turno"]]:[]).concat([["ck","Checklist"],["prod","Producción"],["recepcion","Llegó mercancía"],["salida","Saqué producto"]]).map(function(x){return '<button class="'+(a.modo===x[0]?"on":"")+'" data-act="alm-modo" data-v="'+x[0]+'">'+x[1]+'</button>'}).join("");
   var fotos=a.fotos.map(function(f,i){return '<div class="alth"><img alt="Foto '+(i+1)+'" src="'+f+'"><button type="button" class="rx" data-act="alm-fdel" data-v="'+i+'" aria-label="Quitar foto">×</button></div>'}).join("");
   var fotoBtn=a.fotos.length<4?'<label class="btn ghost" style="display:block;text-align:center;cursor:pointer">📷 '+(a.fotos.length?"Agregar otra foto":"Tomar foto")+'<input type="file" accept="image/*" capture="environment" hidden data-almfoto="1"></label>':"";
   var cuerpo;
+  if(a.modo==="turno"){
+    return pendTxt()+'<div class="panel"><div><h1>Almacén</h1></div><div class="seg" style="flex-wrap:wrap">'+modos+'</div>'+ctForm()+'</div><div><div class="lbl" style="margin-bottom:8px">Últimos checklists</div><div class="plist">'+ctListaHTML()+'</div></div>';
+  }
   if(a.modo==="ck"||a.modo==="prod"){
     return (pendTxt())+'<div class="panel"><div><h1>Almacén</h1></div><div class="seg" style="flex-wrap:wrap">'+modos+'</div>'+(a.modo==="ck"?ckHTML():prHTML())+'</div>'+
       '<div><div class="lbl" style="margin-bottom:8px">Últimos registros</div><div class="plist">'+prodListaHTML()+'</div></div>';
@@ -1745,6 +1808,9 @@ document.addEventListener("input",function(ev){
     var lst=almProds().filter(function(p){return !used[p.id]&&q&&String(p.nombre).toLowerCase().indexOf(q)>-1}).slice(0,10);
     r.innerHTML=lst.map(function(p){return '<button type="button" class="rres" data-act="alm-add" data-id="'+esc(p.id)+'">+ '+esc(p.nombre)+'</button>'}).join("")||(q?'<p class="hint">No hay productos con ese nombre.</p>':'<p class="hint">Escribe para buscar el producto.</p>')}}
   else if(t.id==="cknota"){ckState().nota=t.value}
+  else if(t.id==="ctnota"){CT().nota=t.value}
+  else if(t.dataset&&t.dataset.ctn){var c2=t.value.replace(/[^0-9.,\-]/g,"").replace(",",".");if(c2!==t.value)t.value=c2;var ct=CT();ct[t.dataset.ctn]=c2;var v2=parseFloat(c2),isF=t.dataset.ctn==="fry",lim=isF?[275,300]:[0,8],bad2=!isNaN(v2)&&(v2<lim[0]||v2>lim[1]),sm2=document.getElementById(isF?"ctfs":"ctns");
+    if(sm2)sm2.innerHTML="Debe estar "+(isF?"275–300 °F":"0–8 °C")+(bad2?' · <span style="color:#B3261E">fuera de rango</span>':"");ctBtn()}
   else if(t.dataset&&t.dataset.ckt){var c0=t.value.replace(/[^0-9.,\-]/g,"").replace(",",".");if(c0!==t.value)t.value=c0;ckState().temps[t.dataset.ckt]=c0;
     var cc=CKT.filter(function(x){return x[0]===t.dataset.ckt})[0],sm=t.closest(".rline").querySelector("small"),v=parseFloat(c0),bad=!isNaN(v)&&(v<TRANGO[cc[0]][0]||v>TRANGO[cc[0]][1]);
     sm.innerHTML="Debe estar "+cc[3]+" "+cc[2]+(bad?' · <span style="color:#B3261E">fuera de rango</span>':"")}
@@ -1752,9 +1818,17 @@ document.addEventListener("input",function(ev){
   else if(t.dataset&&t.dataset.alq){var c=t.value.replace(/[^0-9.,]/g,"").replace(",",".");if(c!==t.value)t.value=c;var ln=a.lines.filter(function(l){return l.pid===t.dataset.alq})[0];if(ln)ln.qty=c;almBtn()}
 });
 document.addEventListener("click",function(ev){
-  var el=ev.target.closest("[data-act^='alm-'],[data-act^='ck-'],[data-act^='pr-']");if(!el)return;
+  var el=ev.target.closest("[data-act^='alm-'],[data-act^='ck-'],[data-act^='pr-'],[data-act^='ct-']");if(!el)return;
   var act=el.dataset.act,a=AL(),id=el.dataset.id,v=el.dataset.v;
   if(act==="alm-modo"){a.modo=v;render()}
+  else if(act==="ct-open"){S.view="ct";render()}
+  else if(act==="ct-volver"){S.view=navItems().some(function(x){return x[0]==="contar"})?"contar":defaultView();render()}
+  else if(act==="ct-neg"){var c=CT();c.neg=ctNegs()[+v];c.turno="";render()}
+  else if(act==="ct-turno"){var c3=CT();c3.turno=turnosFor(c3.neg)[+v];var h=ctHecho(c3.neg,c3.turno);if(h){var d=h.datos;c3.fry=String(d.fry);c3.nev=d.nev==null?"":String(d.nev);c3.chk=JSON.parse(JSON.stringify(d.chk));c3.falta=(d.falta||[]).slice();c3.fruta=(d.fruta||[]).slice();c3.nota=d.nota||""}else{c3.fry="";c3.nev="";c3.chk={};c3.falta=[];c3.fruta=[];c3.nota=""}render()}
+  else if(act==="ct-tog"){var c4=CT();c4.chk[v]=c4.chk[v]?0:1;render()}
+  else if(act==="ct-falta"){var c5=CT(),n5=CTF[+v],i5=c5.falta.indexOf(n5);if(i5>-1)c5.falta.splice(i5,1);else c5.falta.push(n5);render()}
+  else if(act==="ct-fruta"){var c6=CT(),n6=CTR[+v],i6=c6.fruta.indexOf(n6);if(i6>-1)c6.fruta.splice(i6,1);else c6.fruta.push(n6);render()}
+  else if(act==="ct-save"){ctGuardar()}
   else if(act==="ck-tog"){var k=ckState();k.chk[+v]=k.chk[+v]?0:1;render()}
   else if(act==="ck-save"){ckGuardar()}
   else if(act==="pr-del"){AL().pr.lineas.splice(+v,1);render()}
