@@ -66,3 +66,40 @@ input.ro{background:var(--line);color:var(--muted);border-style:dashed}
 .nav .in.n6{grid-template-columns:repeat(6,1fr);gap:2px}.nav .in.n6 button{font-size:10px;padding-left:0;padding-right:0}
 .althw{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.alth{position:relative}.alth img{width:92px;height:92px;object-fit:cover;border-radius:10px}.alth .rx{position:absolute;top:-6px;right:-6px}.alfoto{display:block;width:100%;max-width:420px;border-radius:10px;margin:6px 0}
 .chips2{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.chips2 .tchip.on{background:#B3261E;color:#fff;border-color:#B3261E}
+
+/* Mi semana */
+.sem-hero{display:flex;gap:14px;align-items:center;border-radius:16px;padding:16px;border:1px solid var(--line)}
+.sem-hero .big{flex:none;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-family:var(--font-display);font-size:1.6rem;font-weight:800}
+.sem-hero h2{font-size:1.15rem;margin:0 0 2px}.sem-hero p{margin:0;color:var(--muted);font-size:.92rem}
+.sem-hero.ok{background:var(--ok-bg)}.sem-hero.ok .big{background:var(--ok);color:#fff}
+.sem-hero.bad{background:var(--crit-bg)}.sem-hero.bad .big{background:var(--crit);color:#fff}
+.sem-bar{height:10px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:12px}.sem-bar span{display:block;height:100%;background:var(--ok);border-radius:99px;transition:width .3s}
+.sem-barp{margin:6px 0 0;color:var(--muted);font-size:.85rem}
+.sem-lista h2,.sem-card h2{font-size:1.05rem;margin:0}
+.sem-lista{display:grid;gap:10px}
+.sem-acc{display:flex;gap:12px;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--warn);border-radius:12px;padding:12px 14px}
+.sem-acc.bad{border-left-color:var(--crit)}
+.sem-at{min-width:0}.sem-at b{display:block}.sem-at small{display:block;color:var(--muted);font-size:.84rem}
+.sem-acc .btn.small{width:auto;min-height:44px;flex:none;padding:8px 14px;font-size:.95rem}
+.sem-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:12px}
+.sem-h{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.sem-h small{color:var(--muted);font-size:.84rem}
+.sem-dias{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.sem-d{border:1px solid var(--line);border-radius:12px;background:var(--bg);min-height:64px;padding:6px 2px;display:grid;gap:4px;place-items:center;align-content:center}
+.sem-d i{font-style:normal;font-size:.78rem;color:var(--muted);font-weight:700}
+.sem-d b{font-size:1.05rem;font-weight:800;white-space:nowrap}
+.sem-d.hoy{outline:2px solid var(--accent);outline-offset:1px}
+.sem-d.k-ok,.sem-d.k-ini{background:var(--ok-bg);color:var(--ok);border-color:transparent}
+.sem-d.k-ventas{background:var(--warn-bg);color:var(--warn);border-color:transparent}
+.sem-d.k-falta{background:var(--crit-bg);color:var(--crit);border-color:transparent}
+.sem-d.k-hoy,.sem-d.k-na{color:var(--muted)}
+.sem-ley{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;color:var(--muted)}
+.sem-ley b{display:inline-block;min-width:18px;text-align:center;font-weight:800}
+.sem-ley .k-ok b{color:var(--ok)}.sem-ley .k-ventas b{color:var(--warn)}.sem-ley .k-falta b{color:var(--crit)}
+.sem-g{display:flex;justify-content:space-between;gap:10px;align-items:center;min-height:44px;border-top:1px solid var(--line);padding-top:8px}
+.sem-g .btn.small{width:auto;min-height:40px;padding:6px 14px}
+.pill.mute{background:var(--line);color:var(--muted)}
+.sem-link{display:flex;justify-content:space-between;align-items:center;width:100%;min-height:48px;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 14px;font-weight:700;text-align:left}.sem-link span{color:var(--brand)}
+.sem-ayuda{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:4px 14px}
+.sem-ayuda summary{min-height:52px;display:flex;align-items:center;font-weight:800;cursor:pointer}
+.sem-pasos{margin:0 0 10px;padding-left:22px;display:grid;gap:10px}
+.sem-nota{background:var(--bg);border-radius:12px;padding:12px;margin:0 0 12px;font-size:.9rem;line-height:1.5;color:var(--muted)}

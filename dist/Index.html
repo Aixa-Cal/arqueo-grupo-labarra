@@ -268,6 +268,43 @@ input.ro{background:var(--line);color:var(--muted);border-style:dashed}
 .nav .in.n6{grid-template-columns:repeat(6,1fr);gap:2px}.nav .in.n6 button{font-size:10px;padding-left:0;padding-right:0}
 .althw{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.alth{position:relative}.alth img{width:92px;height:92px;object-fit:cover;border-radius:10px}.alth .rx{position:absolute;top:-6px;right:-6px}.alfoto{display:block;width:100%;max-width:420px;border-radius:10px;margin:6px 0}
 .chips2{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.chips2 .tchip.on{background:#B3261E;color:#fff;border-color:#B3261E}
+
+/* Mi semana */
+.sem-hero{display:flex;gap:14px;align-items:center;border-radius:16px;padding:16px;border:1px solid var(--line)}
+.sem-hero .big{flex:none;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-family:var(--font-display);font-size:1.6rem;font-weight:800}
+.sem-hero h2{font-size:1.15rem;margin:0 0 2px}.sem-hero p{margin:0;color:var(--muted);font-size:.92rem}
+.sem-hero.ok{background:var(--ok-bg)}.sem-hero.ok .big{background:var(--ok);color:#fff}
+.sem-hero.bad{background:var(--crit-bg)}.sem-hero.bad .big{background:var(--crit);color:#fff}
+.sem-bar{height:10px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:12px}.sem-bar span{display:block;height:100%;background:var(--ok);border-radius:99px;transition:width .3s}
+.sem-barp{margin:6px 0 0;color:var(--muted);font-size:.85rem}
+.sem-lista h2,.sem-card h2{font-size:1.05rem;margin:0}
+.sem-lista{display:grid;gap:10px}
+.sem-acc{display:flex;gap:12px;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--warn);border-radius:12px;padding:12px 14px}
+.sem-acc.bad{border-left-color:var(--crit)}
+.sem-at{min-width:0}.sem-at b{display:block}.sem-at small{display:block;color:var(--muted);font-size:.84rem}
+.sem-acc .btn.small{width:auto;min-height:44px;flex:none;padding:8px 14px;font-size:.95rem}
+.sem-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:12px}
+.sem-h{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.sem-h small{color:var(--muted);font-size:.84rem}
+.sem-dias{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.sem-d{border:1px solid var(--line);border-radius:12px;background:var(--bg);min-height:64px;padding:6px 2px;display:grid;gap:4px;place-items:center;align-content:center}
+.sem-d i{font-style:normal;font-size:.78rem;color:var(--muted);font-weight:700}
+.sem-d b{font-size:1.05rem;font-weight:800;white-space:nowrap}
+.sem-d.hoy{outline:2px solid var(--accent);outline-offset:1px}
+.sem-d.k-ok,.sem-d.k-ini{background:var(--ok-bg);color:var(--ok);border-color:transparent}
+.sem-d.k-ventas{background:var(--warn-bg);color:var(--warn);border-color:transparent}
+.sem-d.k-falta{background:var(--crit-bg);color:var(--crit);border-color:transparent}
+.sem-d.k-hoy,.sem-d.k-na{color:var(--muted)}
+.sem-ley{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;color:var(--muted)}
+.sem-ley b{display:inline-block;min-width:18px;text-align:center;font-weight:800}
+.sem-ley .k-ok b{color:var(--ok)}.sem-ley .k-ventas b{color:var(--warn)}.sem-ley .k-falta b{color:var(--crit)}
+.sem-g{display:flex;justify-content:space-between;gap:10px;align-items:center;min-height:44px;border-top:1px solid var(--line);padding-top:8px}
+.sem-g .btn.small{width:auto;min-height:40px;padding:6px 14px}
+.pill.mute{background:var(--line);color:var(--muted)}
+.sem-link{display:flex;justify-content:space-between;align-items:center;width:100%;min-height:48px;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 14px;font-weight:700;text-align:left}.sem-link span{color:var(--brand)}
+.sem-ayuda{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:4px 14px}
+.sem-ayuda summary{min-height:52px;display:flex;align-items:center;font-weight:800;cursor:pointer}
+.sem-pasos{margin:0 0 10px;padding-left:22px;display:grid;gap:10px}
+.sem-nota{background:var(--bg);border-radius:12px;padding:12px;margin:0 0 12px;font-size:.9rem;line-height:1.5;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -372,7 +409,8 @@ async function enter(data){
 }
 function defaultView(){
   if((role()==="lider"||role()==="colaborador")&&almSolo())return "alm";
-  if(role()==="admin"||role()==="lider"||role()==="supervisor")return "pend";
+  if(role()==="supervisor")return "sem";
+  if(role()==="admin"||role()==="lider")return "pend";
   if(role()==="gerencia")return "panel";
   return "contar";
 }
@@ -409,7 +447,7 @@ async function refresh(force){
   try{
     var d=await api("sync");
     S.me=d.me;S.hoy=d.hoy;S.cfg=d.config;S.productos=d.productos;S.almacen=d.almacen||[];S.produccion=d.produccion||[];S.checkTurno=d.checkTurno||[];S.conteos=d.conteos;S.entradas=d.entradas;S.movs=d.movs||[];S.motivos=d.motivos||[];S.notifs=d.notifs;S.pend=d.pendientes;S.ready=true;S.err="";S.lastSync=Date.now();
-    if(!S.contactos&&(role()==="admin"||role()==="supervisor")&&S.me.estado==="aprobado")api("contactos").then(function(c){S.contactos=c;if(S.view==="pend"&&!quiet())render()}).catch(function(){});
+    if(!S.contactos&&(role()==="admin"||role()==="supervisor")&&S.me.estado==="aprobado")api("contactos").then(function(c){S.contactos=c;if((S.view==="pend"||S.view==="sem")&&!quiet())render()}).catch(function(){});
     if(S.me.estado!=="aprobado"){S.auth=S.me.estado==="bloqueado"?"blocked":"pending";render();return}
     if(!force&&quiet()){updateChrome()}else render();
   }catch(e){
@@ -461,7 +499,7 @@ function render(){
 function navItems(){
   var r=role();
   if((r==="lider"||r==="colaborador")&&almSolo())return [["alm","Almacén",ICO.recibir,almPend()]];
-  if(r==="supervisor")return [["pend","Pendientes",ICO.ventas,S.pend],["alm","Almacén",ICO.recibir,almPend()],["contar","Contar",ICO.contar],["recibir","Movimientos",ICO.recibir,movPend()],["res","Resultados",ICO.res],["avisos","Avisos",ICO.bell]];
+  if(r==="supervisor")return [["sem","Mi semana",ICO.sem],["pend","Pendientes",ICO.ventas,S.pend],["alm","Almacén",ICO.recibir,almPend()],["contar","Contar",ICO.contar],["recibir","Movimientos",ICO.recibir,movPend()],["res","Resultados",ICO.res]];
   if(r==="lider"&&almOk())return [["pend","Pendientes",ICO.ventas,S.pend],["contar","Contar",ICO.contar],["alm","Almacén",ICO.recibir,almPend()],["recibir","Movimientos",ICO.recibir,movPend()],["res","Resultados",ICO.res]];
   if(r==="lider")return [["pend","Pendientes",ICO.ventas,S.pend],["contar","Contar",ICO.contar],["recibir","Movimientos",ICO.recibir,movPend()],["res","Resultados",ICO.res]];
   if(r==="colaborador"||(r==="admin"&&S.campo))return [["contar","Contar",ICO.contar],["recibir","Movimientos",ICO.recibir,movPend()],["mios","Mis conteos",ICO.res]];
@@ -476,6 +514,7 @@ var ICO={
  panel:'<svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="5" rx="1"/><rect x="13" y="11" width="7" height="9" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/></svg>',
  cat:'<svg viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>',
  eq:'<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 11a3 3 0 1 0 0-6M18 14c2 .7 3 2.5 3 6"/></svg>',
+ sem:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4M9 15l2 2 4-4"/></svg>',
  bell:'<svg viewBox="0 0 24 24"><path d="M6 17h12l-1.5-2V10a4.5 4.5 0 0 0-9 0v5zM10 20a2 2 0 0 0 4 0"/></svg>'
 };
 function renderFoot(){
@@ -504,6 +543,7 @@ function routeHTML(){
     case "alm":return almHTML();
     case "ct":return ctPantalla();
     case "mios":return extra+miosHTML();
+    case "sem":return semHTML();
     case "pend":return pendHTML();
     case "res":return resultadosHTML();
     case "panel":return panelHTML();
@@ -1856,6 +1896,129 @@ async function prGuardar(){
     p.lineas=[];p.eid=null;p.saving=false;toast(r.bajos?"Guardado. Hay un rendimiento bajo y se avisó":"Producción guardada");await refresh(true);render();
   }catch(e){p.saving=false;render();toast(errMsg(e))}
 }
+/* ---------- Mi semana (panel del supervisor: arqueos semanales obligatorios) ---------- */
+var SEM_OBLIG=["Food Shop","Zona Presidente"];
+var SEM_GEN=["Food Shop General","La Barra Atala General","La Barra Atalaya General","La Barra Miraflores General"];
+var DIA_INI=["D","L","M","M","J","V","S"];
+function semLunes(h){return addDays(h,-((dow(h)+6)%7))}
+function semFechas(lun){var a=[];for(var i=0;i<7;i++)a.push(addDays(lun,i));return a}
+function semRango(lun){
+  var d=addDays(lun,6),a=+lun.slice(8),b=+d.slice(8),ma=+lun.slice(5,7),mb=+d.slice(5,7);
+  return ma===mb?a+" al "+b+" de "+MESES[mb-1]:a+" de "+MESES[ma-1]+" al "+b+" de "+MESES[mb-1];
+}
+/* estado de un turno en una fecha: ok | ini | ventas | falta | hoy | na */
+function semEstado(neg,t,fe,h){
+  var c=S.conteos.filter(function(x){return x.negocio===neg&&x.turno===t&&x.fecha===fe&&x.estado!=="anulado"})[0];
+  if(c)return {k:c.estado==="arqueado"?"ok":(c.estado==="contado"?"ventas":"ini"),c:c};
+  if(fe>h)return {k:"na"};
+  if(fe<h)return {k:"falta",past:true};
+  var lim=limiteDe(neg,t);
+  return {k:(lim&&nowHM()>lim)?"falta":"hoy"};
+}
+var SEM_PRI={falta:4,ventas:3,hoy:2,ini:1,ok:0,na:-1};
+/* devuelve {dias:[{fe,marks:[k..],peor}],rows:[{k,n,t,fe,c,lim,past}]} para un negocio y una semana */
+function semInicio(neg,h){var f=h;S.conteos.forEach(function(c){if(c.negocio===neg&&c.estado!=="anulado"&&c.fecha<f)f=c.fecha});return f}
+function semNegocio(neg,lun,h){
+  var ini=semInicio(neg,h);
+  var rows=[],dias=semFechas(lun).map(function(fe){
+    var marks=[];
+    if(fe>h||fe<ini||!isFullDay(neg,fe))return {fe:fe,marks:["na"],peor:"na"};
+    turnosFor(neg).forEach(function(t){
+      var e=semEstado(neg,t,fe,h);marks.push(e.k);
+      if(e.k==="falta"||e.k==="ventas")rows.push({k:e.k==="falta"?"atraso":"ventas",n:neg,t:t,fe:fe,c:e.c,lim:limiteDe(neg,t),past:!!e.past});
+    });
+    if(!marks.length)marks=["na"];
+    var peor=marks.reduce(function(a,b){return SEM_PRI[b]>SEM_PRI[a]?b:a},"na");
+    return {fe:fe,marks:marks,peor:peor};
+  });
+  return {dias:dias,rows:rows};
+}
+function semTodo(){
+  var h=today(),lun=semLunes(h),prev=addDays(lun,-7),neg={},acc=[],tot=0,ok=0,ant=[];
+  SEM_OBLIG.filter(function(n){return S.cfg.negocios.indexOf(n)>-1}).forEach(function(n){
+    var d=semNegocio(n,lun,h);neg[n]=d;
+    d.dias.forEach(function(x){x.marks.forEach(function(k){if(k==="ok"||k==="ini"){tot++;ok++}else if(k==="falta"||k==="ventas")tot++})});
+    acc=acc.concat(d.rows);
+    var p=semNegocio(n,prev,h);ant=ant.concat(p.rows);
+  });
+  var ord=function(a,b){return (a.k===b.k?0:(a.k==="atraso"?-1:1))||(a.fe<b.fe?-1:a.fe>b.fe?1:0)};
+  acc.sort(ord);ant.sort(ord);
+  return {h:h,lun:lun,neg:neg,acc:acc,ant:ant,tot:tot,ok:ok};
+}
+/* conteos semanales generales: estado de esta semana */
+function semGenerales(h,lun){
+  var dom=addDays(lun,6);
+  return SEM_GEN.filter(function(n){return S.cfg.negocios.indexOf(n)>-1}).map(function(n){
+    var cal=(S.cfg.calendario&&S.cfg.calendario[n])||[],d=cal[0],c=S.conteos.filter(function(x){return x.negocio===n&&x.fecha>=lun&&x.fecha<=dom&&x.estado!=="anulado"})[0];
+    var fe=(d==null)?"":addDays(lun,(d+6)%7),k,txt;
+    if(c){k="ok";txt="Hecho"}
+    else if(fe&&fe<h){k="falta";txt="Atrasado"}
+    else if(fe===h){k="hoy";txt="Toca hoy"}
+    else{k="na";txt="Toca el "+(d==null?"":DIAS_L[d].toLowerCase())}
+    return {n:n,k:k,txt:txt,hoy:fe===h&&!c};
+  });
+}
+function semMarca(k){return {ok:"✓",ini:"✓",ventas:"$",falta:"!",hoy:"…",na:"–"}[k]||""}
+function semNota(k){return {ok:"Listo",ini:"Listo",ventas:"Falta cargar ventas",falta:"Falta el conteo",hoy:"Hoy todavía puede contarse",na:"No aplica"}[k]||""}
+function semDiasHTML(neg,d){
+  return '<div class="sem-dias">'+d.dias.map(function(x){
+    var l=DIA_INI[dow(x.fe)],esHoy=x.fe===today();
+    return '<button type="button" class="sem-d k-'+x.peor+(esHoy?" hoy":"")+'" data-act="sem-dia" data-fe="'+x.fe+'" aria-label="'+esc(fechaCorta(x.fe)+": "+semNota(x.peor))+'"><i>'+l+'</i><b>'+x.marks.map(semMarca).join(" ")+'</b></button>'}).join("")+'</div>';
+}
+function semCard(n,d,lun){
+  var tot=0,ok=0,fal=0,ven=0;
+  d.dias.forEach(function(x){x.marks.forEach(function(k){if(k==="ok"||k==="ini"){tot++;ok++}else if(k==="falta"){tot++;fal++}else if(k==="ventas"){tot++;ven++}})});
+  var estado=fal?'<span class="pill crit">'+fal+' sin contar</span>':(ven?'<span class="pill rev">'+ven+' sin ventas</span>':'<span class="pill ok">Al día</span>');
+  var nt=turnosFor(n).length;
+  return '<section class="sem-card"><div class="sem-h"><div><h2>'+esc(n)+'</h2><small>'+(nt>1?nt+" turnos al día":"Conteo diario")+' · '+ok+' de '+tot+' listos</small></div>'+estado+'</div>'+semDiasHTML(n,d)+'</section>';
+}
+function semAccion(r,prev){
+  var falta=r.k==="atraso",c=r.c;
+  var titulo=falta?"Falta el conteo":"Falta cargar las ventas";
+  var sub=esc(r.n)+" · "+esc(r.t)+" · "+esc(fechaCorta(r.fe))+(prev?" · semana pasada":"");
+  var btn=falta?"":'<button class="btn small" data-act="vs-open" data-id="'+esc(c.id)+'">Registrar ventas</button>';
+  var info=!falta&&c?'<small>Contó '+esc(c.resp)+' · '+haceTxt(c.ts)+'</small>':"";
+  return '<div class="sem-acc '+(falta?"bad":"warn")+'"><div class="sem-at"><b>'+titulo+'</b><small>'+sub+'</small>'+info+(falta?waBtns(r):"")+'</div>'+btn+'</div>';
+}
+function semHTML(){
+  var D=semTodo(),h=D.h,pend=D.acc.length+D.ant.length,hayAlm=almPend()>0;
+  var pct=D.tot?Math.round(D.ok*100/D.tot):100;
+  var nombre=(S.me&&S.me.nombre||"").split(" ")[0];
+  var hero;
+  if(!pend)hero='<div class="sem-hero ok"><div class="big">✓</div><div><h2>Vas al día'+(nombre?', '+esc(nombre):"")+'</h2><p>Food Shop y Zona Presidente están completos hasta hoy. Mañana vuelve a mirar este panel.</p></div></div>';
+  else hero='<div class="sem-hero bad"><div class="big">'+pend+'</div><div><h2>'+(pend===1?"Te falta 1 cosa":"Te faltan "+pend+" cosas")+'</h2><p>Empieza por la primera de la lista de abajo. Son pasos cortos.</p></div></div>';
+  var barra='<div class="sem-bar" role="img" aria-label="'+pct+'% de la semana completo"><span style="width:'+pct+'%"></span></div><p class="sem-barp"><b>'+D.ok+' de '+D.tot+'</b> arqueos de la semana listos · La semana cierra el domingo</p>';
+  var acc=D.ant.map(function(r){return semAccion(r,true)}).concat(D.acc.map(function(r){return semAccion(r,false)}));
+  if(hayAlm)acc.push('<div class="sem-acc warn"><div class="sem-at"><b>Traslados por hacer en Citrus</b><small>Hay '+almPend()+' movimientos del almacén esperando</small></div><button class="btn small" data-act="sem-ir" data-v="alm">Abrir Almacén</button></div>');
+  var gen=semGenerales(h,D.lun);
+  var genHTML=gen.length?'<section class="sem-card"><div class="sem-h"><div><h2>Conteos semanales</h2><small>Uno por semana, solo se abre su día</small></div></div>'+gen.map(function(g){
+    return '<div class="sem-g"><span>'+esc(g.n)+'</span>'+(g.hoy?'<button class="btn small" data-act="sem-contar" data-n="'+esc(g.n)+'">Contar ahora</button>':'<span class="pill '+(g.k==="ok"?"ok":(g.k==="falta"?"crit":"rev"))+(g.k==="na"?" mute":"")+'">'+esc(g.txt)+'</span>')+'</div>'}).join("")+'</section>':"";
+  var avisos=unread();
+  var avisosHTML2=avisos?'<button class="sem-link" data-act="sem-ir" data-v="avisos">Tienes '+avisos+(avisos===1?" aviso sin leer":" avisos sin leer")+' <span>Ver</span></button>':"";
+  var cards=Object.keys(D.neg).map(function(n){return semCard(n,D.neg[n],D.lun)}).join("");
+  var leyenda='<div class="sem-ley"><span class="k-ok"><b>✓</b> Listo</span><span class="k-ventas"><b>$</b> Falta cargar ventas</span><span class="k-falta"><b>!</b> Falta el conteo</span><span class="k-hoy"><b>…</b> Aún es hora</span></div>';
+  var ayuda='<details class="sem-ayuda"'+(S.semAyuda?" open":"")+'><summary>Cómo se hace, paso a paso</summary>'+
+    '<ol class="sem-pasos">'+
+    '<li><b>Mira este panel cada día.</b> Si todo está en verde, no tienes que hacer nada más.</li>'+
+    '<li><b>Si ves rojo (!)</b> falta un conteo. Toca el botón de WhatsApp para avisarle a quien le toca contar.</li>'+
+    '<li><b>Si ves amarillo ($)</b> ya contaron y faltan las ventas. Toca <em>Registrar ventas</em>, sube el archivo «Ventas por producto» de Citrus de ese turno y toca <em>Calcular arqueo</em>.</li>'+
+    '<li><b>Mira el resultado.</b> Si sale algún producto en «Revisar» o «Crítico», entra al día y pregunta qué pasó.</li>'+
+    '<li><b>La semana está completa</b> cuando Food Shop y Zona Presidente tienen ✓ en todos los días, hasta el domingo.</li></ol>'+
+    '<div class="sem-nota"><b>Food Shop:</b> dos turnos al día (mañana y tarde), cada uno con su conteo y sus ventas.<br><b>Zona Presidente:</b> un conteo al día. Cuentan «Había» a las 3PM y «Quedan» a las 11PM.<br><b>Te equivocaste:</b> no pasa nada, pídele a administración que anule o corrija ese conteo.</div></details>';
+  return '<div><h1>Mi semana</h1><p class="sub">Del '+esc(semRango(D.lun))+'. Food Shop y Zona Presidente se arquean todas las semanas: no se pueden saltar.</p></div>'+
+    hero+barra+
+    (acc.length?'<section class="sem-lista"><h2>Qué hago ahora</h2>'+acc.join("")+'</section>':"")+
+    avisosHTML2+cards+leyenda+genHTML+ayuda+
+    '<button class="btn ghost" data-act="sem-ir" data-v="pend">Ver pendientes de hoy</button>';
+}
+document.addEventListener("click",function(ev){
+  var el=ev.target.closest("[data-act^='sem-']");if(!el)return;
+  var act=el.dataset.act;
+  if(act==="sem-ir"){S.detail=null;S.vs=null;S.view=el.dataset.v;render();window.scrollTo(0,0)}
+  else if(act==="sem-dia"){S.pFecha=el.dataset.fe<=today()?el.dataset.fe:"";S.detail=null;S.vs=null;S.view="pend";render();window.scrollTo(0,0)}
+  else if(act==="sem-contar"){var n=el.dataset.n;S.detail=null;S.vs=null;S.view="contar";S.step="elegir";S.draft=newDraft();S.draft.negocio=n;S.draft.turno=sugTurno(n,S.draft.fecha);render();window.scrollTo(0,0)}
+});
+document.addEventListener("toggle",function(ev){var t=ev.target;if(t&&t.classList&&t.classList.contains("sem-ayuda"))S.semAyuda=t.open},true);
 
 /* ---------- eventos ---------- */
 function clean(v){return v.replace(/[^0-9.,]/g,"")}
