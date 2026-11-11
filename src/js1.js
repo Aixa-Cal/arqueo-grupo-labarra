@@ -246,6 +246,7 @@ function routeHTML(){
 function afterRender(){
   if(S.auth==="app"&&S.ready){
     if(S.view==="contar"&&S.step==="contar"&&S.draft){updateProgress();applyFilter()}
+    if(S.view==="contar")guiaAuto();
     if(S.view==="recibir")updateRecBtn();
     if(S.view==="panel"&&!S.panel.data&&!S.panel.loading&&!S.panel.err)loadPanel();
     if(S.view==="eq"&&!S.eq.users)loadUsers();

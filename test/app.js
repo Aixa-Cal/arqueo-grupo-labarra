@@ -247,6 +247,7 @@ function routeHTML(){
 function afterRender(){
   if(S.auth==="app"&&S.ready){
     if(S.view==="contar"&&S.step==="contar"&&S.draft){updateProgress();applyFilter()}
+    if(S.view==="contar")guiaAuto();
     if(S.view==="recibir")updateRecBtn();
     if(S.view==="panel"&&!S.panel.data&&!S.panel.loading&&!S.panel.err)loadPanel();
     if(S.view==="eq"&&!S.eq.users)loadUsers();
@@ -389,7 +390,7 @@ function elegirHTML(){
   var dup=(d.negocio&&d.turno&&turnoDone(d.negocio,d.turno,d.fecha))?'<p class="banner">Ya hay un conteo de este turno hoy. Si hubo un error, pide a administración que lo anule o rectifique.</p>':"";
   var can=d.negocio&&d.turno&&!dup&&prodsFor(d.negocio).length&&!S.starting;
   var fechaF=isAdmin()?'<div class="field"><label class="lbl" for="fecha">Fecha</label><input id="fecha" type="date" value="'+esc(d.fecha)+'" max="'+esc(today())+'"></div>':"";
-  return '<div class="panel"><div><h1>¿Qué vas a contar?</h1><p class="sub">Elige el negocio y el turno. Son 3 datos por producto.</p></div>'+
+  return '<div class="panel"><div><h1>¿Qué vas a contar?</h1><p class="sub">Toca tu tienda y tu turno. Después toca «Empezar conteo». Solo escribes cuántos <b>quedan</b>.</p><button type="button" class="guia-btn" data-act="guia-open">❓ ¿Cómo se hace? Míralo en 4 pasos</button></div>'+
     '<div class="lbl">Negocio</div><div class="negs">'+negs+'</div>'+
     (d.negocio?'<div class="lbl">Turno</div><div class="turnos">'+tchips+'</div>'+dueInfo(d):"")+nada+dup+fechaF+
     '<button class="btn" id="startBtn" data-act="start"'+(can?"":" disabled")+'>'+(S.starting?"Preparando…":"Empezar conteo")+'</button></div>'+hoyHTML();
@@ -435,8 +436,11 @@ function contarHTML(){
   return '<div class="bar"><div class="bar-row"><button class="back" data-act="back">← Cambiar</button><span class="sub"><b>'+esc(d.negocio)+'</b> · '+esc(d.turno)+'</span></div>'+
     '<div class="bar-row"><span class="sub" id="prog"></span><span class="chip">'+(isFullDay(d.negocio,d.fecha)?"Conteo completo":"Solo críticos")+'</span></div><div class="meter"><i id="meter"></i></div></div>'+
     '<div class="fbox"><input id="q" class="srch" type="search" placeholder="Buscar producto…" autocomplete="off">'+filtroHTML(list)+'</div>'+
-    (esLB(d.negocio)?'<div class="banner"><b>Entró:</b> lo que recibiste de la principal o sacaste del cuarto frío.<br><b>Quedan:</b> lo que dejas, contando todo: lo que está en la sandwichera y lo que está almacenado.</div>':'')+
-    '<details class="help"><summary>¿Qué pongo en cada casilla?</summary><ul>'+(conDoble()?'<li><b>Había:</b> lo que hay al empezar el turno (cuéntalo).</li>':'')+'<li><b>Entró:</b> '+(esLB(d.negocio)?'lo que recibiste de la principal o sacaste del cuarto frío en tu turno (lo registrado en Movimientos).':'la mercancía que llegó en tu turno (lo registrado en Movimientos).')+'</li><li><b>Quedan:</b> '+(esLB(d.negocio)?'lo que dejas al cerrar, incluido lo de la sandwichera y lo almacenado.':'lo que cuentas ahora mismo.')+'</li></ul></details>'+
+    '<div class="ley"><div class="ley-t"><b>Cómo llenar</b><button type="button" class="linkbtn" data-act="guia-open">¿Cómo se hace?</button></div>'+
+      (conDoble()?'<p><b>Había</b> = lo que había cuando empezaste.</p>':'')+
+      '<p><b>Llegó</b> = lo que llegó o te entregaron en tu turno'+(esLB(d.negocio)?' (de la principal o del cuarto frío)':'')+'. Si no llegó nada, déjalo vacío.</p>'+
+      '<p><b>Quedan</b> = lo que cuentas ahora'+(esLB(d.negocio)?', contando todo: la sandwichera y lo almacenado':'')+'. <b>Cuenta lo que ves.</b></p></div>'+
+    (!conDoble()&&list.some(function(p){return !(d.vals[p.id]||{}).src})?'<div class="banner">Es tu <b>primer conteo</b> de algunos productos: solo escribe cuántos <b>quedan</b>. La app hace las cuentas.</div>':'')+
     '<div class="plist">'+cards+'</div><p class="banner" id="fempty" hidden>Ningún producto coincide con el filtro.</p>'+
     (INSUMOS.indexOf(d.negocio)>-1?'<div class="panel"><div class="field"><label class="lbl" for="cnota">¿Qué te hace falta? (opcional)</label><textarea id="cnota" rows="3" maxlength="300" placeholder="Ej. Falta cera, 2 esponjas y una lija 3000">'+esc(d.nota||"")+'</textarea><p class="hint">Administración recibe este aviso. Escribe lo que necesites, esté o no en la lista.</p></div></div>':(conCierre(d.negocio)?cierreHTML():''));
 }
@@ -446,7 +450,7 @@ function cardHTML(p){
   function f(k,l){return '<label class="f"><span>'+l+(k==="ini"&&lockIni?' 🔒':'')+'</span><input'+(k==="ini"&&lockIni?' readonly tabindex="-1" class="ro"':'')+' id="i-'+esc(p.id)+'-'+k+'" data-pid="'+esc(p.id)+'" data-f="'+k+'" inputmode="decimal" autocomplete="off" placeholder="0" value="'+esc(v[k])+'"></label>'}
   var u=usage(v);
   return '<section class="pcard'+(u?(u.real<0?" s-crit":" s-ok"):"")+'" id="card-'+esc(p.id)+'" data-n="'+esc(String(p.nombre).toLowerCase())+'" data-c="'+esc(p.cat||"")+'" data-z="'+(isZero(v)?"1":"")+'" data-p="'+(usage(v)?"":"1")+'"><div class="phead"><h3>'+esc(p.nombre)+'</h3><span class="unit">'+esc(p.unidad)+'</span></div>'+
-    (sinEnt(p)?'<div class="grid2"><label class="f"><span>Quedan</span><input id="i-'+esc(p.id)+'-fin" data-pid="'+esc(p.id)+'" data-f="fin" inputmode="decimal" autocomplete="off" placeholder="0" value="'+esc(v.fin)+'"></label></div>':dbl?'<div class="grid3">'+f("ini","Había")+f("ent","Entró")+f("fin","Quedan")+'</div>':'<div class="grid2">'+f("ent","Entró")+f("fin","Quedan")+'</div>')+
+    (sinEnt(p)?'<div class="grid2"><label class="f"><span>Quedan</span><input id="i-'+esc(p.id)+'-fin" data-pid="'+esc(p.id)+'" data-f="fin" inputmode="decimal" autocomplete="off" placeholder="0" value="'+esc(v.fin)+'"></label></div>':dbl?'<div class="grid3">'+f("ini","Había")+f("ent","Llegó")+f("fin","Quedan")+'</div>':'<div class="grid2">'+f("ent","Llegó")+f("fin","Quedan")+'</div>')+
     '<div class="res" id="res-'+esc(p.id)+'">'+usageHTML(u)+'</div><p class="note" id="note-'+esc(p.id)+'">'+noteText(v)+'</p></section>';
 }
 function sinEnt(p){return !!S.draft&&/^La Barra/.test(S.draft.negocio)&&/funda abierta/i.test(p.nombre||'')}
@@ -458,18 +462,18 @@ function usage(v){
   return {real:ini+ent-fin};
 }
 function usageHTML(u){
-  if(!u)return '<span class="hint">'+(conDoble()?'Llena «Había» y «Quedan».':'Llena «Quedan».')+'</span>';
-  if(u.first)return '<span class="pill ok">Listo</span><span class="hint">Primer conteo: punto de partida</span>';
-  if(u.real<0)return '<span class="pill crit">Revisa</span><span class="hint">Quedan más de los que había y entraron. Cuenta de nuevo.</span>';
-  return '<span class="pill ok">Listo</span><span class="hint">Salieron '+fmt(u.real)+'</span>';
+  if(!u)return conDoble()?'<span class="hint">Llena «Había» y «Quedan».</span>':'';
+  if(u.first)return '<span class="pill ok">✓ Listo</span>';
+  if(u.real<0)return '<span class="pill crit">Revisa</span><span class="hint">Hay más de lo que debía haber. Vuelve a contar.</span>';
+  return '<span class="pill ok">✓ Listo</span><span class="hint">Se usaron '+fmt(u.real)+'</span>';
 }
 function noteText(v){
   var a=[];
   if(conDoble()){
-    if(!v.src&&!v.iniAuto&&v.ini==="")a.push("Primer conteo de este producto: escribe lo que había al empezar. Esta vez no se arquea.");
-  }else if(!v.src)a.push("Primer conteo de este producto: lo que cuentes es el punto de partida. Esta vez no se arquea.");
+    if(!v.src&&!v.iniAuto&&v.ini==="")a.push("Primera vez: escribe lo que había al empezar.");
+  }
   if(conDoble()&&v.iniAuto&&!v.iniTouched)a.push("«Había» viene del conteo del "+fmtFecha(v.iniFecha)+".");
-  if(v.entAuto&&!v.entTouched)a.push("«Entró» suma lo registrado en Recibir.");
+  if(v.entAuto&&!v.entTouched)a.push("«Llegó» ya viene lleno con lo que anotaste en Movimientos.");
   return a.length?a.join(" "):"";
 }
 function updateCard(pid){
@@ -518,7 +522,7 @@ async function guardar(){
 function listoHTML(){
   var s=S.saved;
   return '<div class="panel center"><div class="big">✓</div><h1>Conteo guardado</h1><p class="sub">'+esc(s.negocio)+' · '+esc(s.turno)+' · '+fmtFecha(s.fecha)+'</p>'+
-    '<p class="sub">'+s.n+' productos contados'+(s.sin?" y "+s.sin+" sin contar":"")+(s.ini?'. Este es tu conteo inicial: sirve de punto de partida y no necesita ventas. El arqueo empieza con tu próximo conteo.':'. Administración ya fue avisada para registrar las ventas y hacer el arqueo.')+'</p></div>'+
+    '<p class="sub">'+s.n+' productos contados'+(s.sin?" y "+s.sin+" sin contar":"")+(s.ini?'. ¡Gracias! Este es tu primer conteo. Sirve para comparar con el próximo.':'. ¡Gracias! Administración ya fue avisada y se encarga del resto.')+'</p></div>'+
     '<div class="btnrow"><button class="btn" data-act="again">Hacer otro conteo</button><button class="btn ghost" data-act="go" data-v="mios">Ver mis conteos</button></div>';
 }
 
@@ -1765,6 +1769,38 @@ document.addEventListener("click",function(ev){
     var id=el.dataset.id;
     guarded(async function(){await eqInvitar(id);render();window.scrollTo(0,0)});
   }
+});
+
+/* ---------- Guía visual "Cómo contar" (primera vez y botón de ayuda) ---------- */
+var GUIA=[
+  {e:"👋",t:"Contar es fácil",p:"Tú solo <b>cuentas lo que ves</b>.<br>La app hace todas las cuentas por ti."},
+  {e:"🏪",t:"Elige tu tienda y tu turno",p:"Toca el nombre de tu tienda.<br>Toca tu turno.<br>Después toca <b>«Empezar conteo»</b>."},
+  {e:"🔢",t:"Cuenta cada producto",p:"Mira el estante y escribe <b>cuántos QUEDAN</b>.<br>Si llegó mercancía hoy, escribe cuántos <b>LLEGARON</b>.<br>Si no llegó nada, déjalo vacío."},
+  {e:"✅",t:"Termina y guarda",p:"Contesta las preguntas del final.<br>Toca <b>«Guardar conteo»</b>.<br>¡Listo! Si te equivocas, avísale a tu supervisora."}
+];
+function guiaSeen(){if(navigator.webdriver&&!window.__guiaTest)return true;try{return !!localStorage.getItem("arq-guia-"+(S.me&&S.me.email))}catch(e){return true}}
+function guiaMark(){try{localStorage.setItem("arq-guia-"+(S.me&&S.me.email),"1")}catch(e){}}
+function guiaAuto(){
+  if(!S.me||(S.me.rol!=="colaborador"&&S.me.rol!=="lider")||guiaSeen()||document.getElementById("guia"))return;
+  guiaOpen(0);
+}
+function guiaOpen(i){
+  var old=document.getElementById("guia");if(old)old.remove();
+  var g=GUIA[i],last=i===GUIA.length-1;
+  var d=document.createElement("div");d.id="guia";d.className="guia";d.setAttribute("role","dialog");d.setAttribute("aria-label","Cómo contar");
+  d.innerHTML='<div class="guia-box"><button type="button" class="guia-x" data-act="guia-x" aria-label="Cerrar">✕</button>'+
+    '<div class="guia-e">'+g.e+'</div><h2>'+g.t+'</h2><p>'+g.p+'</p>'+
+    '<div class="guia-dots">'+GUIA.map(function(_,k){return '<i class="'+(k===i?"on":"")+'"></i>'}).join("")+'</div>'+
+    '<div class="guia-b">'+(i>0?'<button type="button" class="btn ghost" data-act="guia-go" data-v="'+(i-1)+'">Atrás</button>':"")+
+    '<button type="button" class="btn" data-act="'+(last?"guia-x":"guia-go")+'" data-v="'+(i+1)+'">'+(last?"¡Entendido!":"Siguiente")+'</button></div></div>';
+  document.body.appendChild(d);
+}
+document.addEventListener("click",function(ev){
+  var el=ev.target.closest("[data-act^='guia-']");if(!el)return;
+  var a=el.dataset.act;
+  if(a==="guia-open")guiaOpen(0);
+  else if(a==="guia-go")guiaOpen(+el.dataset.v);
+  else if(a==="guia-x"){guiaMark();var g=document.getElementById("guia");if(g)g.remove()}
 });
 
 /* ---------- eventos ---------- */

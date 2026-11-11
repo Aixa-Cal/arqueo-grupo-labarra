@@ -1,0 +1,32 @@
+const {chromium}=require('playwright');
+const {makeEnv}=require('./mock');
+const fs=require('fs');const assert=require('assert');
+const html=fs.readFileSync('../dist/Index.html','utf8');
+const env=makeEnv({clock:Date.UTC(2026,10,3,15,0,0)});env.ctx.instalar();
+const errors=[];
+const tok=(e,n)=>{env.call('reqCode',{email:e});const c=env.mails[env.mails.length-1].body.match(/\d{6}/)[0];return env.call('verifyCode',{email:e,code:c,nombre:n}).data.token};
+(async()=>{
+  const A=tok('dueno@gmail.com');tok('sol@g.com','Sol');
+  env.call('setUser',{email:'sol@g.com',rol:'colaborador',estado:'aprobado',negocios:['Food Shop']},A);
+  const b=await chromium.launch();
+  const ctx=await b.newContext({viewport:{width:360,height:740}});const m=await ctx.newPage();
+  m.on('pageerror',e=>errors.push(e.message));
+  await m.exposeFunction('__api',s=>env.ctx.api(s));
+  await m.addInitScript(()=>{window.__guiaTest=1;const mk=()=>{let ok=()=>{},bad=()=>{};const o={withSuccessHandler(f){ok=f;return o},withFailureHandler(f){bad=f;return o},api(s){window.__api(s).then(ok,bad)}};return o};
+    window.google={script:{run:{withSuccessHandler(f){return mk().withSuccessHandler(f)},withFailureHandler(f){return mk().withFailureHandler(f)},api(s){return mk().api(s)}}}};});
+  await m.route('http://app.local/',r=>r.fulfill({status:200,contentType:'text/html; charset=utf-8',body:html}));
+  await m.goto('http://app.local/');
+  await m.waitForSelector('#lg-email');await m.fill('#lg-email','sol@g.com');await m.click('[data-act=lg-send]');await m.waitForSelector('#lg-code');
+  await m.fill('#lg-code',env.mails[env.mails.length-1].body.match(/\d{6}/)[0]);await m.click('[data-act=lg-verify]');
+  await m.waitForSelector('#guia');assert(/Contar es fácil/.test(await m.innerText('#guia')));await m.screenshot({path:'shots/g1.png'});
+  await m.click('.guia-b .btn:last-child');await m.click('.guia-b .btn:last-child');await m.waitForSelector('#guia >> text=Cuenta cada producto');await m.screenshot({path:'shots/g3.png'});
+  await m.click('.guia-b .btn:last-child');await m.click('.guia-b .btn:last-child');
+  assert.equal(await m.locator('#guia').count(),0);
+  // no vuelve solo, pero se puede abrir con el botón
+  await m.click('[data-act=neg]');await m.click('[data-act=start]');await m.waitForSelector('.ley');
+  assert.equal(await m.locator('#guia').count(),0);
+  await m.fill('#i-fs-001-fin','7');await m.screenshot({path:'shots/g4.png'});
+  await m.click('.ley [data-act=guia-open]');await m.waitForSelector('#guia');await m.click('#guia [data-act=guia-x]');
+  const t=await m.innerText('#view');assert(/Llegó/.test(t)&&/Quedan/.test(t)&&!/Entró/.test(t)&&/primer conteo/i.test(t));
+  console.log('errores',errors);assert.equal(errors.length,0);await b.close();
+})();

@@ -176,3 +176,35 @@ document.addEventListener("click",function(ev){
     guarded(async function(){await eqInvitar(id);render();window.scrollTo(0,0)});
   }
 });
+
+/* ---------- Guía visual "Cómo contar" (primera vez y botón de ayuda) ---------- */
+var GUIA=[
+  {e:"👋",t:"Contar es fácil",p:"Tú solo <b>cuentas lo que ves</b>.<br>La app hace todas las cuentas por ti."},
+  {e:"🏪",t:"Elige tu tienda y tu turno",p:"Toca el nombre de tu tienda.<br>Toca tu turno.<br>Después toca <b>«Empezar conteo»</b>."},
+  {e:"🔢",t:"Cuenta cada producto",p:"Mira el estante y escribe <b>cuántos QUEDAN</b>.<br>Si llegó mercancía hoy, escribe cuántos <b>LLEGARON</b>.<br>Si no llegó nada, déjalo vacío."},
+  {e:"✅",t:"Termina y guarda",p:"Contesta las preguntas del final.<br>Toca <b>«Guardar conteo»</b>.<br>¡Listo! Si te equivocas, avísale a tu supervisora."}
+];
+function guiaSeen(){if(navigator.webdriver&&!window.__guiaTest)return true;try{return !!localStorage.getItem("arq-guia-"+(S.me&&S.me.email))}catch(e){return true}}
+function guiaMark(){try{localStorage.setItem("arq-guia-"+(S.me&&S.me.email),"1")}catch(e){}}
+function guiaAuto(){
+  if(!S.me||(S.me.rol!=="colaborador"&&S.me.rol!=="lider")||guiaSeen()||document.getElementById("guia"))return;
+  guiaOpen(0);
+}
+function guiaOpen(i){
+  var old=document.getElementById("guia");if(old)old.remove();
+  var g=GUIA[i],last=i===GUIA.length-1;
+  var d=document.createElement("div");d.id="guia";d.className="guia";d.setAttribute("role","dialog");d.setAttribute("aria-label","Cómo contar");
+  d.innerHTML='<div class="guia-box"><button type="button" class="guia-x" data-act="guia-x" aria-label="Cerrar">✕</button>'+
+    '<div class="guia-e">'+g.e+'</div><h2>'+g.t+'</h2><p>'+g.p+'</p>'+
+    '<div class="guia-dots">'+GUIA.map(function(_,k){return '<i class="'+(k===i?"on":"")+'"></i>'}).join("")+'</div>'+
+    '<div class="guia-b">'+(i>0?'<button type="button" class="btn ghost" data-act="guia-go" data-v="'+(i-1)+'">Atrás</button>':"")+
+    '<button type="button" class="btn" data-act="'+(last?"guia-x":"guia-go")+'" data-v="'+(i+1)+'">'+(last?"¡Entendido!":"Siguiente")+'</button></div></div>';
+  document.body.appendChild(d);
+}
+document.addEventListener("click",function(ev){
+  var el=ev.target.closest("[data-act^='guia-']");if(!el)return;
+  var a=el.dataset.act;
+  if(a==="guia-open")guiaOpen(0);
+  else if(a==="guia-go")guiaOpen(+el.dataset.v);
+  else if(a==="guia-x"){guiaMark();var g=document.getElementById("guia");if(g)g.remove()}
+});
