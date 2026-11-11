@@ -17,7 +17,7 @@ var S={
   vs:null,detail:null,fNeg:"",fRango:"7",fEstado:"",fDesde:"",fHasta:"",pFecha:"",
   panel:{rango:"7",negocio:"",data:null,loading:false},
   cat:{q:"",editing:null,pendingDel:null,open:{}},
-  eq:{users:null,editing:null,form:null},
+  eq:{users:null,editing:null,form:null,nuevo:null,enlace:null},
   err:"",ready:false,syncing:false,lastSync:0
 };
 var toastT=null,pollT=null;
@@ -97,11 +97,19 @@ function defaultView(){
   return "contar";
 }
 async function boot(){
+  var hm=/^#i=([A-Za-z0-9]{30,})$/.exec(location.hash||"");
+  if(hm){
+    try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}
+    S.auth="load";S.err="";render();
+    try{var rl=await api("entrarLink",{t:hm[1]});await enter(rl);return}
+    catch(e){S.linkErr=errMsg(e)}
+  }
   S.tok=lsGet("arq-tok");
-  if(!S.tok){S.auth="email";render();return}
+  if(!S.tok){S.auth="email";if(S.linkErr)S.err=S.linkErr;render();return}
   try{var me=await api("me");await enter({me:me})}
   catch(e){if(e.code==="net"){S.auth="load";S.err=errMsg(e);render();setTimeout(boot,5000)}else{S.auth="email";render()}}
 }
+window.addEventListener("hashchange",function(){if(/^#i=/.test(location.hash))boot()});
 function startPoll(){
   clearInterval(pollT);
   pollT=setInterval(function(){
@@ -162,7 +170,7 @@ function aplicarTema(){
 function render(){
   var tk=aplicarTema(),logo=tk==="cw"?LOGO_CW:LOGO,marca=tk==="zp"?'<img class="zpl" src="'+LOGO_ZP+'" alt="Zona Presidente">':'<img src="'+logo+'" alt="">ARQUEO · LA BARRA';
   var banners="";
-  if(S.err)banners+='<div class="banner bad">'+esc(S.err)+'</div>';
+  if(S.err&&S.auth==="app")banners+='<div class="banner bad">'+esc(S.err)+'</div>';
   $("#banners").innerHTML=banners;
   var top=$("#topbar");
   if(S.auth==="app"){
@@ -260,7 +268,8 @@ function authHTML(){
   return '<div class="panel login"><div><h1>Entrar</h1><p class="sub">Usa tu Gmail. Te enviamos un código para confirmar que eres tú; no necesitas contraseña.</p></div>'+
     (S.err?'<div class="banner bad">'+esc(S.err)+'</div>':"")+
     '<div class="field"><label class="lbl" for="lg-email">Tu Gmail</label><input id="lg-email" type="email" inputmode="email" autocomplete="email" autocapitalize="none" placeholder="nombre@gmail.com" value="'+esc(S.loginEmail)+'"></div>'+
-    '<button class="btn" data-act="lg-send"'+(S.loginBusy?" disabled":"")+'>'+(S.loginBusy?"Enviando…":"Enviarme el código")+'</button></div>';
+    '<button class="btn" data-act="lg-send"'+(S.loginBusy?" disabled":"")+'>'+(S.loginBusy?"Enviando…":"Enviarme el código")+'</button>'+
+    '<div class="lg-ayuda"><b>¿No puedes con el código?</b><p>Pídele a tu supervisora tu <b>enlace de acceso</b> por WhatsApp. Lo tocas una vez y entras, sin código y sin Gmail.</p></div></div>';
 }
 async function lgSend(){
   var em=($("#lg-email")||{}).value||S.loginEmail;S.loginEmail=String(em).trim().toLowerCase();

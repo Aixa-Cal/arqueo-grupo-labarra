@@ -121,3 +121,58 @@ document.addEventListener("click",function(ev){
   else if(act==="sem-contar"){var n=el.dataset.n;S.detail=null;S.vs=null;S.view="contar";S.step="elegir";S.draft=newDraft();S.draft.negocio=n;S.draft.turno=sugTurno(n,S.draft.fecha);render();window.scrollTo(0,0)}
 });
 document.addEventListener("toggle",function(ev){var t=ev.target;if(t&&t.classList&&t.classList.contains("sem-ayuda"))S.semAyuda=t.open},true);
+
+/* ---------- Equipo: agregar persona y enviar acceso por WhatsApp ---------- */
+function eqN(){return S.eq.nuevo}
+function eqEnlaceHTML(){
+  var e=S.eq.enlace;if(!e)return "";
+  var msg="Hola "+e.nombre.split(" ")[0]+" 👋\\n\\nToca este enlace para entrar a la app de La Barra. Es un solo toque, no necesitas código ni correo:\\n\\n"+e.url+"\\n\\nDespués de entrar, la app se queda abierta sola.";
+  var wa=e.tel?'<a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/'+waNum(e.tel)+'?text='+encodeURIComponent(msg)+'">Enviar por WhatsApp a '+esc(e.nombre.split(" ")[0])+'</a>':'<p class="hint">Esta persona no tiene teléfono guardado. Copia el enlace y envíaselo.</p>';
+  return '<div class="panel eq-enlace"><h2>Enlace listo para '+esc(e.nombre)+'</h2><p class="sub">Vale 7 días. Cada persona tiene el suyo: no lo reenvíes a otra.</p>'+wa+
+    '<button class="btn ghost" data-act="eqn-copiar">Copiar enlace</button><button class="linkbtn" data-act="eqn-cerrar">Listo, cerrar</button></div>';
+}
+function eqNuevoHTML(){
+  var n=eqN();
+  if(!n)return '<button class="btn" data-act="eqn-abrir">+ Agregar persona</button>';
+  var chips=S.cfg.todosNegocios.map(function(x,i){return '<button type="button" class="tchip'+(n.negocios.indexOf(x)>-1?" on":"")+'" data-act="eqn-neg" data-v="'+i+'">'+esc(x)+'</button>'}).join("");
+  var seg=[["colaborador","Colaborador"],["lider","Líder"],["supervisor","Supervisor"]].map(function(v){return '<button class="'+(n.rol===v[0]?"on":"")+'" data-act="eqn-rol" data-v="'+v[0]+'">'+v[1]+'</button>'}).join("");
+  var scoped=n.rol==="lider"||n.rol==="colaborador";
+  return '<div class="panel"><h2>Agregar persona</h2><p class="sub">Solo necesitas su nombre y su WhatsApp. No hace falta Gmail.</p>'+
+    '<div class="field"><label class="lbl" for="eqn-nombre">Nombre</label><input id="eqn-nombre" autocomplete="off" placeholder="Nombre y apellido" value="'+esc(n.nombre)+'"></div>'+
+    '<div class="field"><label class="lbl" for="eqn-tel">WhatsApp</label><input id="eqn-tel" type="tel" inputmode="tel" autocomplete="off" placeholder="809 555 1234" value="'+esc(n.telefono)+'"></div>'+
+    '<div class="lbl">Rol</div><div class="seg">'+seg+'</div>'+
+    (scoped?'<div><div class="lbl">Negocios</div><div class="chips" style="margin-top:8px">'+chips+'</div></div>':"")+
+    (scoped?'<div><div class="lbl">Turnos (opcional)</div><div class="chips" style="margin-top:8px">'+["1","2","3"].map(function(t){return '<button type="button" class="tchip'+(n.turnos.indexOf(t)>-1?" on":"")+'" data-act="eqn-tur" data-v="'+t+'">Turno '+t+'</button>'}).join("")+'</div></div>':"")+
+    '<div class="btnrow"><button class="btn" data-act="eqn-guardar">Guardar y crear enlace</button><button class="btn ghost" data-act="eqn-cerrar-form">Cancelar</button></div></div>';
+}
+async function eqInvitar(email){
+  var r=await api("invitar",{email:email});
+  S.eq.enlace={nombre:r.nombre,tel:r.telefono,url:location.origin+location.pathname+"#i="+r.token};
+}
+document.addEventListener("input",function(ev){
+  var t=ev.target;if(!t||!t.id||!S.eq||!S.eq.nuevo)return;
+  if(t.id==="eqn-nombre")S.eq.nuevo.nombre=t.value;else if(t.id==="eqn-tel")S.eq.nuevo.telefono=t.value;
+});
+document.addEventListener("click",function(ev){
+  var el=ev.target.closest("[data-act^='eqn-'],[data-act='eq-wa']");if(!el)return;
+  var act=el.dataset.act,v=el.dataset.v,n=S.eq.nuevo;
+  if(act==="eqn-abrir"){S.eq.nuevo={nombre:"",telefono:"",rol:"colaborador",negocios:[],turnos:[]};render()}
+  else if(act==="eqn-cerrar-form"){S.eq.nuevo=null;render()}
+  else if(act==="eqn-cerrar"){S.eq.enlace=null;render()}
+  else if(act==="eqn-rol"){n.rol=v;render()}
+  else if(act==="eqn-neg"){var nn=S.cfg.todosNegocios[+v],i=n.negocios.indexOf(nn);if(i>-1)n.negocios.splice(i,1);else n.negocios.push(nn);el.classList.toggle("on")}
+  else if(act==="eqn-tur"){var j=n.turnos.indexOf(v);if(j>-1)n.turnos.splice(j,1);else n.turnos.push(v);el.classList.toggle("on")}
+  else if(act==="eqn-copiar"){var u=S.eq.enlace&&S.eq.enlace.url;if(u&&navigator.clipboard)navigator.clipboard.writeText(u).then(function(){toast("Enlace copiado")},function(){toast("No se pudo copiar")});else toast("Mantén presionado el enlace para copiarlo")}
+  else if(act==="eqn-guardar"){
+    if(!n.nombre.trim()||String(n.telefono).replace(/\\D/g,"").length<10)return toast("Escribe el nombre y el WhatsApp completo.");
+    if((n.rol==="colaborador"||n.rol==="lider")&&!n.negocios.length)return toast("Elige al menos un negocio.");
+    guarded(async function(){
+      var r=await api("crearPersona",{nombre:n.nombre.trim(),telefono:n.telefono,rol:n.rol,negocios:n.negocios,turnos:n.turnos});
+      await eqInvitar(r.email);S.eq.nuevo=null;S.contactos=null;S.eq.users=await api("listUsers");render();window.scrollTo(0,0);
+    });
+  }
+  else if(act==="eq-wa"){
+    var id=el.dataset.id;
+    guarded(async function(){await eqInvitar(id);render();window.scrollTo(0,0)});
+  }
+});

@@ -4,10 +4,10 @@
  * Primera vez: ejecuta la función  instalar  una sola vez (ver instrucciones).
  */
 var TZ = 'America/Santo_Domingo';
-var TOKEN_DIAS = 60;
+var TOKEN_DIAS = 365;
 
 var H = {
-  Usuarios: ['email', 'nombre', 'rol', 'estado', 'negocios', 'creado', 'aprobadoPor', 'ultimoAcceso', 'telefono', 'turnos'],
+  Usuarios: ['email', 'nombre', 'rol', 'estado', 'negocios', 'creado', 'aprobadoPor', 'ultimoAcceso', 'telefono', 'turnos', 'invHash', 'invExp', 'invUsos'],
   Productos: ['id', 'nombre', 'cat', 'unidad', 'factor', 'tol', 'costo', 'critico', 'negocios', 'orden', 'activo'],
   Conteos: ['id', 'fecha', 'negocio', 'turno', 'resp', 'email', 'ts', 'estado', 'items', 'ventas', 'res', 'resumen', 'sin', 'ventasPor', 'ventasTs', 'rect', 'nota', 'cierre'],
   Entradas: ['id', 'fecha', 'negocio', 'resp', 'email', 'ts', 'nota', 'items', 'anulada', 'origen'],
@@ -378,6 +378,60 @@ function verifyCode(p) {
   });
 }
 
+/* ---- acceso por enlace de WhatsApp (sin código de correo) ---- */
+function crearPersona(me, p) {
+  var nombre = String(p.nombre || '').trim().slice(0, 60), tel = String(p.telefono || '').replace(/\D/g, '').slice(0, 15);
+  if (nombre.length < 2) fail('datos', 'Escribe el nombre.');
+  if (tel.length < 10) fail('datos', 'Escribe el teléfono de WhatsApp completo (10 números).');
+  if (['colaborador', 'lider', 'supervisor', 'admin', 'gerencia'].indexOf(p.rol) < 0) fail('datos', 'Rol inválido.');
+  var mail = String(p.email || '').trim() ? normEmail(p.email) : '';
+  return withLock(function () {
+    var email = mail || ('tel' + tel + '@sin-correo.labarra');
+    var todos = readAll('Usuarios');
+    for (var i = 0; i < todos.length; i++) {
+      if (todos[i].email === email || (todos[i].telefono && String(todos[i].telefono) === tel)) fail('datos', 'Ya existe una persona con ese ' + (todos[i].email === email ? 'correo' : 'teléfono') + ': ' + todos[i].nombre + '.');
+    }
+    ensureHeaders('Usuarios');
+    var u = { email: email, nombre: nombre, rol: p.rol, estado: 'aprobado', negocios: (p.negocios || []).map(String), creado: now(), aprobadoPor: me.email, ultimoAcceso: 0, telefono: tel, turnos: (p.turnos || []).map(String).filter(function (x) { return /^[1-3]$/.test(x); }), invHash: '', invExp: 0, invUsos: 0 };
+    appendObj('Usuarios', u);
+    cacheDrop();
+    bit(me.email, 'usuario', 'creó a ' + nombre + ' ' + u.rol + ' ' + u.negocios.join('|'));
+    return { ok: true, email: email };
+  });
+}
+function invitar(me, p) {
+  var email = String(p.email || '').trim().toLowerCase();
+  return withLock(function () {
+    var u = userByEmail(email, true);
+    if (!u) fail('datos', 'No existe esa persona.');
+    if (u.estado === 'bloqueado') fail('datos', 'Esa persona está bloqueada. Desbloquéala primero.');
+    var t = (Utilities.getUuid() + Utilities.getUuid()).replace(/-/g, '').slice(0, 40);
+    ensureHeaders('Usuarios');
+    u.invHash = sha(t + secret()); u.invExp = now() + 7 * 86400000; u.invUsos = 0;
+    writeRow('Usuarios', u._row, u);
+    cacheDrop();
+    bit(me.email, 'usuario', 'envió enlace de acceso a ' + u.nombre);
+    return { token: t, nombre: u.nombre, telefono: u.telefono || '' };
+  });
+}
+function entrarLink(p) {
+  var t = String(p.t || '').replace(/[^A-Za-z0-9]/g, '');
+  if (t.length < 30) fail('enlace', 'Este enlace no es válido. Pide uno nuevo por WhatsApp.');
+  var cache = CacheService.getScriptCache(), n = Number(cache.get('el_n')) || 0;
+  if (n > 40) fail('limite', 'Hay muchos intentos. Espera un minuto.');
+  cache.put('el_n', String(n + 1), 60);
+  return withLock(function () {
+    var h = sha(t + secret()), todos = readAll('Usuarios'), u = null;
+    for (var i = 0; i < todos.length; i++) if (todos[i].invHash && todos[i].invHash === h) { u = todos[i]; break; }
+    if (!u || Number(u.invExp) < now() || Number(u.invUsos) >= 6) fail('enlace', 'Este enlace ya no sirve. Pide uno nuevo por WhatsApp.');
+    if (u.estado === 'bloqueado') fail('bloqueado', 'Tu acceso está bloqueado.');
+    u.invUsos = Number(u.invUsos) + 1; u.ultimoAcceso = now();
+    writeRow('Usuarios', u._row, u);
+    cacheDrop();
+    return { token: makeToken(u.email), me: publicMe(u) };
+  });
+}
+
 function auth(tok) {
   var email = readToken(tok);
   if (!email) fail('sesion', 'Tu sesión venció. Entra de nuevo.');
@@ -402,6 +456,7 @@ function negOk(me, neg) {
 function dispatch(a, p, t) {
   if (a === 'reqCode') return reqCode(p);
   if (a === 'verifyCode') return verifyCode(p);
+  if (a === 'entrarLink') return entrarLink(p);
   var me = auth(t);
   if (a === 'me') return publicMe(me);
   if (me.estado === 'bloqueado') fail('bloqueado', 'Tu acceso está bloqueado.');
@@ -430,6 +485,8 @@ function dispatch(a, p, t) {
     case 'delProducto': need(me, ['admin']); return delProducto(me, p);
     case 'saveConfig': need(me, ['admin']); return saveConfig(me, p);
     case 'listUsers': need(me, ['admin']); return listUsers();
+    case 'crearPersona': need(me, ['admin']); return crearPersona(me, p);
+    case 'invitar': need(me, ['admin']); return invitar(me, p);
     case 'setUser': need(me, ['admin']); return setUser(me, p);
     case 'aliases': need(me, ['admin', 'supervisor', 'lider']); return getAliases();
     case 'saveAliases': need(me, ['admin', 'supervisor', 'lider']); return saveAliases(me, p);
@@ -1382,7 +1439,7 @@ function saveAliases(me, p) {
 
 /* ============================ equipo ============================ */
 function listUsers() {
-  return readAll('Usuarios').map(function (u) { return { email: u.email, nombre: u.nombre, rol: u.rol, estado: u.estado, negocios: u.negocios || [], creado: u.creado, ultimoAcceso: u.ultimoAcceso, telefono: u.telefono || '', turnos: u.turnos || [] }; });
+  return readAll('Usuarios').map(function (u) { return { email: u.email, nombre: u.nombre, rol: u.rol, estado: u.estado, negocios: u.negocios || [], creado: u.creado, ultimoAcceso: Number(u.ultimoAcceso) || 0, telefono: u.telefono || '', turnos: u.turnos || [], sinCorreo: /@sin-correo\.labarra$/.test(u.email) }; });
 }
 /* Personas con acceso y su teléfono, para recordatorios por WhatsApp */
 function contactos() {
@@ -1415,7 +1472,7 @@ function setUser(me, p) {
     bit(me.email, 'usuario', email + ' ' + u.rol + ' ' + u.estado + ' ' + (u.negocios || []).join('|'));
     if (nuevo) {
       try {
-        MailApp.sendEmail({ to: email, name: 'Arqueo La Barra', subject: 'Ya tienes acceso a Arqueo La Barra',
+        if (!/@sin-correo\.labarra$/.test(email)) MailApp.sendEmail({ to: email, name: 'Arqueo La Barra', subject: 'Ya tienes acceso a Arqueo La Barra',
           body: 'Hola ' + u.nombre + ',\n\nTu acceso fue aprobado como ' + u.rol + '.\nEntra aquí: ' + appUrl() + '\n\nUsa tu mismo Gmail; te pediremos un código por correo.' });
       } catch (e) { }
       notify('acceso-ok', 'Acceso aprobado', 'Bienvenido, ' + u.nombre + '.', { para: 'u:' + email, email: false });

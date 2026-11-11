@@ -103,3 +103,6 @@ input.ro{background:var(--line);color:var(--muted);border-style:dashed}
 .sem-ayuda summary{min-height:52px;display:flex;align-items:center;font-weight:800;cursor:pointer}
 .sem-pasos{margin:0 0 10px;padding-left:22px;display:grid;gap:10px}
 .sem-nota{background:var(--bg);border-radius:12px;padding:12px;margin:0 0 12px;font-size:.9rem;line-height:1.5;color:var(--muted)}
+.lg-ayuda{background:var(--field);border-radius:12px;padding:12px 14px;font-size:.92rem;line-height:1.45}.lg-ayuda p{margin:4px 0 0;color:var(--muted)}
+.eq-b{display:flex;gap:8px;flex:none}.eq-b .btn.small{min-height:44px}
+.eq-enlace{border:2px solid var(--ok)}.btn.wa{display:flex;align-items:center;justify-content:center;text-decoration:none;background:#1FA855;color:#fff}
