@@ -1,1 +1,14 @@
-{"nombre": "Lay Sal 55 g", "cat": "Papitas y salsas", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 123, "ejemplo": false}
+{
+ "nombre": "LAY'S ORIGINAL SAL 55 G",
+ "cat": "SNACKS / ALIMENTOS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 65,
+ "ejemplo": false
+}

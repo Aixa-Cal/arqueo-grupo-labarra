@@ -1,1 +1,14 @@
-{"nombre": "Modelo Negra 355 ml", "cat": "Cervezas", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 74, "ejemplo": false}
+{
+ "nombre": "NEGRA MODELO 355 ML",
+ "cat": "CERVEZAS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 31,
+ "ejemplo": false
+}

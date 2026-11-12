@@ -1,1 +1,14 @@
-{"nombre": "Natuchips Caribas Sal 55 g", "cat": "Papitas y salsas", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 124, "ejemplo": false}
+{
+ "nombre": "NATUCHIPS CARIBAS SAL 55 G",
+ "cat": "SNACKS / ALIMENTOS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 66,
+ "ejemplo": false
+}

@@ -1,1 +1,14 @@
-{"nombre": "The One 12 oz", "cat": "Cervezas", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 72, "ejemplo": false}
+{
+ "nombre": "THE ONE 12 OZ",
+ "cat": "CERVEZAS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 29,
+ "ejemplo": false
+}

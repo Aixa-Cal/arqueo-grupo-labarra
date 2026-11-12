@@ -1,1 +1,14 @@
-{"nombre": "M&M Original", "cat": "Chocolates", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 138, "ejemplo": false}
+{
+ "nombre": "M&M'S ORIGINAL",
+ "cat": "SNACKS / ALIMENTOS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 84,
+ "ejemplo": false
+}

@@ -1,1 +1,14 @@
-{"nombre": "Nosotras Nocturnas", "cat": "Higiene y cuidado personal", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 159, "ejemplo": false}
+{
+ "nombre": "NOSOTRAS NOCTURNAS",
+ "cat": "CUIDADO PERSONAL / SALUD",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 101,
+ "ejemplo": false
+}

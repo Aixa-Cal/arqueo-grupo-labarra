@@ -1,1 +1,14 @@
-{"nombre": "L&M Samba", "cat": "Cigarrillos", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 190, "ejemplo": false}
+{
+ "nombre": "L&M SAMBA",
+ "cat": "TABACO / NICOTINA",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 132,
+ "ejemplo": false
+}

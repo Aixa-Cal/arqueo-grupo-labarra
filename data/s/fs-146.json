@@ -1,1 +1,14 @@
-{"nombre": "Marlboro menta de 20", "cat": "Cigarrillos", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 182, "ejemplo": false}
+{
+ "nombre": "MLB CRAF 3 MNT BOX20",
+ "cat": "TABACO / NICOTINA",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 124,
+ "ejemplo": false
+}

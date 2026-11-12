@@ -1,1 +1,14 @@
-{"nombre": "Nutri-Grain Cinnamon Apple", "cat": "Barras y frutos secos", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 154, "ejemplo": false}
+{
+ "nombre": "NUTRI-GRAIN CINNAMON APPLE",
+ "cat": "SNACKS / ALIMENTOS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 96,
+ "ejemplo": false
+}

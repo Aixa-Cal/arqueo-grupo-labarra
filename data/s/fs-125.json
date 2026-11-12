@@ -1,1 +1,14 @@
-{"nombre": "Trojan Pro-Tech, paquete de 3", "cat": "Higiene y cuidado personal", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 161, "ejemplo": false}
+{
+ "nombre": "TROJAN PRO-TECH, PAQUETE DE 3",
+ "cat": "CUIDADO PERSONAL / SALUD",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 103,
+ "ejemplo": false
+}

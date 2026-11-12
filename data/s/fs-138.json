@@ -1,1 +1,14 @@
-{"nombre": "Tratamiento gasolina HS 12 oz", "cat": "Automotriz", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 174, "ejemplo": false}
+{
+ "nombre": "TRATAMIENTO GASOLINA HS 12 OZ",
+ "cat": "AUTOMOTRIZ / AMBIENTADORES",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 116,
+ "ejemplo": false
+}

@@ -1,1 +1,14 @@
-{"nombre": "Salsa Tostitos Mild Red 15.5 oz", "cat": "Papitas y salsas", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 129, "ejemplo": false}
+{
+ "nombre": "SALSA TOSTITOS MILD RED 15.5 OZ",
+ "cat": "SNACKS / ALIMENTOS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 71,
+ "ejemplo": false
+}

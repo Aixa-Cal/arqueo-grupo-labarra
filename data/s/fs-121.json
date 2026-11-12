@@ -1,1 +1,14 @@
-{"nombre": "R/S Pistachios 1.5 oz", "cat": "Barras y frutos secos", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 157, "ejemplo": false}
+{
+ "nombre": "R/S PISTACHIOS 1.5 OZ",
+ "cat": "SNACKS / ALIMENTOS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 99,
+ "ejemplo": false
+}

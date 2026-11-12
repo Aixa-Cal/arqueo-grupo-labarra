@@ -1,1 +1,14 @@
-{"nombre": "Vent Wrap Vainilla", "cat": "Ambientadores", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 171, "ejemplo": false}
+{
+ "nombre": "VENT WRAP VAINILLA",
+ "cat": "AUTOMOTRIZ / AMBIENTADORES",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 113,
+ "ejemplo": false
+}

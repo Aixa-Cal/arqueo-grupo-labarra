@@ -1,1 +1,14 @@
-{"nombre": "Sopa de pollo Issima", "cat": "Sopas", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 152, "ejemplo": false}
+{
+ "nombre": "SOPA DE POLLO ISSIMA",
+ "cat": "SNACKS / ALIMENTOS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 95,
+ "ejemplo": false
+}

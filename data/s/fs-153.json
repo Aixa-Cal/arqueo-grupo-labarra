@@ -1,1 +1,14 @@
-{"nombre": "L&M Forward", "cat": "Cigarrillos", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 189, "ejemplo": false}
+{
+ "nombre": "L&M FORWARD",
+ "cat": "TABACO / NICOTINA",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 131,
+ "ejemplo": false
+}

@@ -1,1 +1,14 @@
-{"nombre": "Glenfiddich", "cat": "Ron, vodka y whisky", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 107, "ejemplo": false}
+{
+ "nombre": "GLENFIDDICH",
+ "cat": "VINOS / LICORES / OTROS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 169,
+ "ejemplo": false
+}

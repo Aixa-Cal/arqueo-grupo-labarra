@@ -1,1 +1,14 @@
-{"nombre": "Trojan Ecstacy texturizado", "cat": "Higiene y cuidado personal", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 163, "ejemplo": false}
+{
+ "nombre": "TROJAN ECSTACY TEXTURIZADO",
+ "cat": "CUIDADO PERSONAL / SALUD",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 105,
+ "ejemplo": false
+}

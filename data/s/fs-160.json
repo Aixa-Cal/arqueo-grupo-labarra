@@ -1,1 +1,14 @@
-{"nombre": "VEEV One Space Grey", "cat": "VEEV", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 196, "ejemplo": false}
+{
+ "nombre": "VEEV ONE SPACE GREY",
+ "cat": "TABACO / NICOTINA",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 138,
+ "ejemplo": false
+}

@@ -1,1 +1,14 @@
-{"nombre": "Galletas Oreo", "cat": "Galletas", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 150, "ejemplo": false}
+{
+ "nombre": "GALLETAS OREO",
+ "cat": "SNACKS / ALIMENTOS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 93,
+ "ejemplo": false
+}

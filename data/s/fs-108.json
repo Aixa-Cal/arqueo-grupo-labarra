@@ -1,1 +1,14 @@
-{"nombre": "Doublemint — chicle", "cat": "Gomas de mascar", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 144, "ejemplo": false}
+{
+ "nombre": "DOUBLEMINT - CHICLE",
+ "cat": "SNACKS / ALIMENTOS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 87,
+ "ejemplo": false
+}

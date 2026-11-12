@@ -1,1 +1,14 @@
-{"nombre": "VEEV N.SML Blue Mint 3.5%", "cat": "VEEV", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 194, "ejemplo": false}
+{
+ "nombre": "VEEV N.SML BLUE MINT 3.5%",
+ "cat": "TABACO / NICOTINA",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 136,
+ "ejemplo": false
+}

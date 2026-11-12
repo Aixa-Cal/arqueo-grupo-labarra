@@ -1,1 +1,14 @@
-{"nombre": "Ron León Jimenez 110", "cat": "Ron, vodka y whisky", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 101, "ejemplo": false}
+{
+ "nombre": "LEÓN JIMENES 110 — VERIFICAR TIPO",
+ "cat": "VINOS / LICORES / OTROS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 159,
+ "ejemplo": false
+}

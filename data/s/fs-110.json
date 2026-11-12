@@ -1,1 +1,14 @@
-{"nombre": "Galletas Biscoff 250 g", "cat": "Galletas", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 146, "ejemplo": false}
+{
+ "nombre": "GALLETAS BISCOFF 250 G",
+ "cat": "SNACKS / ALIMENTOS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 89,
+ "ejemplo": false
+}

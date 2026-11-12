@@ -1,0 +1,14 @@
+{
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "ejemplo": false,
+ "nombre": "SVUKIL VODKA",
+ "cat": "LICORES / BEBIDAS ALCOHÓLICAS",
+ "orden": 55
+}

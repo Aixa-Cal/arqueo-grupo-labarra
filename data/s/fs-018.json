@@ -1,1 +1,14 @@
-{"nombre": "San Pellegrino Zero Peach Clementine 330 ml", "cat": "Jugos, agua y mezcladores", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 54, "ejemplo": false}
+{
+ "nombre": "SAN PELLEGRINO ZERO PEACH CLEMENTINE 330 ML",
+ "cat": "BEBIDAS SIN ALCOHOL / MIXERS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 19,
+ "ejemplo": false
+}

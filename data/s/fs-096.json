@@ -1,1 +1,14 @@
-{"nombre": "Salsa Tostito Santa Elena", "cat": "Papitas y salsas", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 132, "ejemplo": false}
+{
+ "nombre": "SALSA TOSTITO SANTA ELENA",
+ "cat": "SNACKS / ALIMENTOS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 74,
+ "ejemplo": false
+}

@@ -1,1 +1,14 @@
-{"nombre": "Pinito Leather", "cat": "Ambientadores", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 168, "ejemplo": false}
+{
+ "nombre": "PINITO LEATHER",
+ "cat": "AUTOMOTRIZ / AMBIENTADORES",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 110,
+ "ejemplo": false
+}

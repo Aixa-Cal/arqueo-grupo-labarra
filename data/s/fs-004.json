@@ -1,1 +1,14 @@
-{"nombre": "Fireball Blazin Apple 50 ml", "cat": "Bebidas alcohólicas listas para tomar", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 40, "ejemplo": false}
+{
+ "nombre": "FIREBALL BLAZIN APPLE 50 ML",
+ "cat": "BEBIDAS SIN ALCOHOL / MIXERS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 4,
+ "ejemplo": false
+}

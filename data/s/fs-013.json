@@ -1,1 +1,14 @@
-{"nombre": "Soda amarga Enriquillo o Canada Dry 400 ml", "cat": "Jugos, agua y mezcladores", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 49, "ejemplo": false}
+{
+ "nombre": "SODA AMARGA ENRIQUILLO O CANADA DRY 400 ML",
+ "cat": "BEBIDAS SIN ALCOHOL / MIXERS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 14,
+ "ejemplo": false
+}

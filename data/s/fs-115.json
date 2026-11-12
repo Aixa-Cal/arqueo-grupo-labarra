@@ -1,1 +1,14 @@
-{"nombre": "Nissin Sopa de Pollo", "cat": "Sopas", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 151, "ejemplo": false}
+{
+ "nombre": "NISSIN SOPA DE POLLO",
+ "cat": "SNACKS / ALIMENTOS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 94,
+ "ejemplo": false
+}

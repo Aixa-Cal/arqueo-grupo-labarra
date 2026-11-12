@@ -1,1 +1,14 @@
-{"nombre": "Moët & Chandon Rosé Impérial", "cat": "Espumantes", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 116, "ejemplo": false}
+{
+ "nombre": "MOËT & CHANDON ROSÉ IMPÉRIAL",
+ "cat": "VINOS / LICORES / OTROS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 166,
+ "ejemplo": false
+}

@@ -1,1 +1,14 @@
-{"nombre": "Nature Valley Sweet & Salty Chocolate Bar", "cat": "Barras y frutos secos", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 158, "ejemplo": false}
+{
+ "nombre": "NATURE VALLEY SWEET & SALTY CHOCOLATE BAR",
+ "cat": "SNACKS / ALIMENTOS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 100,
+ "ejemplo": false
+}

@@ -1,1 +1,14 @@
-{"nombre": "Country Club Merengue 400 ml", "cat": "Refrescos sin alcohol", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 66, "ejemplo": false}
+{
+ "nombre": "COUNTRY CLUB MERENGUE 400 ML",
+ "cat": "REFRESCOS / AGUAS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 148,
+ "ejemplo": false
+}

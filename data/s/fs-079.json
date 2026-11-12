@@ -1,1 +1,14 @@
-{"nombre": "Moët & Chandon Blue", "cat": "Espumantes", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 115, "ejemplo": false}
+{
+ "nombre": "MOËT & CHANDON BLUE",
+ "cat": "VINOS / LICORES / OTROS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 165,
+ "ejemplo": false
+}

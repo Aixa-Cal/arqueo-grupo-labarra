@@ -1,1 +1,14 @@
-{"nombre": "Líquido de guía HS 12 oz", "cat": "Automotriz", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 172, "ejemplo": false}
+{
+ "nombre": "LÍQUIDO DE GUÍA HS 12 OZ",
+ "cat": "AUTOMOTRIZ / AMBIENTADORES",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 114,
+ "ejemplo": false
+}

@@ -1,1 +1,14 @@
-{"nombre": "911 400 ml", "cat": "Energizantes", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 38, "ejemplo": false}
+{
+ "nombre": "911 400 ML",
+ "cat": "BEBIDAS SIN ALCOHOL / MIXERS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 2,
+ "ejemplo": false
+}

@@ -1,1 +1,14 @@
-{"nombre": "Pinito New Car", "cat": "Ambientadores", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 166, "ejemplo": false}
+{
+ "nombre": "PINITO NEW CAR",
+ "cat": "AUTOMOTRIZ / AMBIENTADORES",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 108,
+ "ejemplo": false
+}

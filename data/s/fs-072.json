@@ -1,1 +1,14 @@
-{"nombre": "Patrón XO Café", "cat": "Otros licores", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 108, "ejemplo": false}
+{
+ "nombre": "PATRÓN XO CAFE",
+ "cat": "VINOS / LICORES / OTROS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 162,
+ "ejemplo": false
+}

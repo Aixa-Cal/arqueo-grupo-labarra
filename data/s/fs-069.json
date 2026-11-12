@@ -1,1 +1,14 @@
-{"nombre": "Buchanan's 15 años", "cat": "Ron, vodka y whisky", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 105, "ejemplo": false}
+{
+ "nombre": "BUCHANAN'S 15 AÑOS",
+ "cat": "VINOS / LICORES / OTROS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 164,
+ "ejemplo": false
+}

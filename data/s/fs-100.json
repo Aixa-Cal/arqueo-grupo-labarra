@@ -1,1 +1,14 @@
-{"nombre": "Chocolate Más Más", "cat": "Chocolates", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 136, "ejemplo": false}
+{
+ "nombre": "CHOCOLATE MÁS MÁS",
+ "cat": "SNACKS / ALIMENTOS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 78,
+ "ejemplo": false
+}

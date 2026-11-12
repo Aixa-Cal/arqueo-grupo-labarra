@@ -1,1 +1,14 @@
-{"nombre": "Marlboro rojo Crafted de 20", "cat": "Cigarrillos", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 180, "ejemplo": false}
+{
+ "nombre": "MLB CRAF ROJO 3 FF BOX20",
+ "cat": "TABACO / NICOTINA",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 122,
+ "ejemplo": false
+}

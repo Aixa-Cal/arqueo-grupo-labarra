@@ -1,1 +1,14 @@
-{"nombre": "Bohemia Especial 22 oz", "cat": "Cervezas", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 83, "ejemplo": false}
+{
+ "nombre": "BOHEMIA ESPECIAL 22 OZ",
+ "cat": "CERVEZAS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 40,
+ "ejemplo": false
+}

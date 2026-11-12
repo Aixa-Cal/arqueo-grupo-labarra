@@ -1,1 +1,14 @@
-{"nombre": "San Pellegrino Limone Menta 330 ml", "cat": "Jugos, agua y mezcladores", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 53, "ejemplo": false}
+{
+ "nombre": "SAN PELLEGRINO LIMONE MENTA 330 ML",
+ "cat": "BEBIDAS SIN ALCOHOL / MIXERS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 18,
+ "ejemplo": false
+}

@@ -1,1 +1,14 @@
-{"nombre": "M&M Peanut Butter", "cat": "Chocolates", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 140, "ejemplo": false}
+{
+ "nombre": "M&M'S PEANUT BUTTER",
+ "cat": "SNACKS / ALIMENTOS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 86,
+ "ejemplo": false
+}

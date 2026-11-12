@@ -1,1 +1,14 @@
-{"nombre": "Galletas Hatuey", "cat": "Galletas", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 147, "ejemplo": false}
+{
+ "nombre": "GALLETAS HATUEY",
+ "cat": "SNACKS / ALIMENTOS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 90,
+ "ejemplo": false
+}

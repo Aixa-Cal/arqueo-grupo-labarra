@@ -1,1 +1,14 @@
-{"nombre": "Vino 19 Crimes", "cat": "Vinos", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 109, "ejemplo": false}
+{
+ "nombre": "VINO 19 CRIMES",
+ "cat": "VINOS / LICORES / OTROS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 153,
+ "ejemplo": false
+}

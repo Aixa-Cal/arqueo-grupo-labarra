@@ -1,1 +1,14 @@
-{"nombre": "Vino 689", "cat": "Vinos", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 111, "ejemplo": false}
+{
+ "nombre": "VINO 689",
+ "cat": "VINOS / LICORES / OTROS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 155,
+ "ejemplo": false
+}

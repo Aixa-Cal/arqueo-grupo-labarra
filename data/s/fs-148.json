@@ -1,1 +1,14 @@
-{"nombre": "Marlboro Gold de 10", "cat": "Cigarrillos", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 184, "ejemplo": false}
+{
+ "nombre": "MLB GOLD 3.5 BOX10",
+ "cat": "TABACO / NICOTINA",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 126,
+ "ejemplo": false
+}

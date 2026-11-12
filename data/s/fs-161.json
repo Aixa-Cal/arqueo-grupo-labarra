@@ -1,1 +1,14 @@
-{"nombre": "ZYN Black Cherry 3 mg", "cat": "ZYN", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 197, "ejemplo": false}
+{
+ "nombre": "ZYN BLACK CHERRY 3 MG",
+ "cat": "TABACO / NICOTINA",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 139,
+ "ejemplo": false
+}

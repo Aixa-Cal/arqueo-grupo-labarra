@@ -1,1 +1,14 @@
-{"nombre": "Marlboro Sunset Mix de 10", "cat": "Cigarrillos", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 188, "ejemplo": false}
+{
+ "nombre": "MLB SUNSET MIX BOX10",
+ "cat": "TABACO / NICOTINA",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 130,
+ "ejemplo": false
+}

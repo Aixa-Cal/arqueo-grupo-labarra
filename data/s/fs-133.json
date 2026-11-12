@@ -1,1 +1,14 @@
-{"nombre": "Pinito Vainilla", "cat": "Ambientadores", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 169, "ejemplo": false}
+{
+ "nombre": "PINITO VAINILLA",
+ "cat": "AUTOMOTRIZ / AMBIENTADORES",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 111,
+ "ejemplo": false
+}

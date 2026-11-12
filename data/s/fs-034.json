@@ -1,1 +1,14 @@
-{"nombre": "Corona Extra 330 ml", "cat": "Cervezas", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 70, "ejemplo": false}
+{
+ "nombre": "CORONA EXTRA 330 ML",
+ "cat": "CERVEZAS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 27,
+ "ejemplo": false
+}

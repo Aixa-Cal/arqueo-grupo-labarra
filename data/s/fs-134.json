@@ -1,1 +1,14 @@
-{"nombre": "Pinito Cinnamon Apple", "cat": "Ambientadores", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 170, "ejemplo": false}
+{
+ "nombre": "PINITO CINNAMON APPLE",
+ "cat": "AUTOMOTRIZ / AMBIENTADORES",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 112,
+ "ejemplo": false
+}

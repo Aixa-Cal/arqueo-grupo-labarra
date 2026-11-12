@@ -1,1 +1,14 @@
-{"nombre": "Coolant verde Crystal HD, galón", "cat": "Automotriz", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 178, "ejemplo": false}
+{
+ "nombre": "COOLANT VERDE CRYSTAL HD, GALÓN",
+ "cat": "AUTOMOTRIZ / AMBIENTADORES",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 120,
+ "ejemplo": false
+}

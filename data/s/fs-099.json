@@ -1,1 +1,14 @@
-{"nombre": "Hershey Cookie — chocolate", "cat": "Chocolates", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 135, "ejemplo": false}
+{
+ "nombre": "HERSHEY COOKIE - CHOCOLATE",
+ "cat": "SNACKS / ALIMENTOS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 77,
+ "ejemplo": false
+}

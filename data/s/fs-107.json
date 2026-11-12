@@ -1,1 +1,14 @@
-{"nombre": "Pringles Crema y Cebolla 37 g", "cat": "Pringles", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 143, "ejemplo": false}
+{
+ "nombre": "PRINGLES CREMA Y CEBOLLA 37 G",
+ "cat": "SNACKS / ALIMENTOS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 83,
+ "ejemplo": false
+}

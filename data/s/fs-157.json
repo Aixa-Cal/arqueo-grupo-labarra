@@ -1,1 +1,14 @@
-{"nombre": "TEREA Zesty Mint BOX10", "cat": "Tabaco calentado TEREA", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 193, "ejemplo": false}
+{
+ "nombre": "TEREA ZESTY MINT BOX10",
+ "cat": "TABACO / NICOTINA",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 135,
+ "ejemplo": false
+}

@@ -1,1 +1,14 @@
-{"nombre": "Ice Fruit Punch — botella plástica", "cat": "Bebidas Ice", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 121, "ejemplo": false}
+{
+ "nombre": "ICE FRUIT PUNCH — BOTELLA PLÁSTICA",
+ "cat": "LICORES / BEBIDAS ALCOHÓLICAS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 63,
+ "ejemplo": false
+}

@@ -1,1 +1,14 @@
-{"nombre": "Trojan Magnum lubricado, paquete de 3", "cat": "Higiene y cuidado personal", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 162, "ejemplo": false}
+{
+ "nombre": "TROJAN MAGNUM LUBRICADO, PAQUETE DE 3",
+ "cat": "CUIDADO PERSONAL / SALUD",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 104,
+ "ejemplo": false
+}

@@ -1,1 +1,14 @@
-{"nombre": "Doritos Nacho 70 g", "cat": "Papitas y salsas", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 126, "ejemplo": false}
+{
+ "nombre": "DORITOS NACHO 70 G",
+ "cat": "SNACKS / ALIMENTOS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 68,
+ "ejemplo": false
+}

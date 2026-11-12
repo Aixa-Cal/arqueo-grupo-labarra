@@ -1,1 +1,14 @@
-{"nombre": "Vive 100", "cat": "Energizantes", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 39, "ejemplo": false}
+{
+ "nombre": "VIVE 100",
+ "cat": "BEBIDAS SIN ALCOHOL / MIXERS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 3,
+ "ejemplo": false
+}

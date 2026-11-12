@@ -1,1 +1,14 @@
-{"nombre": "Ice Black Cherry — botella plástica", "cat": "Bebidas Ice", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 118, "ejemplo": false}
+{
+ "nombre": "ICE BLACK CHERRY — BOTELLA PLÁSTICA",
+ "cat": "LICORES / BEBIDAS ALCOHÓLICAS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 60,
+ "ejemplo": false
+}

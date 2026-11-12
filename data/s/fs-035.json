@@ -1,1 +1,14 @@
-{"nombre": "Michelob Ultra 355 ml", "cat": "Cervezas", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 71, "ejemplo": false}
+{
+ "nombre": "MICHELOB ULTRA 355 ML",
+ "cat": "CERVEZAS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 28,
+ "ejemplo": false
+}

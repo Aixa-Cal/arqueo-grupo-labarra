@@ -1,1 +1,14 @@
-{"nombre": "Club Social Original", "cat": "Galletas", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 148, "ejemplo": false}
+{
+ "nombre": "CLUB SOCIAL ORIGINAL",
+ "cat": "SNACKS / ALIMENTOS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 91,
+ "ejemplo": false
+}

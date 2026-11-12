@@ -1,1 +1,14 @@
-{"nombre": "The Glenlivet", "cat": "Ron, vodka y whisky", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 106, "ejemplo": false}
+{
+ "nombre": "THE GLENLIVET",
+ "cat": "VINOS / LICORES / OTROS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 168,
+ "ejemplo": false
+}

@@ -1,1 +1,14 @@
-{"nombre": "Snickers — chocolate", "cat": "Chocolates", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 133, "ejemplo": false}
+{
+ "nombre": "SNICKERS - CHOCOLATE",
+ "cat": "SNACKS / ALIMENTOS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 75,
+ "ejemplo": false
+}

@@ -1,1 +1,14 @@
-{"nombre": "Gatorade Naranja 20 oz", "cat": "Bebidas hidratantes", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 62, "ejemplo": false}
+{
+ "nombre": "GATORADE NARANJA 20 OZ",
+ "cat": "BEBIDAS SIN ALCOHOL / MIXERS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 24,
+ "ejemplo": false
+}

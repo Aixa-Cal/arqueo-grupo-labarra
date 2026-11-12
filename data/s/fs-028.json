@@ -1,1 +1,14 @@
-{"nombre": "Sprite 400 ml", "cat": "Refrescos sin alcohol", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 64, "ejemplo": false}
+{
+ "nombre": "SPRITE 400 ML",
+ "cat": "REFRESCOS / AGUAS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 146,
+ "ejemplo": false
+}

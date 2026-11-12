@@ -1,1 +1,14 @@
-{"nombre": "Heineken 650 ml", "cat": "Cervezas", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 87, "ejemplo": false}
+{
+ "nombre": "HEINEKEN 650 ML",
+ "cat": "CERVEZAS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 44,
+ "ejemplo": false
+}

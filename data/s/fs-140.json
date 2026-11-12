@@ -1,1 +1,14 @@
-{"nombre": "Líquido de frenos HS DOT3 12 oz", "cat": "Automotriz", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 176, "ejemplo": false}
+{
+ "nombre": "LÍQUIDO DE FRENOS HS DOT3 12 OZ",
+ "cat": "AUTOMOTRIZ / AMBIENTADORES",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 118,
+ "ejemplo": false
+}

@@ -1,1 +1,14 @@
-{"nombre": "Brugal Doble Reserva 350 ml", "cat": "Ron, vodka y whisky", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 91, "ejemplo": false}
+{
+ "nombre": "BRUGAL DOBLE RESERVA 350 ML",
+ "cat": "LICORES / BEBIDAS ALCOHÓLICAS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 48,
+ "ejemplo": false
+}

@@ -1,1 +1,14 @@
-{"nombre": "Agua de coco con trozos, 11.8 oz — Goya", "cat": "Jugos, agua y mezcladores", "unidad": "unid", "factor": 1, "tol": 0.02, "costo": 0, "negocios": ["Food Shop", "Food Shop General"], "orden": 56, "ejemplo": false}
+{
+ "nombre": "AGUA DE COCO CON TROZOS, 11.8 OZ - GOYA",
+ "cat": "REFRESCOS / AGUAS",
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "orden": 150,
+ "ejemplo": false
+}
