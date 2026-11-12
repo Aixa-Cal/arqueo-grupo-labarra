@@ -166,10 +166,11 @@ function contarHTML(){
 function cardHTML(p){
   var v=S.draft.vals[p.id]||(S.draft.vals[p.id]={ini:"",ent:"",fin:"",src:""});
   var dbl=conDoble(),lockIni=!!v.src&&!isAdmin()&&!dbl;
-  function f(k,l){return '<label class="f"><span>'+l+(k==="ini"&&lockIni?' 🔒':'')+'</span><input'+(k==="ini"&&lockIni?' readonly tabindex="-1" class="ro"':'')+' id="i-'+esc(p.id)+'-'+k+'" data-pid="'+esc(p.id)+'" data-f="'+k+'" inputmode="decimal" autocomplete="off" placeholder="0" value="'+esc(v[k])+'"></label>'}
+  function stp(k,d,t){return '<button type="button" class="sb" data-act="stp" data-sp="'+esc(p.id)+'" data-sf="'+k+'" data-d="'+d+'" aria-label="'+t+'" tabindex="-1">'+(d>0?'+':'−')+'</button>'}
+  function f(k,l){var lk=k==="ini"&&lockIni;return '<div class="f"><label for="i-'+esc(p.id)+'-'+k+'"><span>'+l+(lk?' 🔒':'')+'</span></label><div class="stp">'+(lk?'':stp(k,-1,'Menos'))+'<input'+(lk?' readonly tabindex="-1" class="ro"':'')+' id="i-'+esc(p.id)+'-'+k+'" data-pid="'+esc(p.id)+'" data-f="'+k+'" inputmode="decimal" autocomplete="off" placeholder="0" value="'+esc(v[k])+'">'+(lk?'':stp(k,1,'Más'))+'</div></div>'}
   var u=usage(v);
   return '<section class="pcard'+(u?(u.real<0?" s-crit":" s-ok"):"")+'" id="card-'+esc(p.id)+'" data-n="'+esc(String(p.nombre).toLowerCase())+'" data-c="'+esc(p.cat||"")+'" data-z="'+(isZero(v)?"1":"")+'" data-p="'+(usage(v)?"":"1")+'"><div class="phead"><h3>'+esc(p.nombre)+'</h3><span class="unit">'+esc(p.unidad)+'</span></div>'+
-    (sinEnt(p)?'<div class="grid2"><label class="f"><span>Cierre: quedan</span><input id="i-'+esc(p.id)+'-fin" data-pid="'+esc(p.id)+'" data-f="fin" inputmode="decimal" autocomplete="off" placeholder="0" value="'+esc(v.fin)+'"></label></div>':dbl?'<div class="grid3">'+f("ini","Inicio: había")+f("ent","Llegó")+f("fin","Cierre: quedan")+'</div>':'<div class="grid2">'+f("ent","Llegó")+f("fin","Cierre: quedan")+'</div>')+
+    (sinEnt(p)?'<div class="grid2 g1">'+f("fin","Cierre: quedan")+'</div>':dbl?'<div class="grid3">'+f("ini","Inicio: había")+f("ent","Llegó")+f("fin","Cierre: quedan")+'</div>':'<div class="grid2">'+f("ent","Llegó")+f("fin","Cierre: quedan")+'</div>')+
     '<div class="res" id="res-'+esc(p.id)+'">'+usageHTML(u)+'</div><p class="note" id="note-'+esc(p.id)+'">'+noteText(v)+'</p></section>';
 }
 function sinEnt(p){return !!S.draft&&/^La Barra/.test(S.draft.negocio)&&/funda abierta/i.test(p.nombre||'')}
@@ -214,7 +215,7 @@ function updateProgress(){
   $("#meter").style.width=(pr.total?pr.done/pr.total*100:0)+"%";
   var b=$("#saveBtn"),m=$("#saveMsg");if(!b)return;
   var cok=cierreOk(S.draft),ok=pr.done>0&&pr.partial===0&&cok&&!S.saving;
-  b.disabled=!ok;b.textContent=S.saving?"Guardando…":"Guardar conteo";
+  b.disabled=!ok;b.textContent=S.saving?"Guardando…":(pr.done===0&&pr.partial===0&&pr.total?"Faltan "+pr.total+" por contar":"Guardar conteo");
   m.textContent=pr.partial>0?("Falta «Había» en "+pr.partial+(pr.partial>1?" productos":" producto")):
     pr.done===0?"Cuenta al menos un producto":!cok?"Completa el cierre del turno":(pr.total-pr.done>0?"Quedan "+(pr.total-pr.done)+" sin contar; se guardan los "+pr.done+" listos":"Todo listo para guardar");
 }

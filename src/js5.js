@@ -86,6 +86,13 @@ document.addEventListener("click",function(ev){
   var A={
     "ck":function(){var c=cierreDe(S.draft),i=+v;c.chk[i]=!c.chk[i];cierreRefresh()},
     "fz":function(){cierreDe(S.draft).fz.ok=v;cierreRefresh()},
+    "stp":function(){
+      if(!S.draft)return;var pid=el.dataset.sp,k=el.dataset.sf,vv=S.draft.vals[pid];if(!vv)return;
+      var cur=num(vv[k]);if(cur==null)cur=0;var nx=Math.max(0,Math.round((cur+(+el.dataset.d))*100)/100);
+      vv[k]=fmtRaw(nx);if(k==="ini")vv.iniTouched=true;if(k==="ent")vv.entTouched=true;
+      var inp=document.getElementById("i-"+pid+"-"+k);if(inp)inp.value=vv[k];
+      updateCard(pid);updateProgress();persistDraft();
+    },
     "ban":function(){cierreDe(S.draft).bano[el.dataset.k]=v;cierreRefresh()},
     "caf":function(){cierreDe(S.draft).cafe[el.dataset.k]=v;cierreRefresh()},
     "nov":function(){cierreDe(S.draft).nov=v;cierreRefresh()},

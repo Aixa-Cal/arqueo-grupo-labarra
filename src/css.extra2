@@ -120,3 +120,24 @@ input.ro{background:var(--line);color:var(--muted);border-style:dashed}
 .ley-t .linkbtn{font-weight:700;color:var(--brand)}
 .f span{font-size:.95rem}.f input{min-height:58px;font-size:1.4rem}
 .pcard h3{font-size:1.1rem}
+
+/* Contador con − y + */
+.stp{display:flex;gap:6px;align-items:stretch}
+.stp input{flex:1 1 auto;min-width:0;padding:6px 2px}
+.sb{flex:0 0 44px;min-height:58px;border:0;border-radius:12px;background:var(--brand);color:#fff;font-size:1.7rem;font-weight:800;line-height:1;display:grid;place-items:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.sb:active{transform:scale(.94);filter:brightness(.9)}
+.f label{display:block;text-align:center}
+.grid3{grid-template-columns:1fr}
+.grid3 .f{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
+.grid3 .f label{flex:1}.grid3 .f label span{text-align:left}
+.grid3 .stp{flex:0 0 64%}
+.g1{grid-template-columns:1fr}
+.pcard{padding:12px;gap:8px}
+.pcard.s-ok{background:color-mix(in srgb,var(--ok) 9%,var(--surface))}
+.pcard.s-crit{background:color-mix(in srgb,var(--crit) 8%,var(--surface))}
+.res:empty{display:none}.note:empty{display:none}
+.meter{height:12px}
+.savemsg{font-weight:600}
+.stp{gap:4px}.sb{flex:0 0 38px;font-size:1.5rem;border-radius:10px}
+.sb[data-d="-1"]{background:var(--field);color:var(--brand);border:2px solid var(--line)}
+.stp input{font-size:1.5rem}
