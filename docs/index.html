@@ -2073,9 +2073,14 @@ function eqNuevoHTML(){
     (scoped?'<div><div class="lbl">Turnos (opcional)</div><div class="chips" style="margin-top:8px">'+["1","2","3"].map(function(t){return '<button type="button" class="tchip'+(n.turnos.indexOf(t)>-1?" on":"")+'" data-act="eqn-tur" data-v="'+t+'">Turno '+t+'</button>'}).join("")+'</div></div>':"")+
     '<div class="btnrow"><button class="btn" data-act="eqn-guardar">Guardar y crear enlace</button><button class="btn ghost" data-act="eqn-cerrar-form">Cancelar</button></div></div>';
 }
+function appBase(){
+  var h=location.hostname;
+  /* si la administración abre la app desde Apps Script, la dirección del navegador no sirve para otros: se usa la oficial */
+  return (/\.github\.io$/.test(h)||h==="app.local")?location.origin+location.pathname:"https://aixa-cal.github.io/arqueo-grupo-labarra/";
+}
 async function eqInvitar(email){
   var r=await api("invitar",{email:email});
-  S.eq.enlace={nombre:r.nombre,tel:r.telefono,url:location.origin+location.pathname+"#i="+r.token};
+  S.eq.enlace={nombre:r.nombre,tel:r.telefono,url:appBase()+"#i="+r.token};
 }
 document.addEventListener("input",function(ev){
   var t=ev.target;if(!t||!t.id||!S.eq||!S.eq.nuevo)return;
