@@ -768,12 +768,12 @@ function contarHTML(){
   var cards="",lastCat=null;
   list.forEach(function(p){var ct=p.cat||"";if(ct!==lastCat){cards+='<h2 class="cat" data-c="'+esc(ct)+'">'+esc(ct||"Productos")+'</h2>';lastCat=ct}cards+=cardHTML(p)});
   return '<div class="bar"><div class="bar-row"><button class="back" data-act="back">← Cambiar</button><span class="sub"><b>'+esc(d.negocio)+'</b> · '+esc(d.turno)+'</span></div>'+
-    '<div class="bar-row"><span class="sub" id="prog"></span><span class="chip">'+(isFullDay(d.negocio,d.fecha)?"Conteo completo":"Solo críticos")+'</span></div><div class="meter"><i id="meter"></i></div></div>'+
+    '<div class="bar-row"><span class="sub" id="prog"></span><span class="chip">'+(conDoble()?"Conteo de inicio y de cierre":(isFullDay(d.negocio,d.fecha)?"Conteo de cierre":"Conteo de cierre · solo críticos"))+'</span></div><div class="meter"><i id="meter"></i></div></div>'+
     '<div class="fbox"><input id="q" class="srch" type="search" placeholder="Buscar producto…" autocomplete="off">'+filtroHTML(list)+'</div>'+
     '<div class="ley"><div class="ley-t"><b>Cómo llenar</b><button type="button" class="linkbtn" data-act="guia-open">¿Cómo se hace?</button></div>'+
-      (conDoble()?'<p><b>Había</b> = lo que había cuando empezaste.</p>':'')+
+      (conDoble()?'<p><b>Conteo de inicio:</b> escribe lo que <b>había</b> cuando empezaste.</p>':'')+
       '<p><b>Llegó</b> = lo que llegó o te entregaron en tu turno'+(esLB(d.negocio)?' (de la principal o del cuarto frío)':'')+'. Si no llegó nada, déjalo vacío.</p>'+
-      '<p><b>Quedan</b> = lo que cuentas ahora'+(esLB(d.negocio)?', contando todo: la sandwichera y lo almacenado':'')+'. <b>Cuenta lo que ves.</b></p></div>'+
+      '<p><b>Conteo de cierre:</b> escribe cuántos <b>quedan</b> ahora'+(esLB(d.negocio)?', contando todo: la sandwichera y lo almacenado':'')+'. <b>Cuenta lo que ves.</b></p></div>'+
     (!conDoble()&&list.some(function(p){return !(d.vals[p.id]||{}).src})?'<div class="banner">Es tu <b>primer conteo</b> de algunos productos: solo escribe cuántos <b>quedan</b>. La app hace las cuentas.</div>':'')+
     '<div class="plist">'+cards+'</div><p class="banner" id="fempty" hidden>Ningún producto coincide con el filtro.</p>'+
     (INSUMOS.indexOf(d.negocio)>-1?'<div class="panel"><div class="field"><label class="lbl" for="cnota">¿Qué te hace falta? (opcional)</label><textarea id="cnota" rows="3" maxlength="300" placeholder="Ej. Falta cera, 2 esponjas y una lija 3000">'+esc(d.nota||"")+'</textarea><p class="hint">Administración recibe este aviso. Escribe lo que necesites, esté o no en la lista.</p></div></div>':(conCierre(d.negocio)?cierreHTML():''));
@@ -784,7 +784,7 @@ function cardHTML(p){
   function f(k,l){return '<label class="f"><span>'+l+(k==="ini"&&lockIni?' 🔒':'')+'</span><input'+(k==="ini"&&lockIni?' readonly tabindex="-1" class="ro"':'')+' id="i-'+esc(p.id)+'-'+k+'" data-pid="'+esc(p.id)+'" data-f="'+k+'" inputmode="decimal" autocomplete="off" placeholder="0" value="'+esc(v[k])+'"></label>'}
   var u=usage(v);
   return '<section class="pcard'+(u?(u.real<0?" s-crit":" s-ok"):"")+'" id="card-'+esc(p.id)+'" data-n="'+esc(String(p.nombre).toLowerCase())+'" data-c="'+esc(p.cat||"")+'" data-z="'+(isZero(v)?"1":"")+'" data-p="'+(usage(v)?"":"1")+'"><div class="phead"><h3>'+esc(p.nombre)+'</h3><span class="unit">'+esc(p.unidad)+'</span></div>'+
-    (sinEnt(p)?'<div class="grid2"><label class="f"><span>Quedan</span><input id="i-'+esc(p.id)+'-fin" data-pid="'+esc(p.id)+'" data-f="fin" inputmode="decimal" autocomplete="off" placeholder="0" value="'+esc(v.fin)+'"></label></div>':dbl?'<div class="grid3">'+f("ini","Había")+f("ent","Llegó")+f("fin","Quedan")+'</div>':'<div class="grid2">'+f("ent","Llegó")+f("fin","Quedan")+'</div>')+
+    (sinEnt(p)?'<div class="grid2"><label class="f"><span>Cierre: quedan</span><input id="i-'+esc(p.id)+'-fin" data-pid="'+esc(p.id)+'" data-f="fin" inputmode="decimal" autocomplete="off" placeholder="0" value="'+esc(v.fin)+'"></label></div>':dbl?'<div class="grid3">'+f("ini","Inicio: había")+f("ent","Llegó")+f("fin","Cierre: quedan")+'</div>':'<div class="grid2">'+f("ent","Llegó")+f("fin","Cierre: quedan")+'</div>')+
     '<div class="res" id="res-'+esc(p.id)+'">'+usageHTML(u)+'</div><p class="note" id="note-'+esc(p.id)+'">'+noteText(v)+'</p></section>';
 }
 function sinEnt(p){return !!S.draft&&/^La Barra/.test(S.draft.negocio)&&/funda abierta/i.test(p.nombre||'')}
@@ -2114,7 +2114,7 @@ document.addEventListener("click",function(ev){
 var GUIA=[
   {e:"👋",t:"Contar es fácil",p:"Tú solo <b>cuentas lo que ves</b>.<br>La app hace todas las cuentas por ti."},
   {e:"🏪",t:"Elige tu tienda y tu turno",p:"Toca el nombre de tu tienda.<br>Toca tu turno.<br>Después toca <b>«Empezar conteo»</b>."},
-  {e:"🔢",t:"Cuenta cada producto",p:"Mira el estante y escribe <b>cuántos QUEDAN</b>.<br>Si llegó mercancía hoy, escribe cuántos <b>LLEGARON</b>.<br>Si no llegó nada, déjalo vacío."},
+  {e:"🔢",t:"Cuenta cada producto",p:"Es tu <b>conteo de cierre</b>: mira el estante y escribe <b>cuántos QUEDAN</b>.<br>Si llegó mercancía hoy, escribe cuántos <b>LLEGARON</b>.<br>Si no llegó nada, déjalo vacío."},
   {e:"✅",t:"Termina y guarda",p:"Contesta las preguntas del final.<br>Toca <b>«Guardar conteo»</b>.<br>¡Listo! Si te equivocas, avísale a tu supervisora."}
 ];
 function guiaSeen(){if(navigator.webdriver&&!window.__guiaTest)return true;try{return !!localStorage.getItem("arq-guia-"+(S.me&&S.me.email))}catch(e){return true}}

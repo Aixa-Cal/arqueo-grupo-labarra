@@ -27,6 +27,6 @@ const tok=(e,n)=>{env.call('reqCode',{email:e});const c=env.mails[env.mails.leng
   assert.equal(await m.locator('#guia').count(),0);
   await m.fill('#i-fs-001-fin','7');await m.screenshot({path:'shots/g4.png'});
   await m.click('.ley [data-act=guia-open]');await m.waitForSelector('#guia');await m.click('#guia [data-act=guia-x]');
-  const t=await m.innerText('#view');assert(/Llegó/.test(t)&&/Quedan/.test(t)&&!/Entró/.test(t)&&/primer conteo/i.test(t));
+  const t=await m.innerText('#view');assert(/Llegó/.test(t)&&/Cierre: quedan/.test(t)&&/Conteo de cierre/.test(t)&&!/Entró/.test(t)&&/primer conteo/i.test(t));
   console.log('errores',errors);assert.equal(errors.length,0);await b.close();
 })();

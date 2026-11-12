@@ -186,7 +186,7 @@ document.addEventListener("click",function(ev){
 var GUIA=[
   {e:"👋",t:"Contar es fácil",p:"Tú solo <b>cuentas lo que ves</b>.<br>La app hace todas las cuentas por ti."},
   {e:"🏪",t:"Elige tu tienda y tu turno",p:"Toca el nombre de tu tienda.<br>Toca tu turno.<br>Después toca <b>«Empezar conteo»</b>."},
-  {e:"🔢",t:"Cuenta cada producto",p:"Mira el estante y escribe <b>cuántos QUEDAN</b>.<br>Si llegó mercancía hoy, escribe cuántos <b>LLEGARON</b>.<br>Si no llegó nada, déjalo vacío."},
+  {e:"🔢",t:"Cuenta cada producto",p:"Es tu <b>conteo de cierre</b>: mira el estante y escribe <b>cuántos QUEDAN</b>.<br>Si llegó mercancía hoy, escribe cuántos <b>LLEGARON</b>.<br>Si no llegó nada, déjalo vacío."},
   {e:"✅",t:"Termina y guarda",p:"Contesta las preguntas del final.<br>Toca <b>«Guardar conteo»</b>.<br>¡Listo! Si te equivocas, avísale a tu supervisora."}
 ];
 function guiaSeen(){if(navigator.webdriver&&!window.__guiaTest)return true;try{return !!localStorage.getItem("arq-guia-"+(S.me&&S.me.email))}catch(e){return true}}
