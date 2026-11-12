@@ -549,7 +549,7 @@ function notifsFor(me) {
 function sync(me) {
   migrarInsumos();
   migrarLaBarra();
-  migrarFoodShopT3(); migrarMiller(); migrarFoodShopGeneral(); migrarFsLista(); migrarLaBarraGeneral(); migrarAlmacen();
+  migrarFoodShopT3(); migrarMiller(); migrarFoodShopGeneral(); migrarFsLista(); migrarEmpaques(); migrarLaBarraGeneral(); migrarAlmacen();
   var cfg = getConfig(), negs = visibleNegocios(me, cfg);
   var prods = getProductos().filter(function (r) { return r.activo; }).map(productoOut);
   if (scoped(me)) {
@@ -845,6 +845,16 @@ var FS_QUITAR = ["Chicharrón El Chef", "Gatorade Cool Blue 20 oz", "Stolichnaya
 
 /* Una sola vez: lista oficial del Food Shop (nombres y categorías como en Citrus). Conserva el historial: renombra, no borra */
 function normNom(x) { return String(x || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Z0-9]+/g, ' ').trim(); }
+function migrarEmpaques() {
+  if (props().getProperty('MIG_EMPAQUES_V1')) return;
+  withLock(function () {
+    var nn = { 'lb-09': ['Empaques de pierna de pollo', 'Empaques de pechuga de pollo'], 'lb-10': ['Empaques de cerdo', 'Empaques de pierna de cerdo'] };
+    readAll('Productos').forEach(function (p) {
+      var r = nn[String(p.id)]; if (r && p.nombre === r[0]) { p.nombre = r[1]; writeRow('Productos', p._row, p); }
+    });
+    props().setProperty('MIG_EMPAQUES_V1', '1');
+  });
+}
 function migrarFsLista() {
   if (props().getProperty('MIG_FSLISTA_V1')) return;
   withLock(function () {

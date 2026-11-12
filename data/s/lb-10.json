@@ -1,1 +1,1 @@
-{"nombre": "Empaques de cerdo", "cat": "Proteínas", "unidad": "empaque", "factor": 1, "tol": 0.05, "costo": 0, "negocios": ["La Barra Atala", "La Barra Atalaya", "La Barra Miraflores"], "orden": 10, "ejemplo": false}
+{"nombre": "Empaques de pierna de cerdo", "cat": "Proteínas", "unidad": "empaque", "factor": 1, "tol": 0.05, "costo": 0, "negocios": ["La Barra Atala", "La Barra Atalaya", "La Barra Miraflores"], "orden": 10, "ejemplo": false}
