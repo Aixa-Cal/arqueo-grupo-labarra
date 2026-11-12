@@ -445,7 +445,8 @@ function need(me, roles) {
 }
 /* Roles: admin, supervisor (sub-administración: valida/completa conteos de todos los negocios y todo queda en la bitácora), gerencia, lider (cuenta + revisa/registra ventas de SUS negocios), colaborador (solo cuenta y registra movimientos de SUS negocios) */
 function conFreezer(neg) { return neg === 'Food Shop'; }
-function conCafe(neg) { return /^La Barra/.test(neg) || neg === 'Food Shop'; }
+function conCafe(neg) { return (/^La Barra/.test(neg) && neg !== 'La Barra Miraflores') || neg === 'Food Shop'; }
+function conBano(neg) { return neg === 'La Barra Atala' || neg === 'La Barra Miraflores'; }
 function scoped(me) { return me.rol === 'lider' || me.rol === 'colaborador'; }
 function negOk(me, neg) {
   if (me.rol === 'admin' || me.rol === 'gerencia' || me.rol === 'supervisor') return true;
@@ -684,6 +685,13 @@ function saveConteo(me, p) {
         if (fz.ok === 'no' && fzt.length < 3) fail('datos', 'Cuenta qué pasó con los freezers.');
         o.cierre.fz = { ok: fz.ok, txt: fz.ok === 'no' ? fzt : '' };
       }
+      if (conBano(neg)) {
+        var bn = ck.bano || {};
+        if (['si', 'no'].indexOf(bn.papel) < 0 || ['si', 'no'].indexOf(bn.cli) < 0) fail('datos', 'Responde lo del baño y el área de clientes.');
+        var bnt = String(bn.txt || '').trim().slice(0, 300);
+        if ((bn.papel === 'no' || bn.cli === 'no') && bnt.length < 3) fail('datos', 'Cuenta qué falta en el baño o en el área de clientes.');
+        o.cierre.bano = { papel: bn.papel, cli: bn.cli, txt: (bn.papel === 'no' || bn.cli === 'no') ? bnt : '' };
+      }
       if (conCafe(neg)) {
         var cf = ck.cafe || {};
         if (['si', 'no'].indexOf(cf.rell) < 0 || ['si', 'no'].indexOf(cf.func) < 0) fail('datos', 'Responde lo de las máquinas de café.');
@@ -699,6 +707,7 @@ function saveConteo(me, p) {
     }
     appendObj('Conteos', o);
     if (o.cierre && o.cierre.cafe && (o.cierre.cafe.rell === 'no' || o.cierre.cafe.func === 'no')) notify('cafetera', 'Máquinas de café: ' + neg, me.nombre + ' · ' + turno + ': ' + (o.cierre.cafe.rell === 'no' ? 'NO rellenadas. ' : '') + (o.cierre.cafe.func === 'no' ? 'NO funcionan bien. ' : '') + o.cierre.cafe.txt, { para: 'admin,gerencia', negocio: neg, ref: 'conteo|' + id, email: true });
+    if (o.cierre && o.cierre.bano && (o.cierre.bano.papel === 'no' || o.cierre.bano.cli === 'no')) notify('bano', 'Baño / área de clientes: ' + neg, me.nombre + ' · ' + turno + ': ' + (o.cierre.bano.papel === 'no' ? 'Falta papel o jabón. ' : '') + (o.cierre.bano.cli === 'no' ? 'Área de clientes NO limpia. ' : '') + o.cierre.bano.txt, { para: 'admin,gerencia', negocio: neg, ref: 'conteo|' + id, email: true });
     if (o.cierre && o.cierre.fz && o.cierre.fz.ok === 'no') notify('freezer', 'Freezers con problema: ' + neg, me.nombre + ' · ' + turno + ': ' + o.cierre.fz.txt, { para: 'admin,gerencia', negocio: neg, ref: 'conteo|' + id, email: true });
     if (o.cierre && o.cierre.nov === 'si') notify('novedad', 'Novedad en el cierre: ' + neg, me.nombre + ' · ' + turno + ': ' + o.cierre.txt, { para: 'admin,gerencia', negocio: neg, ref: 'conteo|' + id, email: true });
     if (inicial) return { id: id, inicial: true };
