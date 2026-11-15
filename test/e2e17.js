@@ -1,0 +1,13 @@
+const fs=require('fs');let s=fs.readFileSync('ux1.js','utf8');
+s=s.replace("['Food Shop']","['La Barra Atala']").replace("await page.exposeFunction","await page.addInitScript(()=>{window.__pasoTest=true});await page.exposeFunction").replace(/await m\.waitForSelector\('\.prow[\s\S]*$/,`await m.click('[data-act=neg]');await m.waitForSelector('.tchip');await m.click('.tchip');await m.click('[data-act=start]');await m.waitForSelector('.paso');
+  assert=require('assert');
+  assert.equal(await m.$$eval('.pcard',e=>e.length),1);
+  console.log((await m.innerText('.paso')).replace(/\\n+/g,' / ').slice(0,200));await shot(m,'paso1');
+  await m.click('.paso [data-act=stp][data-sf=fin][data-d="1"]');await m.click('.paso [data-act=stp][data-sf=fin][data-d="1"]');
+  await m.click('[data-act=paso][data-v="1"]');await m.waitForTimeout(200);
+  console.log((await m.innerText('.paso-n')));
+  await m.click('[data-act=paso][data-v="-1"]');console.log('volví, valor',await m.$eval('.paso input[data-f=fin]',e=>e.value));
+  const n=+(await m.innerText('.paso-n')).match(/de (\\d+)/)[1];
+  for(let i=0;i<n;i++)await m.click('[data-act=paso][data-v="1"]');
+  await m.waitForSelector('.plist');console.log('lista final, cards',await m.$$eval('.pcard',e=>e.length));await shot(m,'paso2');console.log(errors);await b.close();})();`);
+fs.writeFileSync('e2e17run.js',s);

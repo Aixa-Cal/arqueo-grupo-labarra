@@ -186,7 +186,7 @@ document.addEventListener("click",function(ev){
 var GUIA=[
   {e:"👋",t:"Contar es fácil",p:"Tú solo <b>cuentas lo que ves</b>.<br>La app hace todas las cuentas por ti."},
   {e:"🏪",t:"Elige tu tienda y tu turno",p:"Toca el nombre de tu tienda.<br>Toca tu turno.<br>Después toca <b>«Empezar conteo»</b>."},
-  {e:"🔢",t:"Cuenta cada producto",p:"Es tu <b>conteo de cierre</b>: mira el estante y escribe <b>cuántos QUEDAN</b>.<br>Si llegó mercancía hoy, escribe cuántos <b>LLEGARON</b>.<br>Si no llegó nada, déjalo vacío."},
+  {e:"🔢",t:"Cuenta cada producto",p:"Verás <b>un producto a la vez</b>.<br>Mira el estante y toca <b>+</b> por cada uno que <b>HAY AHORA</b>.<br>Si llegó mercancía hoy, ponla en <b>«Llegó hoy»</b>.<br>Toca <b>Siguiente</b>."},
   {e:"✅",t:"Termina y guarda",p:"Contesta las preguntas del final.<br>Toca <b>«Guardar conteo»</b>.<br>¡Listo! Si te equivocas, avísale a tu supervisora."}
 ];
 function guiaSeen(){if(navigator.webdriver&&!window.__guiaTest)return true;try{return !!localStorage.getItem("arq-guia-"+(S.me&&S.me.email))}catch(e){return true}}
@@ -306,4 +306,17 @@ document.addEventListener("click",function(ev){
     r.onend=function(){DIC.rec=null;var b=document.getElementById("dicmic");if(b){b.textContent="🎤 Hablar";b.classList.remove("on")}};
     try{r.start()}catch(e){DIC.rec=null}
   }
+});
+
+document.addEventListener("click",function(ev){
+  var el=ev.target.closest("[data-act^='paso']");if(!el||!S.draft)return;
+  var a=el.dataset.act,d=S.draft;
+  if(a==="paso"){
+    var list=negProducts(),i=(+d.paso||0)+(+el.dataset.v);
+    if(i>=list.length){d.modo="lista";persistDraft();render();var c=document.getElementById("cierre");if(c)c.scrollIntoView({block:"start"});else window.scrollTo(0,document.body.scrollHeight);return}
+    d.paso=Math.max(0,i);persistDraft();render();window.scrollTo(0,0);
+  }
+  else if(a==="paso-ll"){var pz=document.querySelector(".paso");if(pz)pz.classList.toggle("ll-open")}
+  else if(a==="paso-lista"){d.modo="lista";persistDraft();render();window.scrollTo(0,0)}
+  else if(a==="paso-uno"){d.modo="uno";persistDraft();render();window.scrollTo(0,0)}
 });

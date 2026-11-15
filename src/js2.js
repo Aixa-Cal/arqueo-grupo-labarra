@@ -45,7 +45,7 @@ function banoHTML(c){
 }
 function cierreHTML(){
   var d=S.draft,c=cierreDe(d);
-  return '<div class="panel" id="cierre"><h2>Cierre del turno</h2><p class="sub">Confirma antes de guardar.</p>'+
+  return '<div class="panel" id="cierre"><h2>Antes de terminar</h2><p class="sub">Toca cada cosa que ya hiciste y contesta.</p>'+
     CIERRE.map(function(t,i){return '<button type="button" class="chk'+(c.chk[i]?' on':'')+'" data-act="ck" data-v="'+i+'" aria-pressed="'+(c.chk[i]?'true':'false')+'"><span class="bx">'+(c.chk[i]?'✓':'')+'</span>'+esc(cierreTxt(t,i,d.negocio))+'</button>'}).join('')+
     (conBano(d.negocio)?banoHTML(c):'')+(conCafe(d.negocio)?cafeHTML(c):'')+(conFreezer(d.negocio)?fzHTML(c):'')+'<div class="lbl" style="margin-top:12px">¿Hubo alguna novedad?</div><div class="seg"><button type="button" class="'+(c.nov==="si"?'on':'')+'" data-act="nov" data-v="si">Sí</button><button type="button" class="'+(c.nov==="no"?'on':'')+'" data-act="nov" data-v="no">No</button></div>'+
     (c.nov==="si"?'<div class="field"><label class="lbl" for="cnov">¿Qué pasó? ¿Se dañó algo?</label><textarea id="cnov" rows="3" maxlength="400" placeholder="Cuéntalo brevemente">'+esc(c.txt)+'</textarea></div>':'')+'</div>';
@@ -143,25 +143,37 @@ async function startCount(){
   S.starting=true;render();
   try{
     var base=await api("startCount",{negocio:d.negocio});
-    d.base=base;d.id=rid("c_");d.vals={};S.step="contar";S.starting=false;initVals();render();window.scrollTo(0,0);persistDraft();
+    d.base=base;d.id=rid("c_");d.vals={};d.modo=(navigator.webdriver&&!window.__pasoTest)?"lista":"uno";d.paso=0;S.step="contar";S.starting=false;initVals();render();window.scrollTo(0,0);persistDraft();
   }catch(e){S.starting=false;toast(errMsg(e));render()}
 }
 function diasConteo(neg){var n=["domingo","lunes","martes","miércoles","jueves","viernes","sábado"],c=S.cfg.calendario&&S.cfg.calendario[neg];return Array.isArray(c)?c.map(function(i){return n[i]}).join(", "):"todos"}
 function contarHTML(){
   var d=S.draft,list=negProducts();
   if(!list.length)return '<div class="panel"><h2>No hay productos para '+esc(d.negocio)+'</h2><p class="sub">'+(isFullDay(d.negocio,d.fecha)?"Un administrador debe asignarlos en Catálogo.":(INSUMOS.indexOf(d.negocio)>-1?"Hoy no toca contar este negocio. Se cuenta los días: "+diasConteo(d.negocio)+". Si necesitas contar otro día, pídele a administración que cambie el calendario.":"Hoy solo se cuentan los productos críticos y este negocio no tiene ninguno marcado."))+'</p><button class="btn ghost" data-act="back">Volver</button></div>';
+  if(d.modo==="uno")return pasoHTML(list);
   var cards="",lastCat=null;
   list.forEach(function(p){var ct=p.cat||"";if(ct!==lastCat){cards+='<h2 class="cat" data-c="'+esc(ct)+'">'+esc(ct||"Productos")+'</h2>';lastCat=ct}cards+=cardHTML(p)});
   return '<div class="bar"><div class="bar-row"><button class="back" data-act="back">← Cambiar</button><span class="sub"><b>'+esc(d.negocio)+'</b> · '+esc(d.turno)+'</span></div>'+
-    '<div class="bar-row"><span class="sub" id="prog"></span><span class="chip">'+(conDoble()?"Conteo de inicio y de cierre":(isFullDay(d.negocio,d.fecha)?"Conteo de cierre":"Conteo de cierre · solo críticos"))+'</span></div><div class="meter"><i id="meter"></i></div></div>'+
+    '<div class="bar-row"><span class="sub" id="prog"></span><span class="chip">'+(conDoble()?"Contando: al empezar y al terminar":(isFullDay(d.negocio,d.fecha)?"Contando":"Contando · solo los importantes"))+'</span></div><div class="meter"><i id="meter"></i></div></div>'+
+ '<button type="button" class="paso-ir" data-act="paso-uno">👆 Contar de uno en uno</button>'+
     '<div class="fbox"><input id="q" class="srch" type="search" placeholder="Buscar producto…" autocomplete="off">'+filtroHTML(list)+'</div>'+
     '<button type="button" class="dic-btn" data-act="dic-open"><span>🎤</span><b>Dime lo que tienes</b><small>Habla y la app llena las cantidades. Tú confirmas.</small></button>'+'<div class="ley"><div class="ley-t"><b>Cómo llenar</b><button type="button" class="linkbtn" data-act="guia-open">¿Cómo se hace?</button></div>'+
       (conDoble()?'<p><b>Conteo de inicio:</b> escribe lo que <b>había</b> cuando empezaste.</p>':'')+
-      '<p><b>Llegó</b> = lo que llegó o te entregaron en tu turno'+(esLB(d.negocio)?' (de la principal o del cuarto frío)':'')+'. Si no llegó nada, déjalo vacío.</p>'+
-      '<p><b>Conteo de cierre:</b> escribe cuántos <b>quedan</b> ahora'+(esLB(d.negocio)?', contando todo: la sandwichera y lo almacenado':'')+'. <b>Cuenta lo que ves.</b></p></div>'+
+      '<p><b>Hay ahora</b> = cuántos ves ahora'+(esLB(d.negocio)?' (todo: sandwichera y almacén)':'')+'.</p><p><b>Llegó hoy</b> = lo que te entregaron hoy. Si no llegó nada, déjalo en 0.</p></div>'+
     (!conDoble()&&list.some(function(p){return !(d.vals[p.id]||{}).src})?'<div class="banner">Es tu <b>primer conteo</b> de algunos productos: solo escribe cuántos <b>quedan</b>. La app hace las cuentas.</div>':'')+
     '<div class="plist">'+cards+'</div><p class="banner" id="fempty" hidden>Ningún producto coincide con el filtro.</p>'+
     (INSUMOS.indexOf(d.negocio)>-1?'<div class="panel"><div class="field"><label class="lbl" for="cnota">¿Qué te hace falta? (opcional)</label><textarea id="cnota" rows="3" maxlength="300" placeholder="Ej. Falta cera, 2 esponjas y una lija 3000">'+esc(d.nota||"")+'</textarea><p class="hint">Administración recibe este aviso. Escribe lo que necesites, esté o no en la lista.</p></div></div>':(conCierre(d.negocio)?cierreHTML():''));
+}
+function pasoHTML(list){
+  var d=S.draft,n=list.length,i=Math.min(Math.max(+d.paso||0,0),n-1),p=list[i],last=i===n-1;d.paso=i;
+  var dots='<div class="paso-dots">'+list.map(function(q,k){var u=usage(d.vals[q.id]||{});return '<i class="'+(k===i?'on ':'')+(u?'ok':'')+'"></i>'}).join("")+'</div>';
+  return '<div class="bar"><div class="bar-row"><button class="back" data-act="back">← Cambiar</button><span class="sub"><b>'+esc(d.negocio)+'</b> · '+esc(d.turno)+'</span></div>'+
+    '<div class="bar-row"><span class="sub" id="prog"></span><button type="button" class="linkbtn" data-act="paso-lista">Ver lista</button></div><div class="meter"><i id="meter"></i></div></div>'+
+    '<div class="paso'+(((d.vals[p.id]||{}).ent||"")!==""?" ll-open":"")+'"><div class="paso-n">Producto '+(i+1)+' de '+n+'</div>'+
+    (p.cat?'<div class="paso-c">'+esc(p.cat)+'</div>':'')+
+    '<div class="paso-q">¿Cuántos hay ahora?</div>'+cardHTML(p)+
+    (conDoble()||sinEnt(p)?'':'<button type="button" class="paso-ll" data-act="paso-ll">📦 ¿Llegó mercancía hoy?</button>')+
+    '<div class="paso-b"><button type="button" class="btn ghost" data-act="paso" data-v="-1"'+(i===0?' disabled':'')+'>← Atrás</button><button type="button" class="btn" data-act="paso" data-v="1">'+(last?'Terminar ✓':'Siguiente →')+'</button></div>'+dots+'</div>';
 }
 function cardHTML(p){
   var v=S.draft.vals[p.id]||(S.draft.vals[p.id]={ini:"",ent:"",fin:"",src:""});
@@ -170,7 +182,7 @@ function cardHTML(p){
   function f(k,l){var lk=k==="ini"&&lockIni;return '<div class="f"><label for="i-'+esc(p.id)+'-'+k+'"><span>'+l+(lk?' 🔒':'')+'</span></label><div class="stp">'+(lk?'':stp(k,-1,'Menos'))+'<input'+(lk?' readonly tabindex="-1" class="ro"':'')+' id="i-'+esc(p.id)+'-'+k+'" data-pid="'+esc(p.id)+'" data-f="'+k+'" inputmode="decimal" autocomplete="off" placeholder="0" value="'+esc(v[k])+'">'+(lk?'':stp(k,1,'Más'))+'</div></div>'}
   var u=usage(v);
   return '<section class="pcard'+(u?(u.real<0?" s-crit":" s-ok"):"")+'" id="card-'+esc(p.id)+'" data-n="'+esc(String(p.nombre).toLowerCase())+'" data-c="'+esc(p.cat||"")+'" data-z="'+(isZero(v)?"1":"")+'" data-p="'+(usage(v)?"":"1")+'"><div class="phead"><h3>'+esc(p.nombre)+'</h3><span class="unit">'+esc(p.unidad)+'</span></div>'+
-    (sinEnt(p)?'<div class="grid2 g1">'+f("fin","Cierre: quedan")+'</div>':dbl?'<div class="grid3">'+f("ini","Inicio: había")+f("ent","Llegó")+f("fin","Cierre: quedan")+'</div>':'<div class="grid2">'+f("ent","Llegó")+f("fin","Cierre: quedan")+'</div>')+
+    (sinEnt(p)?'<div class="grid2 g1">'+f("fin","Hay ahora")+'</div>':dbl?'<div class="grid3">'+f("ini","Había al empezar")+f("ent","Llegó hoy")+f("fin","Hay ahora")+'</div>':'<div class="grid2">'+f("fin","Hay ahora")+f("ent","Llegó hoy")+'</div>')+
     '<div class="res" id="res-'+esc(p.id)+'">'+usageHTML(u)+'</div><p class="note" id="note-'+esc(p.id)+'">'+noteText(v)+'</p></section>';
 }
 function sinEnt(p){return !!S.draft&&/^La Barra/.test(S.draft.negocio)&&/funda abierta/i.test(p.nombre||'')}
@@ -193,7 +205,7 @@ function noteText(v){
     if(!v.src&&!v.iniAuto&&v.ini==="")a.push("Primera vez: escribe lo que había al empezar.");
   }
   if(conDoble()&&v.iniAuto&&!v.iniTouched)a.push("«Había» viene del conteo del "+fmtFecha(v.iniFecha)+".");
-  if(v.entAuto&&!v.entTouched)a.push("«Llegó» ya viene lleno con lo que anotaste en Movimientos.");
+  if(v.entAuto&&!v.entTouched)a.push("«Llegó hoy» ya viene lleno con lo que anotaste en Movimientos.");
   return a.length?a.join(" "):"";
 }
 function updateCard(pid){

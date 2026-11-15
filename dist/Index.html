@@ -353,6 +353,33 @@ input.ro{background:var(--line);color:var(--muted);border-style:dashed}
 .dic-l .dn{font-weight:700}.dic-l small{display:block;color:var(--muted);font-weight:600}
 .dic-l .dq{display:flex;align-items:center;gap:6px}.dic-l .dq b{min-width:30px;text-align:center;font-size:1.3rem}
 .dic-l .sb{flex:0 0 38px;min-height:44px}.dic-del{border:0;background:transparent;font-size:1.2rem;color:var(--muted);width:40px;min-height:44px}
+
+/* Uno por uno */
+.paso{display:grid;gap:12px;margin-top:6px}
+.paso-n{font-weight:700;color:var(--muted);text-align:center}
+.paso-c{justify-self:center;background:var(--field);border-radius:99px;padding:4px 12px;font-size:.85rem;font-weight:700}
+.paso-q{font-size:1.6rem;font-weight:800;text-align:center;line-height:1.2}
+.paso .pcard{padding:18px 14px;gap:14px}.paso .pcard h3{font-size:1.5rem;text-align:center;width:100%}
+.paso .phead{justify-content:center;flex-direction:column;align-items:center;gap:2px}
+.paso .stp input{font-size:2.2rem;min-height:76px}.paso .sb{flex:0 0 64px;min-height:76px;font-size:2.4rem}
+.paso .f label span{font-size:1.05rem}
+.paso-b{display:grid;grid-template-columns:1fr 1.4fr;gap:10px}.paso-b .btn{min-height:60px;font-size:1.15rem}
+.paso-dots{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;padding-bottom:90px}
+.paso-dots i{width:9px;height:9px;border-radius:50%;background:var(--line)}.paso-dots i.ok{background:var(--ok)}.paso-dots i.on{outline:3px solid var(--brand);outline-offset:1px}
+.paso-ir{width:100%;border:2px solid var(--brand);background:transparent;color:var(--brand);border-radius:12px;min-height:48px;font-weight:700;font-size:1rem}
+
+.paso .grid2,.paso .grid3{grid-template-columns:1fr;gap:14px}
+.paso .grid3 .f{flex-direction:column;align-items:stretch}.paso .grid3 .f label span{text-align:center}.paso .grid3 .stp{flex:1}
+.paso .stp{gap:8px}
+.paso .f:not(:first-child) .stp input{font-size:1.3rem;min-height:48px}.paso .f:not(:first-child) .sb{flex:0 0 44px;min-height:48px;font-size:1.5rem}
+.paso .stp input{min-height:68px}.paso .f:first-child .sb{min-height:68px;flex:0 0 60px}
+.paso .pcard{padding:12px;gap:8px}.paso .pcard h3{font-size:1.35rem}
+.paso{gap:8px}.paso-q{font-size:1.4rem}
+.paso-b{position:sticky;bottom:92px;z-index:4;background:var(--bg);padding:6px 0}
+
+.paso .grid2:not(.g1) .f:nth-child(2){display:none}.paso.ll-open .grid2 .f:nth-child(2){display:flex}.paso.ll-open .paso-ll{display:none}
+.paso-ll{border:2px dashed var(--line);background:transparent;border-radius:12px;min-height:48px;font-weight:700;color:var(--muted)}
+.paso .f:not(:first-child) .stp input{font-size:1.6rem;min-height:60px}.paso .f:not(:first-child) .sb{min-height:60px}
 </style>
 </head>
 <body>
@@ -699,7 +726,7 @@ function banoHTML(c){
 }
 function cierreHTML(){
   var d=S.draft,c=cierreDe(d);
-  return '<div class="panel" id="cierre"><h2>Cierre del turno</h2><p class="sub">Confirma antes de guardar.</p>'+
+  return '<div class="panel" id="cierre"><h2>Antes de terminar</h2><p class="sub">Toca cada cosa que ya hiciste y contesta.</p>'+
     CIERRE.map(function(t,i){return '<button type="button" class="chk'+(c.chk[i]?' on':'')+'" data-act="ck" data-v="'+i+'" aria-pressed="'+(c.chk[i]?'true':'false')+'"><span class="bx">'+(c.chk[i]?'✓':'')+'</span>'+esc(cierreTxt(t,i,d.negocio))+'</button>'}).join('')+
     (conBano(d.negocio)?banoHTML(c):'')+(conCafe(d.negocio)?cafeHTML(c):'')+(conFreezer(d.negocio)?fzHTML(c):'')+'<div class="lbl" style="margin-top:12px">¿Hubo alguna novedad?</div><div class="seg"><button type="button" class="'+(c.nov==="si"?'on':'')+'" data-act="nov" data-v="si">Sí</button><button type="button" class="'+(c.nov==="no"?'on':'')+'" data-act="nov" data-v="no">No</button></div>'+
     (c.nov==="si"?'<div class="field"><label class="lbl" for="cnov">¿Qué pasó? ¿Se dañó algo?</label><textarea id="cnov" rows="3" maxlength="400" placeholder="Cuéntalo brevemente">'+esc(c.txt)+'</textarea></div>':'')+'</div>';
@@ -797,25 +824,37 @@ async function startCount(){
   S.starting=true;render();
   try{
     var base=await api("startCount",{negocio:d.negocio});
-    d.base=base;d.id=rid("c_");d.vals={};S.step="contar";S.starting=false;initVals();render();window.scrollTo(0,0);persistDraft();
+    d.base=base;d.id=rid("c_");d.vals={};d.modo=(navigator.webdriver&&!window.__pasoTest)?"lista":"uno";d.paso=0;S.step="contar";S.starting=false;initVals();render();window.scrollTo(0,0);persistDraft();
   }catch(e){S.starting=false;toast(errMsg(e));render()}
 }
 function diasConteo(neg){var n=["domingo","lunes","martes","miércoles","jueves","viernes","sábado"],c=S.cfg.calendario&&S.cfg.calendario[neg];return Array.isArray(c)?c.map(function(i){return n[i]}).join(", "):"todos"}
 function contarHTML(){
   var d=S.draft,list=negProducts();
   if(!list.length)return '<div class="panel"><h2>No hay productos para '+esc(d.negocio)+'</h2><p class="sub">'+(isFullDay(d.negocio,d.fecha)?"Un administrador debe asignarlos en Catálogo.":(INSUMOS.indexOf(d.negocio)>-1?"Hoy no toca contar este negocio. Se cuenta los días: "+diasConteo(d.negocio)+". Si necesitas contar otro día, pídele a administración que cambie el calendario.":"Hoy solo se cuentan los productos críticos y este negocio no tiene ninguno marcado."))+'</p><button class="btn ghost" data-act="back">Volver</button></div>';
+  if(d.modo==="uno")return pasoHTML(list);
   var cards="",lastCat=null;
   list.forEach(function(p){var ct=p.cat||"";if(ct!==lastCat){cards+='<h2 class="cat" data-c="'+esc(ct)+'">'+esc(ct||"Productos")+'</h2>';lastCat=ct}cards+=cardHTML(p)});
   return '<div class="bar"><div class="bar-row"><button class="back" data-act="back">← Cambiar</button><span class="sub"><b>'+esc(d.negocio)+'</b> · '+esc(d.turno)+'</span></div>'+
-    '<div class="bar-row"><span class="sub" id="prog"></span><span class="chip">'+(conDoble()?"Conteo de inicio y de cierre":(isFullDay(d.negocio,d.fecha)?"Conteo de cierre":"Conteo de cierre · solo críticos"))+'</span></div><div class="meter"><i id="meter"></i></div></div>'+
+    '<div class="bar-row"><span class="sub" id="prog"></span><span class="chip">'+(conDoble()?"Contando: al empezar y al terminar":(isFullDay(d.negocio,d.fecha)?"Contando":"Contando · solo los importantes"))+'</span></div><div class="meter"><i id="meter"></i></div></div>'+
+ '<button type="button" class="paso-ir" data-act="paso-uno">👆 Contar de uno en uno</button>'+
     '<div class="fbox"><input id="q" class="srch" type="search" placeholder="Buscar producto…" autocomplete="off">'+filtroHTML(list)+'</div>'+
     '<button type="button" class="dic-btn" data-act="dic-open"><span>🎤</span><b>Dime lo que tienes</b><small>Habla y la app llena las cantidades. Tú confirmas.</small></button>'+'<div class="ley"><div class="ley-t"><b>Cómo llenar</b><button type="button" class="linkbtn" data-act="guia-open">¿Cómo se hace?</button></div>'+
       (conDoble()?'<p><b>Conteo de inicio:</b> escribe lo que <b>había</b> cuando empezaste.</p>':'')+
-      '<p><b>Llegó</b> = lo que llegó o te entregaron en tu turno'+(esLB(d.negocio)?' (de la principal o del cuarto frío)':'')+'. Si no llegó nada, déjalo vacío.</p>'+
-      '<p><b>Conteo de cierre:</b> escribe cuántos <b>quedan</b> ahora'+(esLB(d.negocio)?', contando todo: la sandwichera y lo almacenado':'')+'. <b>Cuenta lo que ves.</b></p></div>'+
+      '<p><b>Hay ahora</b> = cuántos ves ahora'+(esLB(d.negocio)?' (todo: sandwichera y almacén)':'')+'.</p><p><b>Llegó hoy</b> = lo que te entregaron hoy. Si no llegó nada, déjalo en 0.</p></div>'+
     (!conDoble()&&list.some(function(p){return !(d.vals[p.id]||{}).src})?'<div class="banner">Es tu <b>primer conteo</b> de algunos productos: solo escribe cuántos <b>quedan</b>. La app hace las cuentas.</div>':'')+
     '<div class="plist">'+cards+'</div><p class="banner" id="fempty" hidden>Ningún producto coincide con el filtro.</p>'+
     (INSUMOS.indexOf(d.negocio)>-1?'<div class="panel"><div class="field"><label class="lbl" for="cnota">¿Qué te hace falta? (opcional)</label><textarea id="cnota" rows="3" maxlength="300" placeholder="Ej. Falta cera, 2 esponjas y una lija 3000">'+esc(d.nota||"")+'</textarea><p class="hint">Administración recibe este aviso. Escribe lo que necesites, esté o no en la lista.</p></div></div>':(conCierre(d.negocio)?cierreHTML():''));
+}
+function pasoHTML(list){
+  var d=S.draft,n=list.length,i=Math.min(Math.max(+d.paso||0,0),n-1),p=list[i],last=i===n-1;d.paso=i;
+  var dots='<div class="paso-dots">'+list.map(function(q,k){var u=usage(d.vals[q.id]||{});return '<i class="'+(k===i?'on ':'')+(u?'ok':'')+'"></i>'}).join("")+'</div>';
+  return '<div class="bar"><div class="bar-row"><button class="back" data-act="back">← Cambiar</button><span class="sub"><b>'+esc(d.negocio)+'</b> · '+esc(d.turno)+'</span></div>'+
+    '<div class="bar-row"><span class="sub" id="prog"></span><button type="button" class="linkbtn" data-act="paso-lista">Ver lista</button></div><div class="meter"><i id="meter"></i></div></div>'+
+    '<div class="paso'+(((d.vals[p.id]||{}).ent||"")!==""?" ll-open":"")+'"><div class="paso-n">Producto '+(i+1)+' de '+n+'</div>'+
+    (p.cat?'<div class="paso-c">'+esc(p.cat)+'</div>':'')+
+    '<div class="paso-q">¿Cuántos hay ahora?</div>'+cardHTML(p)+
+    (conDoble()||sinEnt(p)?'':'<button type="button" class="paso-ll" data-act="paso-ll">📦 ¿Llegó mercancía hoy?</button>')+
+    '<div class="paso-b"><button type="button" class="btn ghost" data-act="paso" data-v="-1"'+(i===0?' disabled':'')+'>← Atrás</button><button type="button" class="btn" data-act="paso" data-v="1">'+(last?'Terminar ✓':'Siguiente →')+'</button></div>'+dots+'</div>';
 }
 function cardHTML(p){
   var v=S.draft.vals[p.id]||(S.draft.vals[p.id]={ini:"",ent:"",fin:"",src:""});
@@ -824,7 +863,7 @@ function cardHTML(p){
   function f(k,l){var lk=k==="ini"&&lockIni;return '<div class="f"><label for="i-'+esc(p.id)+'-'+k+'"><span>'+l+(lk?' 🔒':'')+'</span></label><div class="stp">'+(lk?'':stp(k,-1,'Menos'))+'<input'+(lk?' readonly tabindex="-1" class="ro"':'')+' id="i-'+esc(p.id)+'-'+k+'" data-pid="'+esc(p.id)+'" data-f="'+k+'" inputmode="decimal" autocomplete="off" placeholder="0" value="'+esc(v[k])+'">'+(lk?'':stp(k,1,'Más'))+'</div></div>'}
   var u=usage(v);
   return '<section class="pcard'+(u?(u.real<0?" s-crit":" s-ok"):"")+'" id="card-'+esc(p.id)+'" data-n="'+esc(String(p.nombre).toLowerCase())+'" data-c="'+esc(p.cat||"")+'" data-z="'+(isZero(v)?"1":"")+'" data-p="'+(usage(v)?"":"1")+'"><div class="phead"><h3>'+esc(p.nombre)+'</h3><span class="unit">'+esc(p.unidad)+'</span></div>'+
-    (sinEnt(p)?'<div class="grid2 g1">'+f("fin","Cierre: quedan")+'</div>':dbl?'<div class="grid3">'+f("ini","Inicio: había")+f("ent","Llegó")+f("fin","Cierre: quedan")+'</div>':'<div class="grid2">'+f("ent","Llegó")+f("fin","Cierre: quedan")+'</div>')+
+    (sinEnt(p)?'<div class="grid2 g1">'+f("fin","Hay ahora")+'</div>':dbl?'<div class="grid3">'+f("ini","Había al empezar")+f("ent","Llegó hoy")+f("fin","Hay ahora")+'</div>':'<div class="grid2">'+f("fin","Hay ahora")+f("ent","Llegó hoy")+'</div>')+
     '<div class="res" id="res-'+esc(p.id)+'">'+usageHTML(u)+'</div><p class="note" id="note-'+esc(p.id)+'">'+noteText(v)+'</p></section>';
 }
 function sinEnt(p){return !!S.draft&&/^La Barra/.test(S.draft.negocio)&&/funda abierta/i.test(p.nombre||'')}
@@ -847,7 +886,7 @@ function noteText(v){
     if(!v.src&&!v.iniAuto&&v.ini==="")a.push("Primera vez: escribe lo que había al empezar.");
   }
   if(conDoble()&&v.iniAuto&&!v.iniTouched)a.push("«Había» viene del conteo del "+fmtFecha(v.iniFecha)+".");
-  if(v.entAuto&&!v.entTouched)a.push("«Llegó» ya viene lleno con lo que anotaste en Movimientos.");
+  if(v.entAuto&&!v.entTouched)a.push("«Llegó hoy» ya viene lleno con lo que anotaste en Movimientos.");
   return a.length?a.join(" "):"";
 }
 function updateCard(pid){
@@ -2154,7 +2193,7 @@ document.addEventListener("click",function(ev){
 var GUIA=[
   {e:"👋",t:"Contar es fácil",p:"Tú solo <b>cuentas lo que ves</b>.<br>La app hace todas las cuentas por ti."},
   {e:"🏪",t:"Elige tu tienda y tu turno",p:"Toca el nombre de tu tienda.<br>Toca tu turno.<br>Después toca <b>«Empezar conteo»</b>."},
-  {e:"🔢",t:"Cuenta cada producto",p:"Es tu <b>conteo de cierre</b>: mira el estante y escribe <b>cuántos QUEDAN</b>.<br>Si llegó mercancía hoy, escribe cuántos <b>LLEGARON</b>.<br>Si no llegó nada, déjalo vacío."},
+  {e:"🔢",t:"Cuenta cada producto",p:"Verás <b>un producto a la vez</b>.<br>Mira el estante y toca <b>+</b> por cada uno que <b>HAY AHORA</b>.<br>Si llegó mercancía hoy, ponla en <b>«Llegó hoy»</b>.<br>Toca <b>Siguiente</b>."},
   {e:"✅",t:"Termina y guarda",p:"Contesta las preguntas del final.<br>Toca <b>«Guardar conteo»</b>.<br>¡Listo! Si te equivocas, avísale a tu supervisora."}
 ];
 function guiaSeen(){if(navigator.webdriver&&!window.__guiaTest)return true;try{return !!localStorage.getItem("arq-guia-"+(S.me&&S.me.email))}catch(e){return true}}
@@ -2274,6 +2313,19 @@ document.addEventListener("click",function(ev){
     r.onend=function(){DIC.rec=null;var b=document.getElementById("dicmic");if(b){b.textContent="🎤 Hablar";b.classList.remove("on")}};
     try{r.start()}catch(e){DIC.rec=null}
   }
+});
+
+document.addEventListener("click",function(ev){
+  var el=ev.target.closest("[data-act^='paso']");if(!el||!S.draft)return;
+  var a=el.dataset.act,d=S.draft;
+  if(a==="paso"){
+    var list=negProducts(),i=(+d.paso||0)+(+el.dataset.v);
+    if(i>=list.length){d.modo="lista";persistDraft();render();var c=document.getElementById("cierre");if(c)c.scrollIntoView({block:"start"});else window.scrollTo(0,document.body.scrollHeight);return}
+    d.paso=Math.max(0,i);persistDraft();render();window.scrollTo(0,0);
+  }
+  else if(a==="paso-ll"){var pz=document.querySelector(".paso");if(pz)pz.classList.toggle("ll-open")}
+  else if(a==="paso-lista"){d.modo="lista";persistDraft();render();window.scrollTo(0,0)}
+  else if(a==="paso-uno"){d.modo="uno";persistDraft();render();window.scrollTo(0,0)}
 });
 
 /* ---------- eventos ---------- */
