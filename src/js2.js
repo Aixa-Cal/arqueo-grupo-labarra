@@ -155,7 +155,7 @@ function contarHTML(){
   return '<div class="bar"><div class="bar-row"><button class="back" data-act="back">← Cambiar</button><span class="sub"><b>'+esc(d.negocio)+'</b> · '+esc(d.turno)+'</span></div>'+
     '<div class="bar-row"><span class="sub" id="prog"></span><span class="chip">'+(conDoble()?"Conteo de inicio y de cierre":(isFullDay(d.negocio,d.fecha)?"Conteo de cierre":"Conteo de cierre · solo críticos"))+'</span></div><div class="meter"><i id="meter"></i></div></div>'+
     '<div class="fbox"><input id="q" class="srch" type="search" placeholder="Buscar producto…" autocomplete="off">'+filtroHTML(list)+'</div>'+
-    '<div class="ley"><div class="ley-t"><b>Cómo llenar</b><button type="button" class="linkbtn" data-act="guia-open">¿Cómo se hace?</button></div>'+
+    '<button type="button" class="dic-btn" data-act="dic-open"><span>🎤</span><b>Dime lo que tienes</b><small>Habla y la app llena las cantidades. Tú confirmas.</small></button>'+'<div class="ley"><div class="ley-t"><b>Cómo llenar</b><button type="button" class="linkbtn" data-act="guia-open">¿Cómo se hace?</button></div>'+
       (conDoble()?'<p><b>Conteo de inicio:</b> escribe lo que <b>había</b> cuando empezaste.</p>':'')+
       '<p><b>Llegó</b> = lo que llegó o te entregaron en tu turno'+(esLB(d.negocio)?' (de la principal o del cuarto frío)':'')+'. Si no llegó nada, déjalo vacío.</p>'+
       '<p><b>Conteo de cierre:</b> escribe cuántos <b>quedan</b> ahora'+(esLB(d.negocio)?', contando todo: la sandwichera y lo almacenado':'')+'. <b>Cuenta lo que ves.</b></p></div>'+

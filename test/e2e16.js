@@ -1,0 +1,11 @@
+const fs=require('fs');let s=fs.readFileSync('ux1.js','utf8');
+s=s.replace("['Food Shop']","['La Barra Atala']").replace(/await m\.waitForSelector\('\.prow[\s\S]*$/,`await m.click('[data-act=neg]');await m.waitForSelector('.tchip');await m.click('.tchip');await m.click('[data-act=start]');await m.waitForSelector('.pcard');
+  const names=await m.$$eval('.pcard h3',e=>e.map(x=>x.textContent));console.log(names.slice(0,12).join(' | '));
+  await m.click('[data-act=dic-open]');
+  await m.fill('#dictxt','pan de agua 3, pan frances dos y media, tengo cuatro pan brioche y 5 cosas raras, llegaron 2 pan de agua');
+  await m.click('[data-act=dic-go]');
+  console.log((await m.innerText('#dic')).replace(/\\n+/g,' / '));await shot(m,'dic1');
+  await m.click('[data-act=dic-ok]');await m.waitForTimeout(300);
+  const vals=await m.$$eval('.pcard',c=>c.slice(0,4).map(x=>x.querySelector('h3').textContent+': ent='+x.querySelectorAll('input')[0].value+' fin='+x.querySelectorAll('input')[1].value));
+  console.log(vals.join('\\n'));console.log(errors);await b.close();})();`);
+fs.writeFileSync('e2e16run.js',s);
