@@ -16,7 +16,7 @@ const tok=(e,n)=>{env.call('reqCode',{email:e});const c=env.mails[env.mails.leng
     window.google={script:{run:{withSuccessHandler(f){return mk().withSuccessHandler(f)},withFailureHandler(f){return mk().withFailureHandler(f)},api(s){return mk().api(s)}}}};});
   await m.route('http://app.local/',r=>r.fulfill({status:200,contentType:'text/html; charset=utf-8',body:html}));
   await m.goto('http://app.local/');
-  await m.waitForSelector('#lg-email');await m.fill('#lg-email','sol@g.com');await m.click('[data-act=lg-send]');await m.waitForSelector('#lg-code');
+  await m.waitForSelector('[data-act=lg-gmail]');await m.click('[data-act=lg-gmail]');await m.waitForSelector('#lg-email');await m.fill('#lg-email','sol@g.com');await m.click('[data-act=lg-send]');await m.waitForSelector('#lg-code');
   await m.fill('#lg-code',env.mails[env.mails.length-1].body.match(/\d{6}/)[0]);await m.click('[data-act=lg-verify]');
   await m.waitForSelector('#guia');assert(/Contar es fácil/.test(await m.innerText('#guia')));await m.screenshot({path:'shots/g1.png'});
   await m.click('.guia-b .btn:last-child');await m.click('.guia-b .btn:last-child');await m.waitForSelector('#guia >> text=Cuenta cada producto');await m.screenshot({path:'shots/g3.png'});

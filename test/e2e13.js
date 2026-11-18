@@ -48,7 +48,7 @@ const assert=require('assert');
   assert(await g.locator('.sem-card').count()>=2,'dos tarjetas');
   assert(await g.locator('.sem-d').count()>=14,'7 dias por negocio');
   await g.click('.sem-ayuda summary');await shot(g,'sem1');
-  await g.click('[data-act=sem-dia] >> nth=1');await g.waitForSelector('text=Por completar');
+  await g.click('[data-act=sem-dia] >> nth=1');await g.waitForSelector('text=/Por completar|solo lo de hoy/');
   await g.click('[data-act=go][data-v=sem]');await g.waitForSelector('.sem-hero');
   await shot(g,'sem2');
   // otra supervisora con solo Food Shop

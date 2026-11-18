@@ -8,7 +8,7 @@ const call=(a,p,t)=>JSON.parse(env.ctx.api(JSON.stringify({a,p,t})));
   await p.route('http://app.local/',r=>r.fulfill({status:200,contentType:'text/html; charset=utf-8',body:html}));await p.goto('http://app.local/');return p}
  async function login(p,email,name){await p.waitForSelector('#lg-email');await p.fill('#lg-email',email);await p.click('[data-act=lg-send]');await p.waitForSelector('#lg-code');
   await p.fill('#lg-code',env.mails[env.mails.length-1].body.match(/\d{6}/)[0]);const n=await p.$('#lg-name');if(n)await p.fill('#lg-name',name||'X');await p.click('[data-act=lg-verify]')}
- const adm=await page('light');await login(adm,'dueno@gmail.com');await adm.waitForSelector('text=Por completar');const TA=await adm.evaluate(()=>localStorage.getItem('arq-tok'));
+ const adm=await page('light');await login(adm,'dueno@gmail.com');await adm.waitForSelector('text=/Por completar|solo lo de hoy/');const TA=await adm.evaluate(()=>localStorage.getItem('arq-tok'));
  call('saveConfig',{cfg:{calendario:{'Car Wash':[0,1,2,3,4,5,6]}}},TA);
  for(const [em,neg,scheme] of [['cw@g.com','Car Wash','light'],['zp@g.com','Zona Presidente','light'],['cw2@g.com','Car Wash','dark']]){
   const p=await page(scheme);await login(p,em,'Ana');await p.waitForSelector('text=Solicitud enviada');

@@ -37,7 +37,7 @@ async function contar(p,turnoIdx,opts){
   await p.click('#saveBtn',{timeout:4000});await p.waitForSelector('text=Conteo guardado',{timeout:15000});return info}
 (async()=>{
   const b=await chromium.launch();
-  const adm=await page(b);await login(adm,'dueno@gmail.com');await adm.waitForSelector('text=Por completar');
+  const adm=await page(b);await login(adm,'dueno@gmail.com');await adm.waitForSelector('text=/Por completar|solo lo de hoy/');
   const A=call('verifyCode',{email:'dueno@gmail.com',code:'x'}).ok;
   // token de admin vía API
   call('reqCode',{email:'dueno@gmail.com'});const ac=env.mails[env.mails.length-1].body.match(/\d{6}/)[0];const TA=ok('verifyCode',{email:'dueno@gmail.com',code:ac}).token;

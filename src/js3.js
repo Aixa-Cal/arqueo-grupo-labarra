@@ -62,8 +62,15 @@ function porDia(rows,fn){
     return '<details class="dayd"><summary class="dayh"><b>'+esc(diaLbl(fe))+'</b><span>'+g[fe].length+'</span></summary>'+body+'</details>';
   }).join("");
 }
-function pendHTML(){
+function pocos(arr,fn){
+  var a=arr.slice(0,4).map(fn).join("");
+  return a+(arr.length>4?'<details class="psec fold"><summary>Ver los otros '+(arr.length-4)+'</summary>'+arr.slice(4).map(fn).join("")+'</details>':"");
+}
+function atrasados(){var h=today();return porCompletar().filter(function(r){return r.fe<h&&(r.k==="atraso"||r.k==="ventas")})}
+function pendHTML(modo){
   var rows=porCompletar(),h=today();
+  if(modo==="hoy")rows=rows.filter(function(r){return r.fe===h});
+  if(modo==="pend")rows=rows.filter(function(r){return r.fe<h&&(r.k==="atraso"||r.k==="ventas")});
   var falta=rows.filter(function(r){return r.k==="atraso"||r.k==="falta"});
   var vent=rows.filter(function(r){return r.k==="ventas"});
   var okr=rows.filter(function(r){return r.k==="ok"||r.k==="ini"});
@@ -86,18 +93,27 @@ function pendHTML(){
     var sinTel={};
     if(isAdmin())falta.forEach(function(r){var g=(S.contactos||[]).some(function(c){return (c.rol==="lider"||c.rol==="colaborador")&&(c.negocios||[]).indexOf(r.n)>-1});if(!g)sinTel[r.n]=1});
     var nt=Object.keys(sinTel);
-    html+='<section class="psec"><h2>Falta contar <span>'+falta.length+'</span></h2>'+(nt.length?'<p class="hint">Para avisar por WhatsApp agrega teléfonos en Equipo: '+nt.map(esc).join(", ")+'.</p>':"")+porDia(falta,rowFalta)+'</section>';
+    html+='<section class="psec"><h2>Falta contar <span>'+falta.length+'</span></h2>'+((nt.length&&modo!=="hoy")?'<p class="hint">Para avisar por WhatsApp agrega teléfonos en Equipo: '+nt.map(esc).join(", ")+'.</p>':"")+(modo==="hoy"?pocos(falta,rowFalta):porDia(falta,rowFalta))+'</section>';
   }
-  if(vent.length)html+='<section class="psec"><h2>Falta cargar ventas <span>'+vent.length+'</span></h2>'+porDia(vent,rowVent)+'</section>';
+  if(vent.length)html+='<section class="psec"><h2>Falta cargar ventas <span>'+vent.length+'</span></h2>'+(modo==="hoy"?pocos(vent,rowVent):porDia(vent,rowVent))+'</section>';
   if(okr.length)html+='<details class="psec fold"'+(S.pFecha?' open':'')+'><summary>Al día <span>'+okr.length+'</span></summary>'+porDia(okr,rowOk)+'</details>';
   if(!rows.length)html='<div class="panel center"><div class="big">✓</div><h3>Todo al día</h3><p class="sub">No hay turnos configurados con conteo hoy.</p></div>';
   else if(!falta.length&&!vent.length)html='<div class="panel center"><div class="big">✓</div><h3>Todo al día</h3><p class="sub">No falta ningún conteo ni ventas por cargar.</p></div>'+html;
+  if(modo==="pend"&&!rows.length)html='<div class="panel center"><div class="big">✓</div><h3>Sin pendientes</h3><p class="sub">No quedó nada atrasado de días anteriores.</p></div>';
+  if(modo==="hoy"){
+    var at=atrasados().length;
+    return '<div><h1>Hoy</h1><p class="sub"><b>'+esc(diaLbl(h))+'</b> · solo lo de hoy.</p></div>'+resumen+html+
+      (at?'<button class="btn ghost" data-act="go" data-v="pend">Tienes '+at+' pendiente'+(at>1?'s':'')+' de días anteriores · Ver</button>':'')+
+      '<button class="btn ghost" data-act="campo-on">Hacer un conteo o registrar entrada</button>';
+  }
+  if(modo==="pend")return '<div><h1>Pendientes</h1><p class="sub">Lo que quedó sin hacer de días anteriores.</p></div>'+(rows.length?resumen:'')+html;
   var sel=S.pFecha&&S.pFecha<=h?S.pFecha:"";
   var fsel='<div class="datebar"><span class="lbl">Ver otro día</span><div class="dbrow">'+datePick("p-fecha",sel||h,h)+(sel&&sel!==h?'<button class="btn small ghost" data-act="p-hoy">Volver a hoy</button>':"")+'</div></div>';
   return '<div><h1>Por completar</h1><p class="sub">'+(sel?'Mostrando <b>'+esc(diaLbl(sel))+'</b>.':'Lo que falta por contar y por arquear, con su fecha.')+'</p></div>'+
     fsel+resumen+html+
     '<button class="btn ghost" data-act="campo-on">Hacer un conteo o registrar entrada</button>';
 }
+
 
 /* ---------- registrar ventas ---------- */
 function similar(a,b){

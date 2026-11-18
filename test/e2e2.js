@@ -16,7 +16,7 @@ async function newUser(browser){
   await page.goto('http://app.local/');return page;
 }
 async function login(page,email,name){
-  await page.waitForSelector('#lg-email');await page.fill('#lg-email',email);
+  await page.waitForSelector('[data-act=lg-gmail]');await page.click('[data-act=lg-gmail]');await page.waitForSelector('#lg-email');await page.fill('#lg-email',email);
   await page.click('[data-act=lg-send]');await page.waitForSelector('#lg-code');
   const code=env.mails[env.mails.length-1].body.match(/\d{6}/)[0];
   await page.fill('#lg-code',code);if(name)await page.fill('#lg-name',name);
@@ -25,7 +25,7 @@ async function login(page,email,name){
 const shot=(p,n)=>p.screenshot({path:'shots/'+n+'.png'});
 (async()=>{
   const b=await chromium.launch();
-  const adm=await newUser(b);await login(adm,'dueno@gmail.com');await adm.waitForSelector('text=Por completar');
+  const adm=await newUser(b);await login(adm,'dueno@gmail.com');await adm.waitForSelector('text=/Por completar|solo lo de hoy/');
   const ana=await newUser(b);await login(ana,'ana@gmail.com','Ana Pérez');await ana.waitForSelector('text=Solicitud enviada');
   // approve through api for speed
   const tok=await adm.evaluate(()=>localStorage.getItem('arq-tok'));

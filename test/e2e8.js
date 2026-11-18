@@ -20,7 +20,7 @@ const login=(e,n)=>{call('reqCode',{email:e});const c=env.mails[env.mails.length
   await p.route('http://app.local/',x=>x.fulfill({status:200,contentType:'text/html; charset=utf-8',body:html}));await p.goto('http://app.local/');
   await p.fill('#lg-email','gris@g.com');await p.click('[data-act=lg-send]');await p.waitForSelector('#lg-code');
   await p.fill('#lg-code',env.mails[env.mails.length-1].body.match(/\d{6}/)[0]);await p.click('[data-act=lg-verify]');
-  await p.waitForSelector('text=Por completar');
+  await p.waitForSelector('text=/Por completar|solo lo de hoy/');
   await p.click('[data-act=go][data-v=res]');await p.waitForSelector('[data-act=det-open]');
   let [d]=await Promise.all([p.waitForEvent('download'),p.click('[data-act=csv-lista]')]);
   let t=fs.readFileSync(await d.path(),'utf8');console.log(d.suggestedFilename());console.log(t);

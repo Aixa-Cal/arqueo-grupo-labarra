@@ -8,7 +8,7 @@ const call=(a,p,t)=>JSON.parse(env.ctx.api(JSON.stringify({a,p,t})));
   await p.route('http://app.local/',r=>r.fulfill({status:200,contentType:'text/html; charset=utf-8',body:html}));await p.goto('http://app.local/');return p}
  async function login(p,email,name){await p.waitForSelector('#lg-email');await p.fill('#lg-email',email);await p.click('[data-act=lg-send]');await p.waitForSelector('#lg-code');
   await p.fill('#lg-code',env.mails[env.mails.length-1].body.match(/\d{6}/)[0]);const n=await p.$('#lg-name');if(n)await p.fill('#lg-name',name||'X');await p.click('[data-act=lg-verify]')}
- const adm=await page();await login(adm,'dueno@gmail.com');await adm.waitForSelector('text=Por completar');const TA=await adm.evaluate(()=>localStorage.getItem('arq-tok'));
+ const adm=await page();await login(adm,'dueno@gmail.com');await adm.waitForSelector('text=/Por completar|solo lo de hoy/');const TA=await adm.evaluate(()=>localStorage.getItem('arq-tok'));
  call('saveConfig',{cfg:{calendario:{'Car Wash':[0,1,2,3,4,5,6]}}},TA);
  async function user(em,nombre,rol,neg,tel){const p=await page();await login(p,em,nombre);await p.waitForSelector('text=Solicitud enviada');call('setUser',{email:em,rol,estado:'aprobado',negocios:neg?[neg]:[],telefono:tel||''},TA);await p.click('[data-act=check-pending]').catch(()=>{});return p}
  async function iniciar(p){await p.waitForSelector('[data-act=neg]');await p.click('[data-act=neg]');await p.click('[data-act=turno][data-v="0"]');await p.click('#startBtn');await p.waitForSelector('#saveBtn')}
@@ -24,7 +24,7 @@ const call=(a,p,t)=>JSON.parse(env.ctx.api(JSON.stringify({a,p,t})));
  for(let i=0;i<6;i++)await fs_.click('[data-act=ck][data-v="'+i+'"]');await fs_.click('[data-act=caf][data-k=rell][data-v=si]');await fs_.click('[data-act=caf][data-k=func][data-v=si]');await fs_.click('[data-act=fz][data-v=no]');await fs_.fill('#cfz','El freezer 3 no enfría');await fs_.click('[data-act=nov][data-v=no]');
  await fs_.evaluate(()=>document.querySelector('[data-act=fz]').scrollIntoView({block:'center'}));await fs_.waitForTimeout(200);await fs_.screenshot({path:'shots/v3.png'});
  // 4: supervisor pendientes con WhatsApp
- const sup=await user('sup@g.com','Sara Supervisora','supervisor',null);await sup.waitForSelector('text=Por completar');await sup.reload();await sup.waitForSelector('text=Por completar');await sup.waitForTimeout(800);await sup.screenshot({path:'shots/v4.png'});
+ const sup=await user('sup@g.com','Sara Supervisora','supervisor',null);await sup.waitForSelector('text=/Por completar|solo lo de hoy/');await sup.reload();await sup.waitForSelector('text=/Por completar|solo lo de hoy/');await sup.waitForTimeout(800);await sup.screenshot({path:'shots/v4.png'});
  // 5 Car Wash, 6 ZP
  const cw=await user('cw@g.com','Pedro Car','colaborador','Car Wash');await iniciar(cw);await cw.screenshot({path:'shots/v5.png'});
  const zp=await user('zp@g.com','Ana Zona','colaborador','Zona Presidente');await iniciar(zp);await zp.screenshot({path:'shots/v6.png'});

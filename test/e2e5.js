@@ -14,6 +14,6 @@ const env=makeEnv();env.ctx.instalar();const errors=[];let posts=0;
   await page.waitForSelector('#lg-email');await page.fill('#lg-email','dueno@gmail.com');await page.click('[data-act=lg-send]');
   await page.waitForSelector('#lg-code');
   const code=env.mails[env.mails.length-1].body.match(/\d{6}/)[0];await page.fill('#lg-code',code);await page.click('[data-act=lg-verify]');
-  await page.waitForSelector('text=Por completar',{timeout:15000});
+  await page.waitForSelector('text=/Por completar|solo lo de hoy/',{timeout:15000});
   console.log('POSTs',posts,'errores',errors);await b.close();
 })();

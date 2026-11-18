@@ -48,7 +48,7 @@ const assert=require('assert');
   // el mismo enlace tras recargar: la sesión se mantiene
   await s.goto('http://app.local/');await s.waitForSelector('[data-act=go][data-v=contar]');
   // enlace malo: pantalla de login con mensaje
-  const m=await newUser(b);await m.goto('http://app.local/#i='+'a'.repeat(40));await m.waitForSelector('[data-act=lg-gmail]');await m.click('[data-act=lg-gmail]');await m.waitForSelector('#lg-email');
+  const m=await newUser(b);await m.goto('http://app.local/#i='+'a'.repeat(40));await m.waitForSelector('#lg-nom');
   assert(/ya no sirve|no es válido/.test(await m.innerText('body')));await shot(m,'eq3');
   console.log('errores',errors);await b.close();
 })();

@@ -8,7 +8,7 @@ const html=fs.readFileSync('../docs/index.html','utf8');const env=makeEnv();env.
   await p.route('http://app.local/',r=>r.fulfill({status:200,contentType:'text/html; charset=utf-8',body:html}));await p.goto('http://app.local/');
   await p.waitForSelector('[data-act=lg-gmail]');await p.click('[data-act=lg-gmail]');await p.waitForSelector('#lg-email');await p.screenshot({path:'shots/b-login-'+scheme+'.png'});
   await p.fill('#lg-email','dueno@gmail.com');await p.click('[data-act=lg-send]');await p.waitForSelector('#lg-code');
-  await p.fill('#lg-code',env.mails[env.mails.length-1].body.match(/\d{6}/)[0]);await p.click('[data-act=lg-verify]');await p.waitForSelector('text=Por completar');
+  await p.fill('#lg-code',env.mails[env.mails.length-1].body.match(/\d{6}/)[0]);await p.click('[data-act=lg-verify]');await p.waitForSelector('text=/Por completar|solo lo de hoy/');
   await p.screenshot({path:'shots/b-pend-'+scheme+'.png'});
   await p.click('[data-act=campo-on]');await p.click('[data-act=neg]');await p.click('[data-act=turno][data-v="0"]');await p.click('#startBtn');await p.waitForSelector('#saveBtn');
   await p.screenshot({path:'shots/b-contar-'+scheme+'.png'});

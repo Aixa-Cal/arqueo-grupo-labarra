@@ -20,7 +20,7 @@ const login=(e,n)=>{call('reqCode',{email:e});const c=env.mails[env.mails.length
   await p.route('http://app.local/',x=>x.fulfill({status:200,contentType:'text/html; charset=utf-8',body:html}));await p.goto('http://app.local/');
   await p.fill('#lg-email','gris@g.com');await p.click('[data-act=lg-send]');await p.waitForSelector('#lg-code');
   await p.fill('#lg-code',env.mails[env.mails.length-1].body.match(/\d{6}/)[0]);await p.click('[data-act=lg-verify]');
-  await p.waitForSelector('text=Por completar');
+  await p.waitForSelector('text=/Por completar|solo lo de hoy/');
   await p.fill('[data-dpin=p-fecha]','2026-11-02');await p.waitForSelector('text=Mostrando');
   const t=await p.textContent('body');assert(/lun 2\/11/i.test(t),'muestra el día elegido');assert(/Food Shop/.test(t));
   console.log('pend fecha ok');

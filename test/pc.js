@@ -22,4 +22,4 @@ env.setClock(U(2,20,0));
  await page.clock.setFixedTime(new Date(U(2,20,0)));
  await page.route('https://fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:''}));await page.route('http://app.local/',r=>r.fulfill({status:200,contentType:'text/html; charset=utf-8',body:html}));await page.goto('http://app.local/');
  await page.fill('#lg-email','dueno@gmail.com');await page.click('[data-act=lg-send]');await page.waitForSelector('#lg-code');await page.fill('#lg-code',env.mails[env.mails.length-1].body.match(/\d{6}/)[0]);await page.click('[data-act=lg-verify]');
- await page.waitForSelector('text=Por completar');await page.waitForTimeout(1200);await page.screenshot({path:'shots/pc.png',fullPage:true});console.log('ERRS',errs);await b.close()})();
+ await page.waitForSelector('text=/Por completar|solo lo de hoy/');await page.waitForTimeout(1200);await page.screenshot({path:'shots/pc.png',fullPage:true});console.log('ERRS',errs);await b.close()})();

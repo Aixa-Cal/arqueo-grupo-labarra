@@ -41,7 +41,7 @@ async function login(page,email,name){
   // 1 owner
   const adm=await newUser(browser);
   await login(adm,'dueno@gmail.com');
-  await adm.waitForSelector('text=Por completar');
+  await adm.waitForSelector('text=/Por completar|solo lo de hoy/');
   await shot(adm,'01-admin-pend');
   // 2 ana asks access
   const ana=await newUser(browser);

@@ -8,10 +8,10 @@ const call=(a,p,t)=>JSON.parse(env.ctx.api(JSON.stringify({a,p,t})));
   await p.route('http://app.local/',r=>r.fulfill({status:200,contentType:'text/html; charset=utf-8',body:html}));await p.goto('http://app.local/');return p}
  async function login(p,email,name){await p.waitForSelector('#lg-email');await p.fill('#lg-email',email);await p.click('[data-act=lg-send]');await p.waitForSelector('#lg-code');
   await p.fill('#lg-code',env.mails[env.mails.length-1].body.match(/\d{6}/)[0]);const n=await p.$('#lg-name');if(n)await p.fill('#lg-name',name||'X');await p.click('[data-act=lg-verify]')}
- const adm=await page();await login(adm,'dueno@gmail.com');await adm.waitForSelector('text=Por completar');const TA=await adm.evaluate(()=>localStorage.getItem('arq-tok'));
+ const adm=await page();await login(adm,'dueno@gmail.com');await adm.waitForSelector('text=/Por completar|solo lo de hoy/');const TA=await adm.evaluate(()=>localStorage.getItem('arq-tok'));
  const u=await page();await login(u,'l@g.com','Líder');await u.waitForSelector('text=Solicitud enviada');
  call('setUser',{email:'l@g.com',rol:'lider',estado:'aprobado',negocios:['La Barra Atala','La Barra Atalaya']},TA);
- await u.click('[data-act=check-pending]').catch(()=>{});await u.waitForSelector('text=Por completar',{timeout:10000});
+ await u.click('[data-act=check-pending]').catch(()=>{});await u.waitForSelector('text=/Por completar|solo lo de hoy/',{timeout:10000});
  console.log('Pendientes del líder:',(await u.$$eval('.pitem b',e=>e.map(x=>x.textContent))).join(' | '));
  await u.click('[data-act=go][data-v=contar]');
  const negs=await u.$$eval('[data-act=neg]',e=>e.map(x=>x.textContent.trim()));console.log('negocios visibles:',negs);

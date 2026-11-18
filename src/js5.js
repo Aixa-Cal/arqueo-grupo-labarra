@@ -108,7 +108,7 @@ document.addEventListener("click",function(ev){
       render();window.scrollTo(0,0);refresh(false);
     },
     "campo-on":function(){S.campo=true;S.view="contar";S.step="elegir";S.draft=newDraft();render();window.scrollTo(0,0)},
-    "campo-off":function(){S.campo=false;S.view="pend";S.step="elegir";S.draft=null;render()},
+    "campo-off":function(){S.campo=false;S.view=role()==="admin"?"hoy":"pend";S.step="elegir";S.draft=null;render()},
     "logout":function(){doLogout(false)},
     "check-pending":function(){checkPending()},
     "lg-send":function(){lgSend()},

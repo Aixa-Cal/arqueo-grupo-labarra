@@ -9,11 +9,11 @@ async function page(b){const c=await b.newContext({viewport:{width:390,height:84
   await p.addInitScript(()=>{const mk=()=>{let ok=()=>{},bad=()=>{};const o={withSuccessHandler(f){ok=f;return o},withFailureHandler(f){bad=f;return o},api(s){window.__api(s).then(ok,bad)}};return o};
     window.google={script:{run:{withSuccessHandler(f){return mk().withSuccessHandler(f)},withFailureHandler(f){return mk().withFailureHandler(f)},api(s){return mk().api(s)}}}};});
   await p.route('http://app.local/',r=>r.fulfill({status:200,contentType:'text/html; charset=utf-8',body:html}));await p.goto('http://app.local/');return p}
-async function login(p,email,name){await p.waitForSelector('#lg-email');await p.fill('#lg-email',email);await p.click('[data-act=lg-send]');await p.waitForSelector('#lg-code');
+async function login(p,email,name){await p.waitForSelector('[data-act=lg-gmail]');await p.click('[data-act=lg-gmail]');await p.waitForSelector('#lg-email');await p.fill('#lg-email',email);await p.click('[data-act=lg-send]');await p.waitForSelector('#lg-code');
   const code=env.mails[env.mails.length-1].body.match(/\d{6}/)[0];await p.fill('#lg-code',code);if(name){const n=await p.$('#lg-name');if(n)await p.fill('#lg-name',name)}await p.click('[data-act=lg-verify]')}
 (async()=>{
   const b=await chromium.launch();
-  const adm=await page(b);await login(adm,'dueno@gmail.com');await adm.waitForSelector('text=Por completar');
+  const adm=await page(b);await login(adm,'dueno@gmail.com');await adm.waitForSelector('text=/Por completar|solo lo de hoy/');
   const TA=await adm.evaluate(()=>localStorage.getItem('arq-tok'));
   const col=await page(b);await login(col,'col@g.com','Carlos Ruiz');await col.waitForSelector('text=Solicitud enviada');
   const sup=await page(b);await login(sup,'sup@g.com','Sara Sup');await sup.waitForSelector('text=Solicitud enviada');
@@ -25,10 +25,10 @@ async function login(p,email,name){await p.waitForSelector('#lg-email');await p.
   await adm.click('[data-act=eq-save]');await adm.waitForSelector('text=Guardado');
   await adm.click('[data-act=eq-edit][data-id="col@g.com"]');await adm.click('[data-act=eq-set][data-v=colaborador]');await adm.fill('#eq-tel','829 111 2222');
   await adm.evaluate(()=>document.querySelector('[data-act=eq-neg]')?.click());await adm.click('[data-act=eq-save]');await adm.waitForSelector('text=Guardado');
-  await sup.click('[data-act=check-pending]').catch(()=>{});await sup.waitForSelector('text=Por completar',{timeout:10000});
+  await sup.click('[data-act=check-pending]').catch(()=>{});await sup.waitForSelector('text=/Por completar|solo lo de hoy/',{timeout:10000});
   const nav=await sup.$$eval('.foot button, nav button, .tabbar button',e=>e.map(x=>x.textContent.trim()));console.log('nav supervisor',nav);
   assert(!nav.some(x=>/Panel|Catálogo|Equipo/.test(x)),'supervisor no ve administración');
-  await sup.reload();await sup.waitForSelector('text=Por completar');await sup.waitForTimeout(800);
+  await sup.reload();await sup.waitForSelector('text=/Por completar|solo lo de hoy/');await sup.waitForTimeout(800);
   const links=await sup.$$eval('a.wa',a=>a.map(x=>x.href));console.log('wa',links.length,links[0]&&decodeURIComponent(links[0]).slice(0,200));
   assert(links.length>0,'botones de WhatsApp');assert(links.every(h=>/^https:\/\/wa\.me\/1?\d{10,11}\?text=/.test(h)));
   await sup.screenshot({path:'shots/91-sup-pend.png'});

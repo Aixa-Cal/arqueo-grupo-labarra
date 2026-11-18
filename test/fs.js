@@ -25,7 +25,7 @@ async function login(page,email,name){
 const shot=(p,n)=>p.screenshot({path:'shots/'+n+'.png'});
 (async()=>{
   const b=await chromium.launch();
-  const adm=await newUser(b);await login(adm,'dueno@gmail.com');await adm.waitForSelector('text=Por completar');
+  const adm=await newUser(b);await login(adm,'dueno@gmail.com');await adm.waitForSelector('text=/Por completar|solo lo de hoy/');
   const ana=await newUser(b);await login(ana,'ana@gmail.com','Ana Pérez');await ana.waitForSelector('text=Solicitud enviada');
   // approve through api for speed
   const tok=await adm.evaluate(()=>localStorage.getItem('arq-tok'));
