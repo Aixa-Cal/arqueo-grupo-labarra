@@ -78,7 +78,7 @@ fs.writeFileSync('/tmp/day.json',JSON.stringify({timeline,d}));
     await page.clock.setFixedTime(new Date(U(3,23,59)));
     await page.route('https://fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:''}));
     await page.route('http://app.local/',r=>r.fulfill({status:200,contentType:'text/html; charset=utf-8',body:html}));await page.goto('http://app.local/');return page}
-  async function login(page,email){await page.waitForSelector('#lg-email');await page.fill('#lg-email',email);await page.click('[data-act=lg-send]');await page.waitForSelector('#lg-code');
+  async function login(page,email){await page.waitForSelector('[data-act=lg-gmail]');await page.click('[data-act=lg-gmail]');await page.waitForSelector('#lg-email');await page.fill('#lg-email',email);await page.click('[data-act=lg-send]');await page.waitForSelector('#lg-code');
     const c=env.mails[env.mails.length-1].body.match(/\d{6}/)[0];await page.fill('#lg-code',c);await page.click('[data-act=lg-verify]')}
   const errs=[];
   const g=await newUser();g.on('pageerror',e=>errs.push(e.message));await login(g,'gerencia@gmail.com');await g.waitForTimeout(1500);

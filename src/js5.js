@@ -41,12 +41,17 @@ document.addEventListener("input",function(ev){
   else if(t.id==="lg-email"){S.loginEmail=t.value}
   else if(t.id==="lg-code"){var c5=t.value.replace(/\D/g,"").slice(0,6);if(c5!==t.value)t.value=c5;S.loginCode=c5}
   else if(t.id==="lg-name"){S.loginName=t.value}
+  else if(t.id==="lg-nom"){S.pinNom=t.value}
+  else if(t.id==="lg-tel"){S.pinTel=t.value}
+  else if(t.id==="lg-pin"||t.id==="lg-pin2"){var c4=t.value.replace(/\D/g,"").slice(0,4);if(c4!==t.value)t.value=c4;if(t.id==="lg-pin")S.pin=c4;else S.pin2=c4}
 });
 document.addEventListener("keydown",function(ev){
   if(ev.key!=="Enter")return;
   var id=ev.target.id;
   if(id==="lg-email")lgSend();
   else if(id==="lg-code"||id==="lg-name")lgVerify();
+  else if(id==="lg-nom"||id==="lg-tel")pnSig();
+  else if(id==="lg-pin"||id==="lg-pin2")pnGo();
 });
 document.addEventListener("change",function(ev){
   var t=ev.target,ds=t.dataset||{};
@@ -107,6 +112,12 @@ document.addEventListener("click",function(ev){
     "logout":function(){doLogout(false)},
     "check-pending":function(){checkPending()},
     "lg-send":function(){lgSend()},
+    "pn-sig":function(){pnSig()},
+    "pn-go":function(){pnGo()},
+    "pn-olvide":function(){S.pinPaso="crear";S.pin="";S.pin2="";S.err="";render()},
+    "pn-atras":function(){S.pinPaso="";S.pin="";S.pin2="";S.err="";render()},
+    "lg-gmail":function(){S.auth="email";S.err="";render()},
+    "lg-nom":function(){S.auth="nom";S.err="";S.pinPaso="";render()},
     "lg-resend":function(){lgSend()},
     "lg-change":function(){S.auth="email";S.err="";render()},
     "lg-verify":function(){lgVerify()},

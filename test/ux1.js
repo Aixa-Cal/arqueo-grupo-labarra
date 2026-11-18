@@ -16,7 +16,7 @@ async function newUser(browser){
   await page.goto('http://app.local/');return page;
 }
 async function login(page,email,name){
-  await page.waitForSelector('#lg-email');await page.fill('#lg-email',email);
+  await page.waitForSelector('[data-act=lg-gmail]');await page.click('[data-act=lg-gmail]');await page.waitForSelector('#lg-email');await page.fill('#lg-email',email);
   await page.click('[data-act=lg-send]');await page.waitForSelector('#lg-code');
   const code=env.mails[env.mails.length-1].body.match(/\d{6}/)[0];
   await page.fill('#lg-code',code);if(name)await page.fill('#lg-name',name);

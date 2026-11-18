@@ -7,7 +7,7 @@ var TZ = 'America/Santo_Domingo';
 var TOKEN_DIAS = 365;
 
 var H = {
-  Usuarios: ['email', 'nombre', 'rol', 'estado', 'negocios', 'creado', 'aprobadoPor', 'ultimoAcceso', 'telefono', 'turnos', 'invHash', 'invExp', 'invUsos'],
+  Usuarios: ['email', 'nombre', 'rol', 'estado', 'negocios', 'creado', 'aprobadoPor', 'ultimoAcceso', 'telefono', 'turnos', 'invHash', 'invExp', 'invUsos', 'pinHash'],
   Productos: ['id', 'nombre', 'cat', 'unidad', 'factor', 'tol', 'costo', 'critico', 'negocios', 'orden', 'activo'],
   Conteos: ['id', 'fecha', 'negocio', 'turno', 'resp', 'email', 'ts', 'estado', 'items', 'ventas', 'res', 'resumen', 'sin', 'ventasPor', 'ventasTs', 'rect', 'nota', 'cierre'],
   Entradas: ['id', 'fecha', 'negocio', 'resp', 'email', 'ts', 'nota', 'items', 'anulada', 'origen'],
@@ -399,6 +399,48 @@ function crearPersona(me, p) {
     return { ok: true, email: email };
   });
 }
+/* ---- acceso con nombre + teléfono + PIN (sin correo ni enlace) ---- */
+var PIN_ROLES = ['colaborador', 'lider', 'supervisor'];
+function nombreCompatible(a, b) {
+  var x = normNom(a).split(' ').filter(function (w) { return w.length > 1; }), y = normNom(b).split(' ').filter(function (w) { return w.length > 1; });
+  if (!x.length || !y.length) return false;
+  function sub(m, n) { return m.every(function (w) { return n.indexOf(w) > -1; }); }
+  return sub(x, y) || sub(y, x);
+}
+function entrarPin(p) {
+  var tel = String(p.tel || '').replace(/\D/g, '').slice(-10), nombre = String(p.nombre || '').trim(), pin = String(p.pin || '').replace(/\D/g, '');
+  if (normNom(nombre).length < 3) fail('pin', 'Escribe tu nombre y apellido.');
+  if (tel.length < 10) fail('pin', 'Escribe tu número de teléfono completo (10 números).');
+  var cache = CacheService.getScriptCache(), k = 'pn_' + tel, n = Number(cache.get(k)) || 0;
+  if (n >= 8) fail('pin', 'Demasiados intentos. Espera 15 minutos y vuelve a probar.');
+  ensureHeaders('Usuarios');
+  var u = null, todos = readAll('Usuarios');
+  for (var i = 0; i < todos.length; i++) {
+    var t = String(todos[i].telefono || '').replace(/\D/g, '').slice(-10);
+    if (t === tel && todos[i].estado === 'aprobado' && PIN_ROLES.indexOf(todos[i].rol) > -1 && nombreCompatible(nombre, todos[i].nombre)) { u = todos[i]; break; }
+  }
+  if (!u) { cache.put(k, String(n + 1), 900); fail('pin', 'No encontramos ese nombre con ese teléfono. Escríbelos como los tiene tu supervisora.'); }
+  var tiene = !!u.pinHash;
+  if (!pin) return { paso: tiene ? 'entrar' : 'crear', nombre: u.nombre };
+  if (pin.length !== 4) fail('pin', 'El PIN son 4 números.');
+  var h = sha('pin' + pin + u.email + secret());
+  return withLock(function () {
+    var f = userByEmail(u.email, true);
+    if (!tiene || p.crear) {
+      f.pinHash = h;
+      bit(f.email, 'acceso', tiene ? 'reinició su PIN' : 'creó su PIN');
+      try { notify('acceso', tiene ? 'Reinició su PIN' : 'Creó su PIN', f.nombre + (tiene ? ' reinició su PIN de acceso.' : ' creó su PIN de acceso.'), { para: 'admin', email: false }); } catch (e) {}
+    } else if (f.pinHash !== h) {
+      cache.put(k, String(n + 1), 900);
+      fail('pin', 'Ese PIN no es correcto.' + (n >= 5 ? ' Te quedan pocos intentos.' : ''));
+    }
+    cache.remove(k);
+    f.ultimoAcceso = now();
+    writeRow('Usuarios', f._row, f);
+    cacheDrop();
+    return { token: makeToken(f.email), me: publicMe(f) };
+  });
+}
 function invitar(me, p) {
   var email = String(p.email || '').trim().toLowerCase();
   return withLock(function () {
@@ -458,6 +500,7 @@ function dispatch(a, p, t) {
   if (a === 'reqCode') return reqCode(p);
   if (a === 'verifyCode') return verifyCode(p);
   if (a === 'entrarLink') return entrarLink(p);
+  if (a === 'entrarPin') return entrarPin(p);
   var me = auth(t);
   if (a === 'me') return publicMe(me);
   if (me.estado === 'bloqueado') fail('bloqueado', 'Tu acceso está bloqueado.');

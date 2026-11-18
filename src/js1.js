@@ -9,7 +9,7 @@ var INSUMOS=["Car Wash"];
 var ROL={colaborador:"Colaborador",lider:"Líder",supervisor:"Supervisor",admin:"Administración",gerencia:"Gerencia"};
 var DIAS=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"],DIAS_L=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
 var S={
-  tok:null,auth:"load",me:null,loginEmail:"",loginNuevo:false,loginName:"",loginCode:"",loginBusy:false,
+  tok:null,auth:"load",me:null,loginEmail:"",loginNuevo:false,loginName:"",loginCode:"",loginBusy:false,pinNom:"",pinTel:"",pin:"",pin2:"",pinPaso:"",pinNombre:"",
   hoy:"",cfg:{negocios:[],turnos:{},limites:{},calendario:{},catDias:{},avisos:{},todosNegocios:[]},
   almacen:[],productos:[],conteos:[],entradas:[],movs:[],motivos:[],notifs:[],pend:0,
   view:"",campo:false,step:"elegir",draft:null,saved:null,saving:false,
@@ -73,7 +73,7 @@ function errMsg(e){return (e&&e.msg)||"Algo salió mal. Intenta de nuevo."}
 
 /* ---------- sesión ---------- */
 function doLogout(expired){
-  lsSet("arq-tok","");S.tok=null;S.me=null;S.auth="email";S.ready=false;S.view="";S.campo=false;S.step="elegir";S.draft=null;S.vs=null;S.detail=null;
+  lsSet("arq-tok","");S.tok=null;S.me=null;S.auth="nom";S.ready=false;S.view="";S.campo=false;S.step="elegir";S.draft=null;S.vs=null;S.detail=null;
   if(expired)S.err="Tu sesión venció. Entra de nuevo.";
   render();
 }
@@ -105,9 +105,9 @@ async function boot(){
     catch(e){S.linkErr=errMsg(e)}
   }
   S.tok=lsGet("arq-tok");
-  if(!S.tok){S.auth="email";if(S.linkErr)S.err=S.linkErr;render();return}
+  if(!S.tok){S.auth="nom";if(S.linkErr)S.err=S.linkErr;render();return}
   try{var me=await api("me");await enter({me:me})}
-  catch(e){if(e.code==="net"){S.auth="load";S.err=errMsg(e);render();setTimeout(boot,5000)}else{S.auth="email";render()}}
+  catch(e){if(e.code==="net"){S.auth="load";S.err=errMsg(e);render();setTimeout(boot,5000)}else{S.auth="nom";render()}}
 }
 window.addEventListener("hashchange",function(){if(/^#i=/.test(location.hash))boot()});
 function startPoll(){
@@ -266,11 +266,41 @@ function authHTML(){
       '<button class="btn" data-act="lg-verify"'+(S.loginBusy?" disabled":"")+'>'+(S.loginBusy?"Verificando…":"Entrar")+'</button>'+
       '<div class="row-act"><button class="linkbtn" data-act="lg-resend">Reenviar código</button><button class="linkbtn" data-act="lg-change">Cambiar correo</button></div></div>';
   }
+  if(S.auth==="nom"||S.auth==="nom2"){
+    var paso=S.pinPaso||"",tx={crear:"Crea tu PIN: 4 números que tú te sepas.",entrar:"Escribe tu PIN."}[paso]||"Escribe tu nombre y tu número de teléfono.";
+    return '<div class="panel login"><div><h1>Entrar</h1><p class="sub">'+(paso?'Hola, <b>'+esc(S.pinNombre)+'</b>. ':'')+tx+'</p></div>'+
+      (S.err?'<div class="banner bad">'+esc(S.err)+'</div>':"")+
+      (paso?
+        '<div class="field"><label class="lbl" for="lg-pin">'+(paso==="crear"?"Tu PIN nuevo":"Tu PIN")+'</label><input id="lg-pin" class="code" type="password" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="····" value="'+esc(S.pin)+'"></div>'+
+        (paso==="crear"?'<div class="field"><label class="lbl" for="lg-pin2">Escríbelo otra vez</label><input id="lg-pin2" class="code" type="password" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="····" value="'+esc(S.pin2)+'"></div>':"")+
+        '<button class="btn" data-act="pn-go"'+(S.loginBusy?" disabled":"")+'>'+(S.loginBusy?"Entrando…":(paso==="crear"?"Guardar y entrar":"Entrar"))+'</button>'+
+        '<div class="row-act">'+(paso==="entrar"?'<button class="linkbtn" data-act="pn-olvide">Olvidé mi PIN</button>':'')+'<button class="linkbtn" data-act="pn-atras">Cambiar nombre</button></div>'
+      :
+        '<div class="field"><label class="lbl" for="lg-nom">Nombre y apellido</label><input id="lg-nom" autocomplete="name" placeholder="Ej. María Pérez" value="'+esc(S.pinNom)+'"></div>'+
+        '<div class="field"><label class="lbl" for="lg-tel">Tu teléfono (el de WhatsApp)</label><input id="lg-tel" type="tel" inputmode="tel" autocomplete="tel" maxlength="14" placeholder="809 000 0000" value="'+esc(S.pinTel)+'"></div>'+
+        '<button class="btn" data-act="pn-sig"'+(S.loginBusy?" disabled":"")+'>'+(S.loginBusy?"Buscando…":"Continuar")+'</button>')+
+      '<div class="lg-ayuda"><p>¿Eres de administración o gerencia? <button class="linkbtn" data-act="lg-gmail">Entra con tu Gmail</button></p></div></div>';
+  }
   return '<div class="panel login"><div><h1>Entrar</h1><p class="sub">Usa tu Gmail. Te enviamos un código para confirmar que eres tú; no necesitas contraseña.</p></div>'+
     (S.err?'<div class="banner bad">'+esc(S.err)+'</div>':"")+
     '<div class="field"><label class="lbl" for="lg-email">Tu Gmail</label><input id="lg-email" type="email" inputmode="email" autocomplete="email" autocapitalize="none" placeholder="nombre@gmail.com" value="'+esc(S.loginEmail)+'"></div>'+
     '<button class="btn" data-act="lg-send"'+(S.loginBusy?" disabled":"")+'>'+(S.loginBusy?"Enviando…":"Enviarme el código")+'</button>'+
-    '<div class="lg-ayuda"><b>¿No puedes con el código?</b><p>Pídele a tu supervisora tu <b>enlace de acceso</b> por WhatsApp. Lo tocas una vez y entras, sin código y sin Gmail.</p></div></div>';
+    '<div class="lg-ayuda"><b>¿No tienes Gmail?</b><p><button class="linkbtn" data-act="lg-nom">Entra con tu nombre y teléfono</button></p></div></div>';
+}
+async function pnSig(){
+  S.pinNom=($("#lg-nom")||{}).value||S.pinNom||"";S.pinTel=($("#lg-tel")||{}).value||S.pinTel||"";
+  S.loginBusy=true;S.err="";render();
+  try{var r=await api("entrarPin",{nombre:S.pinNom,tel:S.pinTel});S.pinPaso=r.paso;S.pinNombre=r.nombre;S.pin="";S.pin2=""}
+  catch(e){S.err=errMsg(e)}
+  S.loginBusy=false;render();
+}
+async function pnGo(){
+  S.pin=($("#lg-pin")||{}).value||"";S.pin2=($("#lg-pin2")||{}).value||"";
+  if(S.pin.length!==4){S.err="El PIN son 4 números.";render();return}
+  if(S.pinPaso==="crear"&&S.pin!==S.pin2){S.err="Los dos PIN no son iguales. Escríbelos otra vez.";S.pin2="";render();return}
+  S.loginBusy=true;S.err="";render();
+  try{var r=await api("entrarPin",{nombre:S.pinNom,tel:S.pinTel,pin:S.pin,crear:S.pinPaso==="crear"});S.loginBusy=false;S.pinPaso="";S.pin="";S.pin2="";await enter(r)}
+  catch(e){S.loginBusy=false;S.err=errMsg(e);S.pin="";render()}
 }
 async function lgSend(){
   var em=($("#lg-email")||{}).value||S.loginEmail;S.loginEmail=String(em).trim().toLowerCase();

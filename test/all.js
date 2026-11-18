@@ -10,7 +10,7 @@ async function page(b){const c=await b.newContext({viewport:{width:390,height:84
   await p.addInitScript(()=>{const mk=()=>{let ok=()=>{},bad=()=>{};const o={withSuccessHandler(f){ok=f;return o},withFailureHandler(f){bad=f;return o},api(s){window.__api(s).then(ok,bad)}};return o};
     window.google={script:{run:{withSuccessHandler(f){return mk().withSuccessHandler(f)},withFailureHandler(f){return mk().withFailureHandler(f)},api(s){return mk().api(s)}}}};});
   await p.route('http://app.local/',r=>r.fulfill({status:200,contentType:'text/html; charset=utf-8',body:html}));await p.goto('http://app.local/');return p}
-async function login(p,email,name){await p.waitForSelector('#lg-email');await p.fill('#lg-email',email);await p.click('[data-act=lg-send]');await p.waitForSelector('#lg-code');
+async function login(p,email,name){await p.waitForSelector('[data-act=lg-gmail]');await p.click('[data-act=lg-gmail]');await p.waitForSelector('#lg-email');await p.fill('#lg-email',email);await p.click('[data-act=lg-send]');await p.waitForSelector('#lg-code');
   const code=env.mails[env.mails.length-1].body.match(/\d{6}/)[0];await p.fill('#lg-code',code);if(name){const n=await p.$('#lg-name');if(n)await p.fill('#lg-name',name)}await p.click('[data-act=lg-verify]')}
 const TURNOS={};
 async function contar(p,turnoIdx,opts){

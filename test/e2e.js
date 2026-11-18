@@ -24,7 +24,7 @@ async function newUser(browser){
   return page;
 }
 async function login(page,email,name){
-  await page.waitForSelector('#lg-email');
+  await page.waitForSelector('[data-act=lg-gmail]');await page.click('[data-act=lg-gmail]');await page.waitForSelector('#lg-email');
   await page.fill('#lg-email',email);
   const before=env.mails.length;
   await page.click('[data-act=lg-send]');

@@ -28,7 +28,7 @@ const leakSet={};[2,9,14].forEach(i=>leakSet[prods[i].id]=1.35);
   await page.route('http://app.local/',r=>r.fulfill({status:200,contentType:'text/html; charset=utf-8',body:html}));
   const cap=async t=>{await page.evaluate(t=>{let d=document.getElementById('__cap');if(!d){d=document.createElement('div');d.id='__cap';d.style.cssText='position:fixed;left:8px;right:8px;top:8px;z-index:99999;background:#111c;color:#fff;font:600 14px system-ui;padding:10px 12px;border-radius:10px;pointer-events:none';document.body.appendChild(d)}d.textContent=t},t);};
   const pause=ms=>page.waitForTimeout(ms);
-  async function loginUI(email){await page.goto('http://app.local/');await page.waitForSelector('#lg-email');await cap('Entrar con el correo: llega un código de 6 dígitos');await pause(1200);
+  async function loginUI(email){await page.goto('http://app.local/');await page.waitForSelector('[data-act=lg-gmail]');await page.click('[data-act=lg-gmail]');await page.waitForSelector('#lg-email');await cap('Entrar con el correo: llega un código de 6 dígitos');await pause(1200);
     await page.fill('#lg-email',email);await pause(600);await page.click('[data-act=lg-send]');await page.waitForSelector('#lg-code');
     const c=env.mails[env.mails.length-1].body.match(/\d{6}/)[0];await page.fill('#lg-code',c);await pause(800);await page.click('[data-act=lg-verify]');await pause(1500)}
   // 1 líder

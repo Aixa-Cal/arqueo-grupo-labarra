@@ -16,7 +16,7 @@ async function newUser(browser){
   await page.goto('http://app.local/');return page;
 }
 async function login(page,email,name){
-  await page.waitForSelector('#lg-email');await page.fill('#lg-email',email);
+  await page.waitForSelector('[data-act=lg-gmail]');await page.click('[data-act=lg-gmail]');await page.waitForSelector('#lg-email');await page.fill('#lg-email',email);
   await page.click('[data-act=lg-send]');await page.waitForSelector('#lg-code');
   const code=env.mails[env.mails.length-1].body.match(/\d{6}/)[0];
   await page.fill('#lg-code',code);if(name)await page.fill('#lg-name',name);
@@ -48,7 +48,7 @@ const assert=require('assert');
   // el mismo enlace tras recargar: la sesión se mantiene
   await s.goto('http://app.local/');await s.waitForSelector('[data-act=go][data-v=contar]');
   // enlace malo: pantalla de login con mensaje
-  const m=await newUser(b);await m.goto('http://app.local/#i='+'a'.repeat(40));await m.waitForSelector('#lg-email');
+  const m=await newUser(b);await m.goto('http://app.local/#i='+'a'.repeat(40));await m.waitForSelector('[data-act=lg-gmail]');await m.click('[data-act=lg-gmail]');await m.waitForSelector('#lg-email');
   assert(/ya no sirve|no es válido/.test(await m.innerText('body')));await shot(m,'eq3');
   console.log('errores',errors);await b.close();
 })();
