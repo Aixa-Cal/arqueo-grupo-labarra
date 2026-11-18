@@ -1805,3 +1805,178 @@ function dash(p) {
   });
   return { mermas: mm, desde: desde, hasta: hasta, total: tot, porNegocio: porNeg, top: top, diario: dd, faltan: faltan.slice(-40), pendientes: pendList };
 }
+
+/* ============================ WhatsApp (Bird): recordatorios y alertas de conteo ============================ */
+/*
+ * Propiedades del script (Configuración del proyecto → Propiedades del script):
+ *   BIRD_API_KEY = clave de Bird (empieza con bk_us1_ …). Nunca se escribe en el código.
+ *   WA_ACTIVO    = si   → envía de verdad. Cualquier otro valor: no envía nada (solo anota en la hoja WhatsApp).
+ *   WA_PRUEBA    = 8299196334 → modo prueba: TODOS los mensajes van a ese número. Bórrala para enviar al equipo.
+ * Una sola vez: ejecuta  instalarWhatsApp  (crea la revisión automática cada 10 minutos).
+ */
+var WA_FROM = '+18295995490';
+var WA_DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+var WA_MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+/* Teléfonos (10 números, República Dominicana) */
+var WA_GENTE = {
+  'Juanito': '8293136131', 'Claribel': '8094473777', 'Zayan': '8094444574', 'Genesis': '8093773135', 'Elvira': '8097153900',
+  'Jisela': '8296449840', 'Yessica': '8297471746', 'Leidy': '8496217193', 'Génesis Florentino': '8298797606',
+  'Marilisys': '8297691940', 'Angel': '8496243556', 'Raisa': '8097146988', 'Esperanza': '8298440008', 'Lismell': '8293650934', 'Tatiana': '8298549368',
+  'Sol': '8299321990', 'Deyanira': '8296064491', 'Anabelle': '8495282323', 'Elisa': '8495441915',
+  'Griselda': '8099747446', 'Aixa': '8299196334'
+};
+/* Quién cuenta cada turno. cubre = {día de la semana (0=dom … 6=sáb): quién cuenta ese día}. cerrado = días sin ese turno.
+   noche = turno 11PM-7AM: el día libre se refiere a la noche que empieza ese día (se cuenta a las 7AM del día siguiente).
+   rec = hora del recordatorio · ale = hora de la alerta si no contó (vacío = sin alerta) · sup = supervisora que recibe la alerta, con sus días libres */
+var T1 = 'Turno 1 (7AM-3PM)', T2 = 'Turno 2 (3PM-11PM)', T3 = 'Turno 3 (11PM-7AM)', TZP = 'Turno único (3PM-11PM)';
+var SUP_FS = { n: 'Anabelle', libre: [2] };
+var WA_TURNOS = [
+  { id: 'atala1', neg: 'La Barra Atala', turno: T1, rec: '14:00', ale: '15:30', hora: '3:30 PM', quien: 'Juanito', cubre: { 3: 'Claribel' } },
+  { id: 'atala2', neg: 'La Barra Atala', turno: T2, rec: '22:00', ale: '23:30', hora: '11:30 PM', quien: 'Zayan', cubre: { 2: 'Genesis' } },
+  { id: 'atala3', neg: 'La Barra Atala', turno: T3, rec: '06:00', ale: '07:30', hora: '7:30 AM', quien: 'Elvira', noche: true, cerrado: [2] },
+  { id: 'atalaya1', neg: 'La Barra Atalaya', turno: T1, rec: '14:00', ale: '15:30', hora: '3:30 PM', quien: 'Jisela', cubre: { 4: 'Yessica' } },
+  { id: 'atalaya2', neg: 'La Barra Atalaya', turno: T2, rec: '22:00', ale: '23:30', hora: '11:30 PM', quien: 'Leidy', cubre: { 1: 'Génesis Florentino' } },
+  { id: 'mf1', neg: 'La Barra Miraflores', turno: T1, rec: '14:00', ale: '15:30', hora: '3:30 PM', quien: 'Marilisys', cubre: { 2: 'Angel', 4: 'Angel' } },
+  { id: 'mf2', neg: 'La Barra Miraflores', turno: T2, rec: '22:00', ale: '23:30', hora: '11:30 PM', quien: 'Raisa', cubre: { 2: 'Marilisys' } },
+  { id: 'mf3', neg: 'La Barra Miraflores', turno: T3, rec: '06:00', ale: '07:30', hora: '7:30 AM', quien: 'Esperanza', noche: true, cubre: { 3: 'Lismell' } },
+  { id: 'fs1', neg: 'Food Shop', turno: T1, rec: '14:00', ale: '15:30', hora: '3:30 PM', quien: 'Sol', cubre: { 3: 'Anabelle' }, sup: SUP_FS },
+  { id: 'fs2', neg: 'Food Shop', turno: T2, rec: '22:00', ale: '23:30', hora: '11:30 PM', quien: 'Deyanira', cubre: { 1: 'Anabelle' }, sup: SUP_FS },
+  { id: 'zpE', neg: 'Zona Presidente', turno: TZP, rec: '15:00', ale: '', hora: '11:30 PM', momento: 'al entrar, anota lo que hay', quien: 'Elisa', cerrado: [1] },
+  { id: 'zp', neg: 'Zona Presidente', turno: TZP, rec: '22:00', ale: '23:30', hora: '11:30 PM', momento: 'cierre del turno', quien: 'Elisa', cerrado: [1], sup: SUP_FS }
+];
+/* Conteo general semanal (Griselda) */
+var WA_SEMANAL = [
+  { id: 'genLun', dia: 1, at: '07:00', quien: 'Griselda', tienda: 'La Barra Atala y La Barra Atalaya', hora: '12:00 PM' },
+  { id: 'genMar', dia: 2, at: '07:00', quien: 'Griselda', tienda: 'La Barra Miraflores, Food Shop y Zona Presidente', hora: '12:00 PM' }
+];
+/* Resumen de la mañana con los conteos que faltaron el día anterior */
+var WA_RESUMEN = { at: '07:30', quien: 'Aixa' };
+var WA_VENTANA = 60;   // minutos: pasado ese tiempo, un aviso atrasado ya no se envía
+
+function waDow(f) { return new Date(f + 'T12:00:00Z').getUTCDay(); }
+function waFechaTxt(f) { var p = f.split('-'); return WA_DIAS[waDow(f)] + ' ' + (+p[2]) + ' de ' + WA_MESES[+p[1] - 1]; }
+function waMin(hm) { var p = String(hm).split(':'); return (+p[0]) * 60 + (+p[1]); }
+function waNombre(n) { return String(n).split(' ')[0]; }
+function waTurnoCorto(t) { var m = String(t).match(/^Turno (\d)/); return m ? 'T' + m[1] : 'Turno único'; }
+function waTiendaCorta(n) { return String(n).replace(/^La Barra /, ''); }
+/* Quién cuenta un turno en un día de la semana; null si ese turno no abre */
+function waQuien(t, dowTurno) {
+  if ((t.cerrado || []).indexOf(dowTurno) > -1) return null;
+  return (t.cubre && t.cubre[dowTurno]) || t.quien;
+}
+function waSheet() {
+  var ss = ssb(), s = ss.getSheetByName('WhatsApp');
+  if (!s) { s = ss.insertSheet('WhatsApp'); s.getRange(1, 1, 1, 6).setValues([['ts', 'ref', 'para', 'plantilla', 'estado', 'detalle']]).setFontWeight('bold'); }
+  return s;
+}
+function waYaHecho(ref) {
+  var s = waSheet(), last = s.getLastRow();
+  if (last < 2) return false;
+  var from = Math.max(2, last - 499), v = s.getRange(from, 2, last - from + 1, 1).getValues();
+  for (var i = 0; i < v.length; i++) if (String(v[i][0]) === ref) return true;
+  return false;
+}
+function waLog(ref, para, plantilla, estado, detalle) {
+  waSheet().appendRow([Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd') + ' ' + Utilities.formatDate(new Date(), TZ, 'HH:mm'), ref, para, plantilla, estado, String(detalle || '').slice(0, 400)]);
+}
+/* Envía una plantilla. Devuelve el estado anotado. */
+function waSend(ref, nombre, slug, params) {
+  var tel = WA_GENTE[nombre];
+  if (!tel) { waLog(ref, nombre, slug, 'sin teléfono', ''); return 'sin teléfono'; }
+  var pr = props(), activo = pr.getProperty('WA_ACTIVO') === 'si', prueba = String(pr.getProperty('WA_PRUEBA') || '').replace(/\D/g, '');
+  var to = prueba || tel, para = nombre + (prueba ? ' (prueba → ' + prueba + ')' : '');
+  if (!activo) { waLog(ref, para, slug, 'apagado', JSON.stringify(params)); return 'apagado'; }
+  var key = pr.getProperty('BIRD_API_KEY');
+  if (!key) { waLog(ref, para, slug, 'falta la clave', ''); return 'falta la clave'; }
+  var region = (String(key).split('_')[1] || 'us1');
+  try {
+    var r = UrlFetchApp.fetch('https://' + region + '.platform.bird.com/v1/whatsapp/messages', {
+      method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+      headers: { Authorization: 'Bearer ' + key, 'Idempotency-Key': (ref + '|' + to).slice(0, 200) },
+      payload: JSON.stringify({ to: '+1' + to, from: WA_FROM, template: { slug: slug, language: 'es', parameters: params }, reference: ref.slice(0, 100) })
+    });
+    var code = r.getResponseCode(), est = code >= 200 && code < 300 ? 'enviado' : 'error ' + code;
+    waLog(ref, para, slug, est, est === 'enviado' ? '' : r.getContentText());
+    return est;
+  } catch (e) { waLog(ref, para, slug, 'error', String(e)); return 'error'; }
+}
+function waContado(conteos, neg, turno, f) {
+  return conteos.some(function (c) { return c.negocio === neg && c.turno === turno && c.fecha === f && c.estado !== 'anulado'; });
+}
+/* Lista de avisos del día f (fecha de hoy), cada uno con su hora */
+function waEventos(f) {
+  var dow = waDow(f), ayer = fechaMas(f, -1), dowAyer = waDow(ayer), ev = [];
+  WA_TURNOS.forEach(function (t) {
+    var dT = t.noche ? dowAyer : dow, q = waQuien(t, dT);
+    if (!q) return;
+    ev.push({ ref: 'rec|' + f + '|' + t.id, at: t.rec, tipo: 'rec', t: t, q: q, f: f, dT: dT });
+    if (t.ale) ev.push({ ref: 'ale|' + f + '|' + t.id, at: t.ale, tipo: 'ale', t: t, q: q, f: f, dT: dT });
+  });
+  WA_SEMANAL.forEach(function (s) { if (s.dia === dow) ev.push({ ref: 'gen|' + f + '|' + s.id, at: s.at, tipo: 'gen', s: s, f: f }); });
+  ev.push({ ref: 'res|' + f, at: WA_RESUMEN.at, tipo: 'res', f: f });
+  return ev;
+}
+function waProcesar(e, conteos) {
+  if (e.tipo === 'rec') {
+    var t = e.t;
+    if (t.id !== 'zpE' && waContado(conteos, t.neg, t.turno, e.f)) return 'ya contó';
+    var mom = t.momento || ('cierre del ' + t.turno.replace(/ \(.*\)$/, ''));
+    return waSend(e.ref, e.q, 'recordatorio_conteo', { nombre: waNombre(e.q), tienda: t.neg, momento: mom, hora: t.hora });
+  }
+  if (e.tipo === 'ale') {
+    var t2 = e.t;
+    if (waContado(conteos, t2.neg, t2.turno, e.f)) return 'ya contó';
+    var p = { tienda: t2.neg, turno: t2.turno, fecha: waFechaTxt(e.f), persona: waNombre(e.q) }, out = [];
+    out.push(waSend(e.ref, e.q, 'alerta_conteo_faltante', Object.assign({ nombre: waNombre(e.q) }, p)));
+    if (t2.sup && t2.sup.libre.indexOf(e.dT) < 0 && t2.sup.n !== e.q) out.push(waSend(e.ref, t2.sup.n, 'alerta_conteo_faltante', Object.assign({ nombre: waNombre(t2.sup.n) }, p)));
+    return out.join(', ');
+  }
+  if (e.tipo === 'gen') {
+    return waSend(e.ref, e.s.quien, 'recordatorio_conteo', { nombre: waNombre(e.s.quien), tienda: e.s.tienda, momento: 'conteo general semanal', hora: e.s.hora });
+  }
+  if (e.tipo === 'res') {
+    var r = waResumen(fechaMas(e.f, -1), conteos);
+    return waSend(e.ref, WA_RESUMEN.quien, 'resumen_conteos_diario', { nombre: waNombre(WA_RESUMEN.quien), fecha: waFechaTxt(r.fecha), hechos: r.hechos + ' de ' + r.total, faltaron: String(r.faltan.length), detalle: r.faltan.length ? r.faltan.join(' · ') : 'Ninguno, todos contaron 🎉' });
+  }
+}
+/* Conteos esperados del día f (fecha del conteo, como la guarda la app) */
+function waResumen(f, conteos) {
+  var dow = waDow(f), dowAyer = waDow(fechaMas(f, -1)), total = 0, hechos = 0, faltan = [];
+  WA_TURNOS.forEach(function (t) {
+    if (!t.ale) return;   // la entrada de ZP no es un conteo aparte
+    var q = waQuien(t, t.noche ? dowAyer : dow);
+    if (!q) return;
+    total++;
+    if (waContado(conteos, t.neg, t.turno, f)) hechos++; else faltan.push(waTiendaCorta(t.neg) + ' ' + waTurnoCorto(t.turno) + ' (' + waNombre(q) + ')');
+  });
+  return { fecha: f, total: total, hechos: hechos, faltan: faltan };
+}
+/* Corre cada 10 minutos */
+function waRevisar() {
+  var f = hoy(), ahora = waMin(Utilities.formatDate(new Date(), TZ, 'HH:mm'));
+  var pend = waEventos(f).filter(function (e) { var d = ahora - waMin(e.at); return d >= 0 && d < WA_VENTANA; });
+  if (!pend.length) return [];
+  var conteos = readRecentConteos(3), hechos = [];
+  pend.forEach(function (e) {
+    if (waYaHecho(e.ref)) return;
+    var est = waProcesar(e, conteos);
+    if (est === 'ya contó') waLog(e.ref, e.q || '', '', 'ya contó', '');
+    hechos.push(e.ref + ': ' + est);
+  });
+  return hechos;
+}
+function instalarWhatsApp() {
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'waRevisar') ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('waRevisar').timeBased().everyMinutes(10).create();
+  waSheet();
+  return 'Listo: revisión de WhatsApp cada 10 minutos.';
+}
+/* Prueba: envía un ejemplo de cada mensaje (en modo prueba, todo llega a WA_PRUEBA) */
+function waPrueba() {
+  var f = hoy(), ref = 'prueba|' + now();
+  return [
+    waSend(ref + '|1', 'Sol', 'recordatorio_conteo', { nombre: 'Sol', tienda: 'Food Shop', momento: 'cierre del Turno 1', hora: '3:30 PM' }),
+    waSend(ref + '|2', 'Anabelle', 'alerta_conteo_faltante', { nombre: 'Anabelle', tienda: 'Food Shop', turno: T1, fecha: waFechaTxt(f), persona: 'Sol' }),
+    waSend(ref + '|3', 'Aixa', 'resumen_conteos_diario', { nombre: 'Aixa', fecha: waFechaTxt(fechaMas(f, -1)), hechos: '11 de 13', faltaron: '2', detalle: 'Atala T2 (Zayan) · Food Shop T1 (Sol)' })
+  ].join(', ');
+}
