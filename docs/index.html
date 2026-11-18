@@ -380,6 +380,8 @@ input.ro{background:var(--line);color:var(--muted);border-style:dashed}
 .paso .grid2:not(.g1) .f:nth-child(2){display:none}.paso.ll-open .grid2 .f:nth-child(2){display:flex}.paso.ll-open .paso-ll{display:none}
 .paso-ll{border:2px dashed var(--line);background:transparent;border-radius:12px;min-height:48px;font-weight:700;color:var(--muted)}
 .paso .f:not(:first-child) .stp input{font-size:1.6rem;min-height:60px}.paso .f:not(:first-child) .sb{min-height:60px}
+.dic-mini{margin:8px 0 0;padding:10px 14px;display:flex;align-items:center;gap:10px}
+.dic-mini small{display:none}
 </style>
 </head>
 <body>
@@ -850,6 +852,7 @@ function pasoHTML(list){
   var dots='<div class="paso-dots">'+list.map(function(q,k){var u=usage(d.vals[q.id]||{});return '<i class="'+(k===i?'on ':'')+(u?'ok':'')+'"></i>'}).join("")+'</div>';
   return '<div class="bar"><div class="bar-row"><button class="back" data-act="back">← Cambiar</button><span class="sub"><b>'+esc(d.negocio)+'</b> · '+esc(d.turno)+'</span></div>'+
     '<div class="bar-row"><span class="sub" id="prog"></span><button type="button" class="linkbtn" data-act="paso-lista">Ver lista</button></div><div class="meter"><i id="meter"></i></div></div>'+
+    '<button type="button" class="dic-btn dic-mini" data-act="dic-open"><span>🎤</span><b>Dime lo que tienes</b></button>'+
     '<div class="paso'+(((d.vals[p.id]||{}).ent||"")!==""?" ll-open":"")+'"><div class="paso-n">Producto '+(i+1)+' de '+n+'</div>'+
     (p.cat?'<div class="paso-c">'+esc(p.cat)+'</div>':'')+
     '<div class="paso-q">¿Cuántos hay ahora?</div>'+cardHTML(p)+

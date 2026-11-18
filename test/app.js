@@ -458,6 +458,7 @@ function pasoHTML(list){
   var dots='<div class="paso-dots">'+list.map(function(q,k){var u=usage(d.vals[q.id]||{});return '<i class="'+(k===i?'on ':'')+(u?'ok':'')+'"></i>'}).join("")+'</div>';
   return '<div class="bar"><div class="bar-row"><button class="back" data-act="back">← Cambiar</button><span class="sub"><b>'+esc(d.negocio)+'</b> · '+esc(d.turno)+'</span></div>'+
     '<div class="bar-row"><span class="sub" id="prog"></span><button type="button" class="linkbtn" data-act="paso-lista">Ver lista</button></div><div class="meter"><i id="meter"></i></div></div>'+
+    '<button type="button" class="dic-btn dic-mini" data-act="dic-open"><span>🎤</span><b>Dime lo que tienes</b></button>'+
     '<div class="paso'+(((d.vals[p.id]||{}).ent||"")!==""?" ll-open":"")+'"><div class="paso-n">Producto '+(i+1)+' de '+n+'</div>'+
     (p.cat?'<div class="paso-c">'+esc(p.cat)+'</div>':'')+
     '<div class="paso-q">¿Cuántos hay ahora?</div>'+cardHTML(p)+

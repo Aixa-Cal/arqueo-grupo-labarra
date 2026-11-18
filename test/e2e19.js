@@ -1,0 +1,12 @@
+const fs=require('fs');let s=fs.readFileSync('ux1.js','utf8');
+s=s.replace("['Food Shop']","['La Barra Atala']").replace("await page.exposeFunction","await page.addInitScript(()=>{window.__pasoTest=true});await page.exposeFunction").replace(/await m\.waitForSelector\('\.prow[\s\S]*$/,`await m.waitForSelector('.paso');
+  const assert=require('assert');
+  assert.ok(await m.$('.paso-ir, .dic-mini'),'mic en paso');
+  await m.click('.dic-mini');await m.fill('#dictxt','pan de agua 3, pan frances dos y media');
+  await m.click('[data-act=dic-go]');await m.click('[data-act=dic-ok]');await m.waitForTimeout(300);
+  await shot(m,'paso_voz');
+  await m.click('[data-act=paso-lista]');await m.waitForSelector('.pcard');
+  const v=await m.$$eval('.pcard',c=>Array.from(c).slice(0,4).map(x=>x.querySelector('h3').textContent+'='+x.querySelectorAll('input')[0].value));
+  console.log(v.join(' | '));console.log('V',JSON.stringify(v),(await m.innerText('body')).split(String.fromCharCode(10)).join(' / ').slice(0,500));
+  console.log(errors);await b.close();})();`);
+fs.writeFileSync('e2e19run.js',s);
