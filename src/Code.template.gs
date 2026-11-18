@@ -126,7 +126,8 @@ function secret() {
   if (!s) { s = Utilities.getUuid() + Utilities.getUuid(); props().setProperty('SECRET', s); }
   return s;
 }
-function appUrl() { try { return ScriptApp.getService().getUrl(); } catch (e) { return ''; } }
+var APP_WEB = 'https://aixa-cal.github.io/arqueo-grupo-labarra/';
+function appUrl() { return APP_WEB; }
 
 /* ============================ tablas ============================ */
 function headers(name) { return H[name]; }
@@ -1611,7 +1612,7 @@ function setUser(me, p) {
     if (nuevo) {
       try {
         if (!/@sin-correo\.labarra$/.test(email)) MailApp.sendEmail({ to: email, name: 'Arqueo La Barra', subject: 'Ya tienes acceso a Arqueo La Barra',
-          body: 'Hola ' + u.nombre + ',\n\nTu acceso fue aprobado como ' + u.rol + '.\nEntra aquí: ' + appUrl() + '\n\nUsa tu mismo Gmail; te pediremos un código por correo.' });
+          body: 'Hola ' + u.nombre + ',\n\nTu acceso fue aprobado como ' + u.rol + '.\nEntra aquí: ' + appUrl() + '\n\nEntra con tu nombre, tu teléfono y un PIN de 4 números que tú creas la primera vez. Si usas Gmail, te pediremos un código por correo.' });
       } catch (e) { }
       notify('acceso-ok', 'Acceso aprobado', 'Bienvenido, ' + u.nombre + '.', { para: 'u:' + email, email: false });
     }
