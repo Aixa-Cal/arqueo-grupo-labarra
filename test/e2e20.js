@@ -13,6 +13,12 @@ s=s.replace(/await m\.waitForSelector\('\.prow[\s\S]*$/,`
   console.log('distintos:',await m2.innerText('.banner.bad'));
   await m2.fill('#lg-pin','1234');await m2.fill('#lg-pin2','1234');await m2.click('[data-act=pn-go]');await m2.waitForSelector('.tabs, nav, [data-act=neg], .paso, .chip',{timeout:8000});
   console.log('dentro:',(await m2.innerText('body')).split(String.fromCharCode(10)).slice(0,6).join(' / '));
+  // volver a entrar: solo PIN
+  await m2.evaluate(()=>localStorage.setItem('arq-tok',''));await m2.reload();
+  await m2.waitForSelector('#lg-pin',{timeout:5000});assert.equal(await m2.$('#lg-nom'),null,'no pide nombre');
+  console.log('solo PIN:',(await m2.innerText('.panel')).split(String.fromCharCode(10)).slice(0,3).join(' / '));
+  await m2.fill('#lg-pin','1234');await m2.click('[data-act=pn-go]');await m2.waitForSelector('[data-act=neg], .tchip, .chip',{timeout:8000});console.log('entró otra vez solo con PIN');
+  await m2.evaluate(()=>localStorage.setItem('arq-tok',''));await m2.reload();await m2.waitForSelector('#lg-pin');await m2.click('[data-act=pn-atras]');await m2.waitForSelector('#lg-nom');console.log('No soy yo: pide nombre');
   // segundo teléfono: pide PIN
   const m3=await newUser(b);await m3.waitForSelector('#lg-nom');
   await m3.fill('#lg-nom','Sol Martínez');await m3.fill('#lg-tel','8095551234');await m3.click('[data-act=pn-sig]');await m3.waitForSelector('#lg-pin');

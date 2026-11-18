@@ -115,7 +115,7 @@ document.addEventListener("click",function(ev){
     "pn-sig":function(){pnSig()},
     "pn-go":function(){pnGo()},
     "pn-olvide":function(){S.pinPaso="crear";S.pin="";S.pin2="";S.err="";render()},
-    "pn-atras":function(){S.pinPaso="";S.pin="";S.pin2="";S.err="";render()},
+    "pn-atras":function(){lsSet("arq-id","");S.pinRec=false;S.pinNom="";S.pinTel="";S.pinPaso="";S.pin="";S.pin2="";S.err="";render()},
     "lg-gmail":function(){S.auth="email";S.err="";render()},
     "lg-nom":function(){S.auth="nom";S.err="";S.pinPaso="";render()},
     "lg-resend":function(){lgSend()},
