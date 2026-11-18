@@ -1,5 +1,7 @@
 /* ---------- Mi semana (panel del supervisor: arqueos semanales obligatorios) ---------- */
 var SEM_OBLIG=["Food Shop","Zona Presidente"];
+function semMios(){var m=S.me||{};if(m.rol==="supervisor"&&(m.negocios||[]).length)return m.negocios.filter(function(n){return !/ General$/.test(n)&&n!=="Car Wash"&&n!==ALM_NOM});return SEM_OBLIG}
+var ALM_NOM="Almacén";
 var SEM_GEN=["Food Shop General","La Barra Atala General","La Barra Atalaya General","La Barra Miraflores General"];
 var DIA_INI=["D","L","M","M","J","V","S"];
 function semLunes(h){return addDays(h,-((dow(h)+6)%7))}
@@ -37,7 +39,7 @@ function semNegocio(neg,lun,h){
 }
 function semTodo(){
   var h=today(),lun=semLunes(h),prev=addDays(lun,-7),neg={},acc=[],tot=0,ok=0,ant=[];
-  SEM_OBLIG.filter(function(n){return S.cfg.negocios.indexOf(n)>-1}).forEach(function(n){
+  semMios().filter(function(n){return S.cfg.negocios.indexOf(n)>-1}).forEach(function(n){
     var d=semNegocio(n,lun,h);neg[n]=d;
     d.dias.forEach(function(x){x.marks.forEach(function(k){if(k==="ok"||k==="ini"){tot++;ok++}else if(k==="falta"||k==="ventas")tot++})});
     acc=acc.concat(d.rows);
@@ -50,7 +52,7 @@ function semTodo(){
 /* conteos semanales generales: estado de esta semana */
 function semGenerales(h,lun){
   var dom=addDays(lun,6);
-  return SEM_GEN.filter(function(n){return S.cfg.negocios.indexOf(n)>-1}).map(function(n){
+  var mios=semMios();return SEM_GEN.filter(function(n){return S.cfg.negocios.indexOf(n)>-1&&mios.indexOf(n.replace(/ General$/,""))>-1}).map(function(n){
     var cal=(S.cfg.calendario&&S.cfg.calendario[n])||[],d=cal[0],c=S.conteos.filter(function(x){return x.negocio===n&&x.fecha>=lun&&x.fecha<=dom&&x.estado!=="anulado"})[0];
     var fe=(d==null)?"":addDays(lun,(d+6)%7),k,txt;
     if(c){k="ok";txt="Hecho"}
@@ -82,12 +84,13 @@ function semAccion(r,prev){
   var info=!falta&&c?'<small>Contó '+esc(c.resp)+' · '+haceTxt(c.ts)+'</small>':"";
   return '<div class="sem-acc '+(falta?"bad":"warn")+'"><div class="sem-at"><b>'+titulo+'</b><small>'+sub+'</small>'+info+(falta?waBtns(r):"")+'</div>'+btn+'</div>';
 }
+function semNombres(){var l=semMios().filter(function(n){return S.cfg.negocios.indexOf(n)>-1});return l.length>1?l.slice(0,-1).join(", ")+" y "+l[l.length-1]:(l[0]||"tus negocios")}
 function semHTML(){
   var D=semTodo(),h=D.h,pend=D.acc.length+D.ant.length,hayAlm=almPend()>0;
   var pct=D.tot?Math.round(D.ok*100/D.tot):100;
   var nombre=(S.me&&S.me.nombre||"").split(" ")[0];
   var hero;
-  if(!pend)hero='<div class="sem-hero ok"><div class="big">✓</div><div><h2>Vas al día'+(nombre?', '+esc(nombre):"")+'</h2><p>Food Shop y Zona Presidente están completos hasta hoy. Mañana vuelve a mirar este panel.</p></div></div>';
+  if(!pend)hero='<div class="sem-hero ok"><div class="big">✓</div><div><h2>Vas al día'+(nombre?', '+esc(nombre):"")+'</h2><p>'+esc(semNombres())+' están completos hasta hoy. Mañana vuelve a mirar este panel.</p></div></div>';
   else hero='<div class="sem-hero bad"><div class="big">'+pend+'</div><div><h2>'+(pend===1?"Te falta 1 cosa":"Te faltan "+pend+" cosas")+'</h2><p>Empieza por la primera de la lista de abajo. Son pasos cortos.</p></div></div>';
   var barra='<div class="sem-bar" role="img" aria-label="'+pct+'% de la semana completo"><span style="width:'+pct+'%"></span></div><p class="sem-barp"><b>'+D.ok+' de '+D.tot+'</b> arqueos de la semana listos · La semana cierra el domingo</p>';
   var acc=D.ant.map(function(r){return semAccion(r,true)}).concat(D.acc.map(function(r){return semAccion(r,false)}));
@@ -105,9 +108,9 @@ function semHTML(){
     '<li><b>Si ves rojo (!)</b> falta un conteo. Toca el botón de WhatsApp para avisarle a quien le toca contar.</li>'+
     '<li><b>Si ves amarillo ($)</b> ya contaron y faltan las ventas. Toca <em>Registrar ventas</em>, sube el archivo «Ventas por producto» de Citrus de ese turno y toca <em>Calcular arqueo</em>.</li>'+
     '<li><b>Mira el resultado.</b> Si sale algún producto en «Revisar» o «Crítico», entra al día y pregunta qué pasó.</li>'+
-    '<li><b>La semana está completa</b> cuando Food Shop y Zona Presidente tienen ✓ en todos los días, hasta el domingo.</li></ol>'+
-    '<div class="sem-nota"><b>Food Shop:</b> dos turnos al día (mañana y tarde), cada uno con su conteo y sus ventas.<br><b>Zona Presidente:</b> un conteo al día. Cuentan «Había» a las 3PM y «Quedan» a las 11PM.<br><b>Te equivocaste:</b> no pasa nada, pídele a administración que anule o corrija ese conteo.</div></details>';
-  return '<div><h1>Mi semana</h1><p class="sub">Del '+esc(semRango(D.lun))+'. Food Shop y Zona Presidente se arquean todas las semanas: no se pueden saltar.</p></div>'+
+    '<li><b>La semana está completa</b> cuando '+esc(semNombres())+' tienen ✓ en todos los días, hasta el domingo.</li></ol>'+
+    '<div class="sem-nota">'+(semMios().indexOf("Food Shop")>-1?'<b>Food Shop:</b> dos turnos al día (mañana y tarde), cada uno con su conteo y sus ventas.<br>':'')+(semMios().indexOf("Zona Presidente")>-1?'<b>Zona Presidente:</b> un conteo al día. Cuentan «Había» a las 3PM y «Quedan» a las 11PM.<br>':'')+'<b>Te equivocaste:</b> no pasa nada, pídele a administración que anule o corrija ese conteo.</div></details>';
+  return '<div><h1>Mi semana</h1><p class="sub">Del '+esc(semRango(D.lun))+'. '+esc(semNombres())+' se arquean todas las semanas: no se pueden saltar.</p></div>'+
     hero+barra+
     (acc.length?'<section class="sem-lista"><h2>Qué hago ahora</h2>'+acc.join("")+'</section>':"")+
     avisosHTML2+cards+leyenda+genHTML+ayuda+

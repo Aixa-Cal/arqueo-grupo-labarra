@@ -51,5 +51,10 @@ const assert=require('assert');
   await g.click('[data-act=sem-dia] >> nth=1');await g.waitForSelector('text=Por completar');
   await g.click('[data-act=go][data-v=sem]');await g.waitForSelector('.sem-hero');
   await shot(g,'sem2');
+  // otra supervisora con solo Food Shop
+  tok('ana@g.com','Anabelle');env.call('setUser',{email:'ana@g.com',rol:'supervisor',estado:'aprobado',negocios:['Food Shop']},A);
+  const an=await newUser(b);await login(an,'ana@g.com');await an.waitForSelector('.sem-card');
+  console.log('cards',await an.locator('.sem-card').count());
+  const ta=await an.innerText('#view');assert(!/Zona Presidente/.test(ta)&&!/La Barra Atala/.test(ta)&&/Food Shop General/.test(ta),'solo lo suyo');
   console.log('errores',errors);assert.equal(errors.length,0);await b.close();
 })();
