@@ -9,12 +9,13 @@ function haceTxt(ts){
 function porCompletar(){
   var h=today(),hm=nowHM(),rows=[],seen={};
   var first=h;S.conteos.forEach(function(c){if(c.estado!=="anulado"&&c.fecha<first)first=c.fecha});
+  var ini=function(n){return (S.cfg.inicio||{})[n]||""};
   var from=addDays(h,-2);if(from<first)from=first;
   var f=h,days=[];while(f>=from){days.push(f);f=addDays(f,-1)}
   var sel=S.pFecha&&S.pFecha<=h?S.pFecha:"";if(sel)days=[sel];
   days.forEach(function(fe){
     S.cfg.negocios.forEach(function(n){
-      if(!isFullDay(n,fe))return;
+      if(!isFullDay(n,fe)||fe<ini(n))return;
       turnosFor(n).forEach(function(t){
         var c=S.conteos.filter(function(x){return x.negocio===n&&x.turno===t&&x.fecha===fe&&x.estado!=="anulado"})[0];
         var lim=limiteDe(n,t);
@@ -28,7 +29,7 @@ function porCompletar(){
       });
     });
   });
-  if(!sel)S.conteos.forEach(function(c){if(c.estado==="contado"&&!seen[c.id])rows.push({k:"ventas",n:c.negocio,t:c.turno,fe:c.fecha,c:c,lim:""})});
+  if(!sel)S.conteos.forEach(function(c){if(c.estado==="contado"&&!seen[c.id]&&c.fecha>=ini(c.negocio))rows.push({k:"ventas",n:c.negocio,t:c.turno,fe:c.fecha,c:c,lim:""})});
   var ord={atraso:0,ventas:1,falta:2,ok:3,ini:4};
   rows.sort(function(a,b){return (ord[a.k]-ord[b.k])||(a.fe<b.fe?1:a.fe>b.fe?-1:0)});
   return rows;

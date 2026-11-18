@@ -21,7 +21,7 @@ function semEstado(neg,t,fe,h){
 }
 var SEM_PRI={falta:4,ventas:3,hoy:2,ini:1,ok:0,na:-1};
 /* devuelve {dias:[{fe,marks:[k..],peor}],rows:[{k,n,t,fe,c,lim,past}]} para un negocio y una semana */
-function semInicio(neg,h){var f=h;S.conteos.forEach(function(c){if(c.negocio===neg&&c.estado!=="anulado"&&c.fecha<f)f=c.fecha});return f}
+function semInicio(neg,h){var f=h;S.conteos.forEach(function(c){if(c.negocio===neg&&c.estado!=="anulado"&&c.fecha<f)f=c.fecha});var i=(S.cfg.inicio||{})[neg]||"";return i>f?i:f}
 function semNegocio(neg,lun,h){
   var ini=semInicio(neg,h);
   var rows=[],dias=semFechas(lun).map(function(fe){
@@ -56,6 +56,7 @@ function semGenerales(h,lun){
     var cal=(S.cfg.calendario&&S.cfg.calendario[n])||[],d=cal[0],c=S.conteos.filter(function(x){return x.negocio===n&&x.fecha>=lun&&x.fecha<=dom&&x.estado!=="anulado"})[0];
     var fe=(d==null)?"":addDays(lun,(d+6)%7),k,txt;
     if(c){k="ok";txt="Hecho"}
+    else if(fe&&fe<h&&fe<((S.cfg.inicio||{})[n]||"")){k="na";txt="Toca el "+(d==null?"":DIAS_L[d].toLowerCase())}
     else if(fe&&fe<h){k="falta";txt="Atrasado"}
     else if(fe===h){k="hoy";txt="Toca hoy"}
     else{k="na";txt="Toca el "+(d==null?"":DIAS_L[d].toLowerCase())}

@@ -550,7 +550,7 @@ function notifsFor(me) {
 function sync(me) {
   migrarInsumos();
   migrarLaBarra();
-  migrarFoodShopT3(); migrarMiller(); migrarFoodShopGeneral(); migrarFsLista(); migrarEmpaques(); migrarLaBarraGeneral(); migrarAlmacen();
+  migrarFoodShopT3(); migrarMiller(); migrarFoodShopGeneral(); migrarFsLista(); migrarFsV2(); migrarEmpaques(); migrarLaBarraGeneral(); migrarAlmacen();
   var cfg = getConfig(), negs = visibleNegocios(me, cfg);
   var prods = getProductos().filter(function (r) { return r.activo; }).map(productoOut);
   if (scoped(me)) {
@@ -562,14 +562,14 @@ function sync(me) {
   if (scoped(me)) entradas = entradas.filter(function (e) { return negs.indexOf(e.negocio) > -1; });
   var pend = [];
   if (me.rol !== 'colaborador') {
-    pend = conteos.filter(function (c) { return c.estado === 'contado'; });
+    pend = conteos.filter(function (c) { return c.estado === 'contado' && c.fecha >= ((cfg.inicio || {})[c.negocio] || ''); });
   }
   var movs = readMovs(14).filter(function (m) { return !m.anulada; });
   if (scoped(me)) movs = movs.filter(function (m) { return negs.indexOf(m.negocio) > -1 || negs.indexOf(m.destino) > -1; });
   movs = movs.map(function (m) { return { id: m.id, fecha: m.fecha, tipo: m.tipo, negocio: m.negocio, destino: m.destino, motivo: m.motivo, detalle: m.detalle, resp: m.resp, ts: m.ts, items: m.items, estado: m.estado, recPor: m.recPor, recTs: m.recTs, recItems: m.recItems }; });
   return {
     me: publicMe(me), hoy: hoy(), ahora: now(),
-    config: { negocios: negs, turnos: cfg.turnos, limites: cfg.limites, calendario: cfg.calendario, catDias: cfg.catDias || {}, avisos: cfg.avisos, todosNegocios: cfg.negocios },
+    config: { negocios: negs, turnos: cfg.turnos, limites: cfg.limites, calendario: cfg.calendario, catDias: cfg.catDias || {}, inicio: cfg.inicio || {}, avisos: cfg.avisos, todosNegocios: cfg.negocios },
     productos: prods, conteos: conteos, entradas: entradas.map(function (e) { return { id: e.id, fecha: e.fecha, negocio: e.negocio, resp: e.resp, ts: e.ts, nota: e.nota, items: e.items, origen: e.origen || 'Proveedor' }; }), movs: movs, motivos: MOTIVOS,
     almacen: almacenFor(me), produccion: produccionFor(me), checkTurno: checkTurnoFor(me), notifs: notifsFor(me), pendientes: pend.length
   };
@@ -890,6 +890,31 @@ function migrarFsLista() {
       appendObj('Productos', { id: 'fs-' + maxId, nombre: x[1], cat: x[0], unidad: 'unid', factor: 1, tol: 0.02, costo: 0, critico: 0, negocios: ['Food Shop', 'Food Shop General'], orden: i + 1, activo: 1 });
     });
     props().setProperty('MIG_FSLISTA_V1', '1');
+    cacheDrop();
+  });
+}
+var FS_V2_REN = [["Chicharrón El Chef", "CHICHARRÓN EL CHEF", "SNACKS / ALIMENTOS"], ["Miller 12 oz", "MILLER PEQUEÑA 12 OZ", "CERVEZAS"], ["Miller 22 oz", "MILLER MEDIANA 22 OZ", "CERVEZAS"]];
+var FS_V2_NUEVOS = [["EMPANADA POLLO", "SNACKS / ALIMENTOS", "unid"], ["EMPANADA RES VEGETAL", "SNACKS / ALIMENTOS", "unid"], ["EMPANADA POLLO CON QUESO", "SNACKS / ALIMENTOS", "unid"], ["EMPANADA JAMÓN Y QUESO", "SNACKS / ALIMENTOS", "unid"], ["EMPANADA QUESO", "SNACKS / ALIMENTOS", "unid"], ["PASTELISTO 3 QUESOS", "SNACKS / ALIMENTOS", "unid"], ["PASTELISTO PEPPERONI Y SALSA PIZZA", "SNACKS / ALIMENTOS", "unid"], ["LA AURORA 107", "TABACO / NICOTINA", "unid"], ["LA AURORA CAMEROON", "TABACO / NICOTINA", "unid"], ["VASOS CAFÉ NESCAFÉ", "CAFÉ (SOLO VASOS)", "vaso"], ["VASOS CAFÉ SANTO DOMINGO", "CAFÉ (SOLO VASOS)", "vaso"]];
+function migrarFsV2() {
+  if (props().getProperty('MIG_FSLISTA_V2')) return;
+  withLock(function () {
+    if (props().getProperty('MIG_FSLISTA_V2')) return;
+    var todos = readAll('Productos'), maxId = 0, maxOrd = 0, ids = {};
+    todos.forEach(function (p) {
+      var m = /^fs-(\d+)$/.exec(String(p.id)); if (m) maxId = Math.max(maxId, +m[1]);
+      if ((p.negocios || []).indexOf('Food Shop') > -1) { maxOrd = Math.max(maxOrd, Number(p.orden) || 0); ids[normNom(p.nombre)] = p; }
+    });
+    FS_V2_REN.forEach(function (r) {
+      var p = ids[normNom(r[0])] || ids[normNom(r[1])]; if (!p) return;
+      p.nombre = r[1]; p.cat = r[2]; p.activo = 1; writeRow('Productos', p._row, p); ids[normNom(r[1])] = p;
+    });
+    FS_V2_NUEVOS.forEach(function (x) {
+      if (ids[normNom(x[0])]) { var q = ids[normNom(x[0])]; if (String(q.activo) === '0') { q.activo = 1; writeRow('Productos', q._row, q); } return; }
+      maxId++; maxOrd++;
+      appendObj('Productos', { id: 'fs-' + maxId, nombre: x[0], cat: x[1], unidad: x[2], factor: 1, tol: 0.02, costo: 0, critico: 0, negocios: ['Food Shop', 'Food Shop General'], orden: maxOrd, activo: 1 });
+    });
+    if (hoy() >= '2026-11-18') { var ini = getConfig().inicio || {}; ini['Food Shop'] = '2026-11-18'; ini['Food Shop General'] = '2026-11-18'; setConfigKey('inicio', ini); }
+    props().setProperty('MIG_FSLISTA_V2', '1');
     cacheDrop();
   });
 }
@@ -1705,7 +1730,7 @@ function dash(p) {
   tot.faltante = r2(tot.faltante); tot.sobrante = r2(tot.sobrante); tot.decl = r2(tot.decl);
   var top = Object.keys(prod).map(function (k) { var q = prod[k]; q.faltaU = r2(q.faltaU); q.faltaV = r2(q.faltaV); return q; })
     .filter(function (q) { return q.faltaU > 0; }).sort(function (a, b) { return (b.faltaV - a.faltaV) || (b.faltaU - a.faltaU); }).slice(0, 12);
-  var pendList = vivos.filter(function (r) { return r.estado === 'contado'; }).sort(function (a, b) { return a.ts - b.ts; })
+  var pendList = vivos.filter(function (r) { return r.estado === 'contado' && r.fecha >= ((cfg.inicio || {})[r.negocio] || ''); }).sort(function (a, b) { return a.ts - b.ts; })
     .map(function (r) { return { id: r.id, fecha: r.fecha, negocio: r.negocio, turno: r.turno, horas: Math.floor((ahora - r.ts) / 3600000) }; });
   var dd = Object.keys(diario).sort().map(function (k) { diario[k].faltante = r2(diario[k].faltante); return diario[k]; });
   var pmm = productMap(), mm = { total: 0, porMotivo: {}, enviados: 0, sinConfirmar: 0 };

@@ -1,0 +1,14 @@
+{
+ "unidad": "vaso",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "ejemplo": false,
+ "nombre": "VASOS CAFÉ NESCAFÉ",
+ "cat": "CAFÉ (SOLO VASOS)",
+ "orden": 183
+}

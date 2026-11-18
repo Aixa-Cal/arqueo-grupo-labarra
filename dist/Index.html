@@ -1151,12 +1151,13 @@ function haceTxt(ts){
 function porCompletar(){
   var h=today(),hm=nowHM(),rows=[],seen={};
   var first=h;S.conteos.forEach(function(c){if(c.estado!=="anulado"&&c.fecha<first)first=c.fecha});
+  var ini=function(n){return (S.cfg.inicio||{})[n]||""};
   var from=addDays(h,-2);if(from<first)from=first;
   var f=h,days=[];while(f>=from){days.push(f);f=addDays(f,-1)}
   var sel=S.pFecha&&S.pFecha<=h?S.pFecha:"";if(sel)days=[sel];
   days.forEach(function(fe){
     S.cfg.negocios.forEach(function(n){
-      if(!isFullDay(n,fe))return;
+      if(!isFullDay(n,fe)||fe<ini(n))return;
       turnosFor(n).forEach(function(t){
         var c=S.conteos.filter(function(x){return x.negocio===n&&x.turno===t&&x.fecha===fe&&x.estado!=="anulado"})[0];
         var lim=limiteDe(n,t);
@@ -1170,7 +1171,7 @@ function porCompletar(){
       });
     });
   });
-  if(!sel)S.conteos.forEach(function(c){if(c.estado==="contado"&&!seen[c.id])rows.push({k:"ventas",n:c.negocio,t:c.turno,fe:c.fecha,c:c,lim:""})});
+  if(!sel)S.conteos.forEach(function(c){if(c.estado==="contado"&&!seen[c.id]&&c.fecha>=ini(c.negocio))rows.push({k:"ventas",n:c.negocio,t:c.turno,fe:c.fecha,c:c,lim:""})});
   var ord={atraso:0,ventas:1,falta:2,ok:3,ini:4};
   rows.sort(function(a,b){return (ord[a.k]-ord[b.k])||(a.fe<b.fe?1:a.fe>b.fe?-1:0)});
   return rows;
@@ -2028,7 +2029,7 @@ function semEstado(neg,t,fe,h){
 }
 var SEM_PRI={falta:4,ventas:3,hoy:2,ini:1,ok:0,na:-1};
 /* devuelve {dias:[{fe,marks:[k..],peor}],rows:[{k,n,t,fe,c,lim,past}]} para un negocio y una semana */
-function semInicio(neg,h){var f=h;S.conteos.forEach(function(c){if(c.negocio===neg&&c.estado!=="anulado"&&c.fecha<f)f=c.fecha});return f}
+function semInicio(neg,h){var f=h;S.conteos.forEach(function(c){if(c.negocio===neg&&c.estado!=="anulado"&&c.fecha<f)f=c.fecha});var i=(S.cfg.inicio||{})[neg]||"";return i>f?i:f}
 function semNegocio(neg,lun,h){
   var ini=semInicio(neg,h);
   var rows=[],dias=semFechas(lun).map(function(fe){
@@ -2063,6 +2064,7 @@ function semGenerales(h,lun){
     var cal=(S.cfg.calendario&&S.cfg.calendario[n])||[],d=cal[0],c=S.conteos.filter(function(x){return x.negocio===n&&x.fecha>=lun&&x.fecha<=dom&&x.estado!=="anulado"})[0];
     var fe=(d==null)?"":addDays(lun,(d+6)%7),k,txt;
     if(c){k="ok";txt="Hecho"}
+    else if(fe&&fe<h&&fe<((S.cfg.inicio||{})[n]||"")){k="na";txt="Toca el "+(d==null?"":DIAS_L[d].toLowerCase())}
     else if(fe&&fe<h){k="falta";txt="Atrasado"}
     else if(fe===h){k="hoy";txt="Toca hoy"}
     else{k="na";txt="Toca el "+(d==null?"":DIAS_L[d].toLowerCase())}

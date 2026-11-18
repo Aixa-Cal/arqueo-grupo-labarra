@@ -1,0 +1,14 @@
+{
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "ejemplo": false,
+ "nombre": "MILLER PEQUEÑA 12 OZ",
+ "cat": "CERVEZAS",
+ "orden": 172
+}

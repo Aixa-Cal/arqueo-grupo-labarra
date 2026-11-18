@@ -1,0 +1,14 @@
+{
+ "unidad": "unid",
+ "factor": 1,
+ "tol": 0.02,
+ "costo": 0,
+ "negocios": [
+  "Food Shop",
+  "Food Shop General"
+ ],
+ "ejemplo": false,
+ "nombre": "MILLER MEDIANA 22 OZ",
+ "cat": "CERVEZAS",
+ "orden": 173
+}
