@@ -550,7 +550,7 @@ function notifsFor(me) {
 function sync(me) {
   migrarInsumos();
   migrarLaBarra();
-  migrarFoodShopT3(); migrarMiller(); migrarFoodShopGeneral(); migrarFsLista(); migrarFsV2(); migrarEmpaques(); migrarLaBarraGeneral(); migrarAlmacen();
+  migrarFoodShopT3(); migrarMiller(); migrarFoodShopGeneral(); migrarFsLista(); migrarFsV2(); migrarFsV3(); migrarEmpaques(); migrarLaBarraGeneral(); migrarAlmacen();
   var cfg = getConfig(), negs = visibleNegocios(me, cfg);
   var prods = getProductos().filter(function (r) { return r.activo; }).map(productoOut);
   if (scoped(me)) {
@@ -915,6 +915,22 @@ function migrarFsV2() {
     });
     if (hoy() >= '2026-11-18') { var ini = getConfig().inicio || {}; ini['Food Shop'] = '2026-11-18'; ini['Food Shop General'] = '2026-11-18'; setConfigKey('inicio', ini); }
     props().setProperty('MIG_FSLISTA_V2', '1');
+    cacheDrop();
+  });
+}
+/* Una sola vez: sexto sabor de empanada que todavía se compra */
+function migrarFsV3() {
+  if (props().getProperty('MIG_FSLISTA_V3')) return;
+  withLock(function () {
+    if (props().getProperty('MIG_FSLISTA_V3')) return;
+    var nom = 'EMPANADA POLLO, JAMÓN Y QUESO', maxId = 0, maxOrd = 0, ya = null;
+    readAll('Productos').forEach(function (p) {
+      var m = /^fs-(\d+)$/.exec(String(p.id)); if (m) maxId = Math.max(maxId, +m[1]);
+      if ((p.negocios || []).indexOf('Food Shop') > -1) { maxOrd = Math.max(maxOrd, Number(p.orden) || 0); if (normNom(p.nombre) === normNom(nom)) ya = p; }
+    });
+    if (ya) { if (String(ya.activo) === '0') { ya.activo = 1; writeRow('Productos', ya._row, ya); } }
+    else appendObj('Productos', { id: 'fs-' + (maxId + 1), nombre: nom, cat: 'SNACKS / ALIMENTOS', unidad: 'unid', factor: 1, tol: 0.02, costo: 0, critico: 0, negocios: ['Food Shop', 'Food Shop General'], orden: maxOrd + 1, activo: 1 });
+    props().setProperty('MIG_FSLISTA_V3', '1');
     cacheDrop();
   });
 }
