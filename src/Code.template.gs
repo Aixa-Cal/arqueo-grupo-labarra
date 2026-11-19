@@ -754,6 +754,7 @@ function saveConteo(me, p) {
     if (o.cierre && o.cierre.bano && (o.cierre.bano.papel === 'no' || o.cierre.bano.cli === 'no')) notify('bano', 'Baño / área de clientes: ' + neg, me.nombre + ' · ' + turno + ': ' + (o.cierre.bano.papel === 'no' ? 'Falta papel o jabón. ' : '') + (o.cierre.bano.cli === 'no' ? 'Área de clientes NO limpia. ' : '') + o.cierre.bano.txt, { para: 'admin,gerencia', negocio: neg, ref: 'conteo|' + id, email: true });
     if (o.cierre && o.cierre.fz && o.cierre.fz.ok === 'no') notify('freezer', 'Freezers con problema: ' + neg, me.nombre + ' · ' + turno + ': ' + o.cierre.fz.txt, { para: 'admin,gerencia', negocio: neg, ref: 'conteo|' + id, email: true });
     if (o.cierre && o.cierre.nov === 'si') notify('novedad', 'Novedad en el cierre: ' + neg, me.nombre + ' · ' + turno + ': ' + o.cierre.txt, { para: 'admin,gerencia', negocio: neg, ref: 'conteo|' + id, email: true });
+    if (o.cierre) calNovedad(o, me);
     if (inicial) return { id: id, inicial: true };
     if (SOLO_CONSUMO(neg)) {
       if (o.nota) notify('faltan-insumos', 'Insumos que hacen falta: ' + neg, me.nombre + ': ' + o.nota, { para: 'admin,gerencia', negocio: neg, ref: 'conteo|' + id, email: true });
@@ -1979,4 +1980,30 @@ function waPrueba() {
     waSend(ref + '|2', 'Anabelle', 'alerta_conteo_faltante', { nombre: 'Anabelle', tienda: 'Food Shop', turno: T1, fecha: waFechaTxt(f), persona: 'Sol' }),
     waSend(ref + '|3', 'Aixa', 'resumen_conteos_diario', { nombre: 'Aixa', fecha: waFechaTxt(fechaMas(f, -1)), hechos: '11 de 13', faltaron: '2', detalle: 'Atala T2 (Zayan) · Food Shop T1 (Sol)' })
   ].join(', ');
+}
+
+/* ============================ Recordatorio en Google Calendar cuando una tienda reporta algo al cerrar ============================ */
+/* Si en el cierre hay novedad, freezers o cafeteras con problema, o baño/área de clientes sin cumplir:
+   crea un evento en el calendario de esta cuenta (labarra.adm) con aviso.
+   Reportes de 10PM a 8AM → el evento suena a las 8:00 AM. Reportes de día → suena a los 5 minutos. */
+function calNovedad(o, me) {
+  try {
+    var c = o.cierre, pts = [];
+    if (c.nov === 'si') pts.push('Novedad: ' + c.txt);
+    if (c.fz && c.fz.ok === 'no') pts.push('Freezers con problema: ' + c.fz.txt);
+    if (c.cafe && (c.cafe.rell === 'no' || c.cafe.func === 'no')) pts.push('Máquinas de café' + (c.cafe.rell === 'no' ? ' NO rellenadas' : '') + (c.cafe.func === 'no' ? ' NO funcionan bien' : '') + ': ' + c.cafe.txt);
+    if (c.bano && (c.bano.papel === 'no' || c.bano.cli === 'no')) pts.push((c.bano.papel === 'no' ? 'Falta papel o jabón en el baño. ' : '') + (c.bano.cli === 'no' ? 'Área de clientes NO limpia. ' : '') + c.bano.txt);
+    if (!pts.length) return;
+    var ahora = new Date(), h = +Utilities.formatDate(ahora, TZ, 'HH:mm').split(':')[0], ini;
+    if (h >= 22 || h < 8) {
+      var f = hoy(); if (h >= 22) f = fechaMas(f, 1);
+      var q = f.split('-');
+      ini = new Date(Date.UTC(+q[0], +q[1] - 1, +q[2], 12, 0));   // 8:00 AM en RD (UTC-4, sin horario de verano)
+    } else ini = new Date(ahora.getTime() + 5 * 60000);
+    var fin = new Date(ini.getTime() + 15 * 60000);
+    var titulo = '⚠️ Revisar reporte: ' + o.negocio + ' · ' + String(o.turno).replace(/ \(.*\)$/, '');
+    var desc = 'Reportó: ' + me.nombre + '\nFecha del conteo: ' + o.fecha + ' · ' + o.turno + '\n\n• ' + pts.join('\n• ') + '\n\nApp: ' + appUrl();
+    var ev = CalendarApp.getDefaultCalendar().createEvent(titulo, ini, fin, { description: desc });
+    ev.removeAllReminders(); ev.addPopupReminder(0);
+  } catch (e) { try { Logger.log('calNovedad: ' + e); } catch (e2) { } }
 }
