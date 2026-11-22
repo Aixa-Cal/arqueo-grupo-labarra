@@ -594,7 +594,7 @@ function notifsFor(me) {
 function sync(me) {
   migrarInsumos();
   migrarLaBarra();
-  migrarFoodShopT3(); migrarMiller(); migrarFoodShopGeneral(); migrarFsLista(); migrarFsV2(); migrarFsV3(); migrarEmpaques(); migrarLaBarraGeneral(); migrarAlmacen();
+  migrarFoodShopT3(); migrarMiller(); migrarFoodShopGeneral(); migrarFsLista(); migrarFsV2(); migrarFsV3(); migrarFsV4(); migrarEmpaques(); migrarLaBarraGeneral(); migrarAlmacen();
   var cfg = getConfig(), negs = visibleNegocios(me, cfg);
   var prods = getProductos().filter(function (r) { return r.activo; }).map(productoOut);
   if (scoped(me)) {
@@ -975,6 +975,29 @@ function migrarFsV3() {
     if (ya) { if (String(ya.activo) === '0') { ya.activo = 1; writeRow('Productos', ya._row, ya); } }
     else appendObj('Productos', { id: 'fs-' + (maxId + 1), nombre: nom, cat: 'SNACKS / ALIMENTOS', unidad: 'unid', factor: 1, tol: 0.02, costo: 0, critico: 0, negocios: ['Food Shop', 'Food Shop General'], orden: maxOrd + 1, activo: 1 });
     props().setProperty('MIG_FSLISTA_V3', '1');
+    cacheDrop();
+  });
+}
+/* Una sola vez: productos nuevos del Food Shop (snacks, chips, Dino, Aloe, San Pellegrino 500 ml) y Gatorade azul */
+var FS_V4_NUEVOS = [["BARRA DE GRANOLA AZUL", "SNACKS / ALIMENTOS"], ["CHIPS DE PLÁTANO MADURO", "SNACKS / ALIMENTOS"], ["CHIPS DE PLÁTANO OVALADO", "SNACKS / ALIMENTOS"], ["CHIPS DE TUBÉRCULOS", "SNACKS / ALIMENTOS"], ["CHIPS DE YUCA", "SNACKS / ALIMENTOS"], ["DINO CHOCOLATE", "SNACKS / ALIMENTOS"], ["DINO FRESA", "SNACKS / ALIMENTOS"], ["DINO VAINILLA", "SNACKS / ALIMENTOS"], ["ALOE PURE PLUS", "BEBIDAS SIN ALCOHOL / MIXERS"], ["AGUA SAN PELLEGRINO 500 ML", "BEBIDAS SIN ALCOHOL / MIXERS"]];
+function migrarFsV4() {
+  if (props().getProperty('MIG_FSLISTA_V4')) return;
+  withLock(function () {
+    if (props().getProperty('MIG_FSLISTA_V4')) return;
+    var maxId = 0, maxOrd = 0, ids = {};
+    readAll('Productos').forEach(function (p) {
+      var m = /^fs-(\d+)$/.exec(String(p.id)); if (m) maxId = Math.max(maxId, +m[1]);
+      if ((p.negocios || []).indexOf('Food Shop') > -1) { maxOrd = Math.max(maxOrd, Number(p.orden) || 0); ids[normNom(p.nombre)] = p; }
+    });
+    var uva = ids[normNom('GATORADE COOL GRAPE 20 OZ')];
+    if (uva) { uva.nombre = 'GATORADE AZUL (COOL BLUE) 20 OZ'; uva.activo = 1; writeRow('Productos', uva._row, uva); }
+    FS_V4_NUEVOS.forEach(function (x) {
+      var q = ids[normNom(x[0])];
+      if (q) { if (String(q.activo) === '0') { q.activo = 1; writeRow('Productos', q._row, q); } return; }
+      maxId++; maxOrd++;
+      appendObj('Productos', { id: 'fs-' + maxId, nombre: x[0], cat: x[1], unidad: 'unid', factor: 1, tol: 0.02, costo: 0, critico: 0, negocios: ['Food Shop', 'Food Shop General'], orden: maxOrd, activo: 1 });
+    });
+    props().setProperty('MIG_FSLISTA_V4', '1');
     cacheDrop();
   });
 }

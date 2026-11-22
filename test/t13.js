@@ -6,7 +6,7 @@ const ok=(a,p,t)=>{const r=E.call(a,p,t);assert(r.ok,a+' '+JSON.stringify(r));re
 const A=login('dueno@gmail.com');
 const fs=()=>ok('sync',{},A).productos.filter(p=>p.negocios.includes('Food Shop'));
 let P=fs();
-assert.equal(P.length,185,'semilla nueva: lista + Lenguita + Miller/Chicharrón + empanadas, pastelistos, Aurora y vasos de café');
+assert.equal(P.length,195,'semilla nueva: lista + Lenguita + Miller/Chicharrón + empanadas, pastelistos, Aurora y vasos de café');
 const nn0=P.map(p=>p.nombre);['EMPANADA POLLO','EMPANADA RES VEGETAL','PASTELISTO 3 QUESOS','LA AURORA 107','LA AURORA CAMEROON','VASOS CAFÉ NESCAFÉ','VASOS CAFÉ SANTO DOMINGO','MILLER PEQUEÑA 12 OZ','MILLER MEDIANA 22 OZ','CHICHARRÓN EL CHEF'].forEach(n=>assert(nn0.includes(n),'falta '+n));
 assert(P.some(p=>p.nombre==='LENGUITA ACIDA')&&P.some(p=>p.nombre==='SVUKIL VODKA'));
 assert.equal(new Set(P.map(p=>p.cat)).size,10);
