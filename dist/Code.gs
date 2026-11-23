@@ -1102,8 +1102,9 @@ function saveAlmacen(me, p) {
     }
     appendObj('Almacen', { id: id, fecha: hoy(), tipo: tipo, destino: destino, items: items, nota: nota, fotos: ids, resp: me.nombre, email: me.email, ts: now(), estado: 'nuevo', hechoPor: '', hechoTs: 0 });
     bit(me.email, 'almacen-' + tipo, (destino ? destino + ' · ' : '') + (items.length ? itemsTexto(items) : ids.length + ' foto(s)'));
-    if (tipo === 'recepcion') notify('almacen', 'Llegó mercancía', me.nombre + ' recibió mercancía y subió la foto con la factura.' + (nota ? ' ' + nota : ''), { para: 'admin', ref: 'alm|' + id, email: false });
-    else notify('almacen', 'Salida para ' + destino, me.nombre + ': ' + itemsTexto(items) + '. Falta hacerla en Citrus.', { para: 'admin', ref: 'alm|' + id, email: false });
+    var aviso = me.rol === 'supervisor';   // lo que registra la supervisora de Almacén (Griselda) llega por correo al momento a administración para hacer el traslado en Citrus
+    if (tipo === 'recepcion') notify('almacen', 'Llegó mercancía' + (aviso ? ' · hacer la entrada en Citrus' : ''), me.nombre + ' recibió mercancía y subió la foto con la factura.' + (nota ? ' ' + nota : '') + (aviso ? ' Falta hacer la entrada en Citrus.' : ''), { para: 'admin', ref: 'alm|' + id, email: aviso, soloAdmin: aviso });
+    else notify('almacen', 'Salida para ' + destino + (aviso ? ' · hacer el traslado en Citrus' : ''), me.nombre + ': ' + itemsTexto(items) + '. Falta hacerla en Citrus.', { para: 'admin', ref: 'alm|' + id, email: aviso, soloAdmin: aviso });
     return { id: id };
   });
 }
@@ -1646,9 +1647,9 @@ function setUser(me, p) {
 }
 
 /* ============================ avisos ============================ */
-function recipients(para, tipo) {
+function recipients(para, tipo, soloAdmin) {
   var toks = String(para).split(','), out = {};
-  var users = readAll('Usuarios').filter(function (u) { return u.estado === 'aprobado'; });
+  var users = readAll('Usuarios').filter(function (u) { return u.estado === 'aprobado' && (!soloAdmin || u.rol === 'admin'); });
   users.forEach(function (u) {
     var alm = almSoloUser(u), hit = (!alm && toks.indexOf(u.rol) > -1) || toks.indexOf('u:' + u.email) > -1 || toks.indexOf('todos') > -1 || (u.rol === 'supervisor' && toks.indexOf('admin') > -1 && tipo !== 'acceso' && (!alm || tipo === 'almacen'));
     if (!hit && (u.rol === 'lider' || u.rol === 'colaborador')) (u.negocios || []).forEach(function (n) { if (toks.indexOf('n:' + n) > -1 || (u.rol === 'lider' && toks.indexOf('nl:' + n) > -1)) hit = true; });
@@ -1664,7 +1665,7 @@ function notify(tipo, titulo, texto, o) {
     try {
       var cfg = getConfig(), flag = ({ acceso: 'acceso', pendiente: 'pendiente', critico: 'critico', falta: 'falta' })[tipo];
       if (flag && cfg.avisos && cfg.avisos[flag] === false) return;
-      var to = recipients(o.para || 'admin', tipo);
+      var to = recipients(o.para || 'admin', tipo, o.soloAdmin);
       if (!to.length || MailApp.getRemainingDailyQuota() < 5) return;
       MailApp.sendEmail({ to: to.join(','), name: 'Arqueo La Barra', subject: titulo, body: texto + '\n\nAbrir la app: ' + appUrl() });
     } catch (e) { }
