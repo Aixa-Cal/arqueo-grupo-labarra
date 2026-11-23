@@ -490,8 +490,8 @@ function need(me, roles) {
 function conFreezer(neg) { return neg === 'Food Shop'; }
 function conCafe(neg) { return (/^La Barra/.test(neg) && neg !== 'La Barra Miraflores') || neg === 'Food Shop'; }
 function conBano(neg) { return neg === 'La Barra Atala' || neg === 'La Barra Miraflores'; }
-/* Supervisora solo de Almacén (p. ej. Griselda): ve únicamente Almacén, sin pendientes ni avisos de otros negocios */
-function almSoloUser(me) { return me.rol === 'supervisor' && (me.negocios || []).length === 1 && me.negocios[0] === 'Almacén'; }
+/* Supervisora de Almacén con negocios asignados (p. ej. Griselda: Almacén + conteos generales): ve solo lo suyo, sin pendientes ni avisos de otros negocios */
+function almSoloUser(me) { return me.rol === 'supervisor' && (me.negocios || []).indexOf('Almacén') > -1; }
 function scoped(me) { return me.rol === 'lider' || me.rol === 'colaborador' || almSoloUser(me); }
 function negOk(me, neg) {
   if (me.rol === 'admin' || me.rol === 'gerencia' || (me.rol === 'supervisor' && !almSoloUser(me))) return true;
