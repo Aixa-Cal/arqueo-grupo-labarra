@@ -490,9 +490,11 @@ function need(me, roles) {
 function conFreezer(neg) { return neg === 'Food Shop'; }
 function conCafe(neg) { return (/^La Barra/.test(neg) && neg !== 'La Barra Miraflores') || neg === 'Food Shop'; }
 function conBano(neg) { return neg === 'La Barra Atala' || neg === 'La Barra Miraflores'; }
-function scoped(me) { return me.rol === 'lider' || me.rol === 'colaborador'; }
+/* Supervisora solo de Almacén (p. ej. Griselda): ve únicamente Almacén, sin pendientes ni avisos de otros negocios */
+function almSoloUser(me) { return me.rol === 'supervisor' && (me.negocios || []).length === 1 && me.negocios[0] === 'Almacén'; }
+function scoped(me) { return me.rol === 'lider' || me.rol === 'colaborador' || almSoloUser(me); }
 function negOk(me, neg) {
-  if (me.rol === 'admin' || me.rol === 'gerencia' || me.rol === 'supervisor') return true;
+  if (me.rol === 'admin' || me.rol === 'gerencia' || (me.rol === 'supervisor' && !almSoloUser(me))) return true;
   return (me.negocios || []).indexOf(neg) > -1;
 }
 
@@ -584,7 +586,7 @@ function notifsFor(me) {
   var vals = s.getRange(from, 1, n, H.Notificaciones.length).getValues(), out = [];
   vals.forEach(function (r) {
     var o = fromRow('Notificaciones', r), toks = String(o.para).split(',');
-    var mine = toks.indexOf(me.rol) > -1 || toks.indexOf('u:' + me.email) > -1 || toks.indexOf('todos') > -1 || (me.rol === 'supervisor' && toks.indexOf('admin') > -1 && o.tipo !== 'acceso');
+    var alm = almSoloUser(me), mine = (!alm && toks.indexOf(me.rol) > -1) || toks.indexOf('u:' + me.email) > -1 || toks.indexOf('todos') > -1 || (me.rol === 'supervisor' && toks.indexOf('admin') > -1 && o.tipo !== 'acceso' && (!alm || o.tipo === 'almacen'));
     if (!mine && scoped(me)) (me.negocios || []).forEach(function (ng) { if (toks.indexOf('n:' + ng) > -1 || (me.rol === 'lider' && toks.indexOf('nl:' + ng) > -1)) mine = true; });
     if (mine) out.push({ id: o.id, ts: o.ts, tipo: o.tipo, titulo: o.titulo, texto: o.texto, negocio: o.negocio, ref: o.ref, leido: (o.leidoPor || []).indexOf(me.email) > -1 });
   });
@@ -1648,7 +1650,7 @@ function recipients(para, tipo) {
   var toks = String(para).split(','), out = {};
   var users = readAll('Usuarios').filter(function (u) { return u.estado === 'aprobado'; });
   users.forEach(function (u) {
-    var hit = toks.indexOf(u.rol) > -1 || toks.indexOf('u:' + u.email) > -1 || toks.indexOf('todos') > -1 || (u.rol === 'supervisor' && toks.indexOf('admin') > -1 && tipo !== 'acceso');
+    var alm = almSoloUser(u), hit = (!alm && toks.indexOf(u.rol) > -1) || toks.indexOf('u:' + u.email) > -1 || toks.indexOf('todos') > -1 || (u.rol === 'supervisor' && toks.indexOf('admin') > -1 && tipo !== 'acceso' && (!alm || tipo === 'almacen'));
     if (!hit && (u.rol === 'lider' || u.rol === 'colaborador')) (u.negocios || []).forEach(function (n) { if (toks.indexOf('n:' + n) > -1 || (u.rol === 'lider' && toks.indexOf('nl:' + n) > -1)) hit = true; });
     if (hit) out[u.email] = 1;
   });

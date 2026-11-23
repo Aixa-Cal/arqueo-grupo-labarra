@@ -88,12 +88,12 @@ async function enter(data){
   S.auth="app";S.err="";
   S.view=defaultView();
   await refresh(true);
-  if((role()==="lider"||role()==="colaborador")&&almSolo())S.view="alm";
+  if((role()==="lider"||role()==="colaborador"||role()==="supervisor")&&almSolo())S.view="alm";
   if(role()!=="gerencia"){restoreDraft();render()}
   startPoll();
 }
 function defaultView(){
-  if((role()==="lider"||role()==="colaborador")&&almSolo())return "alm";
+  if((role()==="lider"||role()==="colaborador"||role()==="supervisor")&&almSolo())return "alm";
   if(role()==="supervisor")return "sem";
   if(role()==="admin")return "hoy";
   if(role()==="lider")return "pend";
@@ -192,7 +192,7 @@ function render(){
 }
 function navItems(){
   var r=role();
-  if((r==="lider"||r==="colaborador")&&almSolo())return [["alm","Almacén",ICO.recibir,almPend()]];
+  if((r==="lider"||r==="colaborador"||r==="supervisor")&&almSolo())return [["alm","Almacén",ICO.recibir,almPend()]];
   if(r==="supervisor")return [["sem","Mi semana",ICO.sem],["pend","Pendientes",ICO.ventas,S.pend],["alm","Almacén",ICO.recibir,almPend()],["contar","Contar",ICO.contar],["recibir","Movimientos",ICO.recibir,movPend()],["res","Resultados",ICO.res]];
   if(r==="lider"&&almOk())return [["pend","Pendientes",ICO.ventas,S.pend],["contar","Contar",ICO.contar],["alm","Almacén",ICO.recibir,almPend()],["recibir","Movimientos",ICO.recibir,movPend()],["res","Resultados",ICO.res]];
   if(r==="lider")return [["pend","Pendientes",ICO.ventas,S.pend],["contar","Contar",ICO.contar],["recibir","Movimientos",ICO.recibir,movPend()],["res","Resultados",ICO.res]];
