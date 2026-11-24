@@ -599,7 +599,7 @@ function notifsFor(me) {
 function sync(me) {
   migrarInsumos();
   migrarLaBarra();
-  migrarFoodShopT3(); migrarMiller(); migrarFoodShopGeneral(); migrarFsLista(); migrarFsV2(); migrarFsV3(); migrarFsV4(); migrarAtalaFrio(); migrarZpGeneral(); migrarEmpaques(); migrarLaBarraGeneral(); migrarAlmacen();
+  migrarFoodShopT3(); migrarMiller(); migrarFoodShopGeneral(); migrarFsLista(); migrarFsV2(); migrarFsV3(); migrarFsV4(); migrarFsV5(); migrarAtalaFrio(); migrarZpGeneral(); migrarEmpaques(); migrarLaBarraGeneral(); migrarAlmacen();
   var cfg = getConfig(), negs = visibleNegocios(me, cfg);
   var prods = getProductos().filter(function (r) { return r.activo; }).map(productoOut);
   if (scoped(me)) {
@@ -1043,6 +1043,26 @@ function migrarZpGeneral() {
     t[ZP_GEN] = ['Semanal']; l[ZP_GEN + '|Semanal'] = '23:30'; cal[ZP_GEN] = [2];
     setConfigKey('negocios', ng); setConfigKey('turnos', t); setConfigKey('limites', l); setConfigKey('calendario', cal);
     props().setProperty('MIG_ZPGEN_V1', '1');
+    cacheDrop();
+  });
+}
+/* Una sola vez: Pringles Snack nuevas (pequeñas) del Food Shop */
+var FS_V5_NUEVOS = [["PRINGLES SNACK ORIGINAL (PEQUEÑA)", "SNACKS / ALIMENTOS"], ["PRINGLES SNACK QUESO (PEQUEÑA)", "SNACKS / ALIMENTOS"], ["PRINGLES SNACK CREMA Y CEBOLLA (PEQUEÑA)", "SNACKS / ALIMENTOS"]];
+function migrarFsV5() {
+  if (props().getProperty('MIG_FSLISTA_V5')) return;
+  withLock(function () {
+    if (props().getProperty('MIG_FSLISTA_V5')) return;
+    var maxId = 0, maxOrd = 0, ids = {};
+    readAll('Productos').forEach(function (p) {
+      var m = /^fs-(\d+)$/.exec(String(p.id)); if (m) maxId = Math.max(maxId, +m[1]);
+      if ((p.negocios || []).indexOf('Food Shop') > -1) { maxOrd = Math.max(maxOrd, Number(p.orden) || 0); ids[normNom(p.nombre)] = p; }
+    });
+    FS_V5_NUEVOS.forEach(function (x) {
+      if (ids[normNom(x[0])]) return;
+      maxId++; maxOrd++;
+      appendObj('Productos', { id: 'fs-' + maxId, nombre: x[0], cat: x[1], unidad: 'unid', factor: 1, tol: 0.02, costo: 0, critico: 0, negocios: ['Food Shop', 'Food Shop General'], orden: maxOrd, activo: 1 });
+    });
+    props().setProperty('MIG_FSLISTA_V5', '1');
     cacheDrop();
   });
 }
