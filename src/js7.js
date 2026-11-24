@@ -2,7 +2,7 @@
 var SEM_OBLIG=["Food Shop","Zona Presidente"];
 function semMios(){var m=S.me||{};if(m.rol==="supervisor"&&(m.negocios||[]).length)return m.negocios.filter(function(n){return !/ General$/.test(n)&&n!=="Car Wash"&&n!==ALM_NOM});return SEM_OBLIG}
 var ALM_NOM="Almacén";
-var SEM_GEN=["Food Shop General","La Barra Atala General","La Barra Atalaya General","La Barra Miraflores General"];
+var SEM_GEN=["Food Shop General","La Barra Atala General","La Barra Atala Cuarto Frío","La Barra Atalaya General","La Barra Miraflores General"];
 var DIA_INI=["D","L","M","M","J","V","S"];
 function semLunes(h){return addDays(h,-((dow(h)+6)%7))}
 function semFechas(lun){var a=[];for(var i=0;i<7;i++)a.push(addDays(lun,i));return a}

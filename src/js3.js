@@ -337,7 +337,7 @@ function csvCitrus(c){
   c.items.forEach(function(it){var p=prodById(it.pid);rows.push([it.nombre,(p&&+p.costo)||0,+it.fin||0,"","",""])});
   xlsxDown("Citrus_Inventario_"+slug(c.negocio.replace(/ General$/,""))+"_"+c.fecha+".xlsx","Lista de Inventario",rows);
 }
-function esGeneralLB(n){return /^La Barra .* General$/.test(n||"")}
+function esGeneralLB(n){return /^La Barra .* (General|Cuarto Frío)$/.test(n||"")}
 function estTxt(e){return {inicial:"Conteo inicial",contado:"Esperando ventas",arqueado:"Arqueado",anulado:"Anulado"}[e]||e}
 function slug(s){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z0-9]+/g,"_").replace(/^_|_$/g,"")}
 function csvDet(c){

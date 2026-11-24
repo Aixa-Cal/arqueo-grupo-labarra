@@ -337,7 +337,7 @@ function prodsFor(neg){
 }
 function newDraft(){return {negocio:"",turno:"",fecha:today(),vals:{},base:null,id:null,fcat:null,fmode:""}}
 var CIERRE=["Revisé las áreas","Rellené lo necesario","El turno completó sus limpiezas","Dejé los equipos cargando y en orden","Cerré el sistema e hice el cierre de caja","Dejé los baños limpios y los safacones listos"];
-var SOLO_CAL=["Food Shop General","La Barra Atala General","La Barra Atalaya General","La Barra Miraflores General"];
+var SOLO_CAL=["Food Shop General","La Barra Atala General","La Barra Atala Cuarto Frío","La Barra Atalaya General","La Barra Miraflores General"];
 function conCierre(neg){return !!neg&&INSUMOS.indexOf(neg)<0&&SOLO_CAL.indexOf(neg)<0}
 function conCafe(neg){return (esLB(neg)&&neg!=="La Barra Miraflores")||neg==="Food Shop"}
 function conBano(neg){return neg==="La Barra Atala"||neg==="La Barra Miraflores"}
@@ -1123,7 +1123,7 @@ function csvCitrus(c){
   c.items.forEach(function(it){var p=prodById(it.pid);rows.push([it.nombre,(p&&+p.costo)||0,+it.fin||0,"","",""])});
   xlsxDown("Citrus_Inventario_"+slug(c.negocio.replace(/ General$/,""))+"_"+c.fecha+".xlsx","Lista de Inventario",rows);
 }
-function esGeneralLB(n){return /^La Barra .* General$/.test(n||"")}
+function esGeneralLB(n){return /^La Barra .* (General|Cuarto Frío)$/.test(n||"")}
 function estTxt(e){return {inicial:"Conteo inicial",contado:"Esperando ventas",arqueado:"Arqueado",anulado:"Anulado"}[e]||e}
 function slug(s){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z0-9]+/g,"_").replace(/^_|_$/g,"")}
 function csvDet(c){
@@ -1670,7 +1670,7 @@ async function prGuardar(){
 var SEM_OBLIG=["Food Shop","Zona Presidente"];
 function semMios(){var m=S.me||{};if(m.rol==="supervisor"&&(m.negocios||[]).length)return m.negocios.filter(function(n){return !/ General$/.test(n)&&n!=="Car Wash"&&n!==ALM_NOM});return SEM_OBLIG}
 var ALM_NOM="Almacén";
-var SEM_GEN=["Food Shop General","La Barra Atala General","La Barra Atalaya General","La Barra Miraflores General"];
+var SEM_GEN=["Food Shop General","La Barra Atala General","La Barra Atala Cuarto Frío","La Barra Atalaya General","La Barra Miraflores General"];
 var DIA_INI=["D","L","M","M","J","V","S"];
 function semLunes(h){return addDays(h,-((dow(h)+6)%7))}
 function semFechas(lun){var a=[];for(var i=0;i<7;i++)a.push(addDays(lun,i));return a}

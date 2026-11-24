@@ -33,8 +33,10 @@ var DOBLE = ['Zona Presidente'];
 var INSUMOS = ['Car Wash'];
 /* Conteo general semanal del Food Shop (martes, lo hace supervisión): sin checklist de cierre, café ni freezers */
 var GEN_LB = ['La Barra Atala General', 'La Barra Atalaya General', 'La Barra Miraflores General'];   // conteo semanal de almacén de La Barra (Griselda)
-var SIN_CIERRE = ['Food Shop General'].concat(GEN_LB);
-function SOLO_CONSUMO(n) { return INSUMOS.indexOf(n) > -1 || GEN_LB.indexOf(n) > -1; }
+var ATALA_FRIO = 'La Barra Atala Cuarto Frío';   // conteo semanal aparte del cuarto frío del Atala (Griselda, lunes)
+var GEN_LB_ALL = GEN_LB.concat([ATALA_FRIO]);
+var SIN_CIERRE = ['Food Shop General'].concat(GEN_LB_ALL);
+function SOLO_CONSUMO(n) { return INSUMOS.indexOf(n) > -1 || GEN_LB_ALL.indexOf(n) > -1; }
 var CAT_CONSUMO = 'Insumos para café', CAT_ALMACEN = 'Almacén';   // dentro de ese conteo se controla solo el consumo, sin ventas
 var INSUMOS_PRODUCTOS = [
   { id: 'cw-001', nombre: 'Shampoo (libras)', u: 'lb' },
@@ -596,7 +598,7 @@ function notifsFor(me) {
 function sync(me) {
   migrarInsumos();
   migrarLaBarra();
-  migrarFoodShopT3(); migrarMiller(); migrarFoodShopGeneral(); migrarFsLista(); migrarFsV2(); migrarFsV3(); migrarFsV4(); migrarEmpaques(); migrarLaBarraGeneral(); migrarAlmacen();
+  migrarFoodShopT3(); migrarMiller(); migrarFoodShopGeneral(); migrarFsLista(); migrarFsV2(); migrarFsV3(); migrarFsV4(); migrarAtalaFrio(); migrarEmpaques(); migrarLaBarraGeneral(); migrarAlmacen();
   var cfg = getConfig(), negs = visibleNegocios(me, cfg);
   var prods = getProductos().filter(function (r) { return r.activo; }).map(productoOut);
   if (scoped(me)) {
@@ -657,7 +659,7 @@ function startCount(me, p) {
     }
     if (m.negocio === neg && m.ts > cut) sals.push({ ts: m.ts, tipo: m.tipo, motivo: m.motivo, destino: m.destino, items: m.items });
   });
-  if (GEN_LB.indexOf(neg) > -1) {   // conteo semanal de la tienda: «Entró» = lo que Maria sacó del almacén para ella
+  if (GEN_LB_ALL.indexOf(neg) > -1) {   // conteo semanal de la tienda: «Entró» = lo que Maria sacó del almacén para ella
     var base = neg.replace(/ General$/, '');
     readTail('Almacen', 400).forEach(function (x) { if (x.tipo === 'salida' && x.destino === base && x.ts > cut) ents.push({ ts: x.ts, items: x.items }); });
   }
@@ -1000,6 +1002,27 @@ function migrarFsV4() {
       appendObj('Productos', { id: 'fs-' + maxId, nombre: x[0], cat: x[1], unidad: 'unid', factor: 1, tol: 0.02, costo: 0, critico: 0, negocios: ['Food Shop', 'Food Shop General'], orden: maxOrd, activo: 1 });
     });
     props().setProperty('MIG_FSLISTA_V4', '1');
+    cacheDrop();
+  });
+}
+/* Una sola vez: el cuarto frío del Atala se cuenta aparte del almacén general (mismo día, lunes). Los productos de frío salen del conteo «La Barra Atala General» */
+var FRIO_ATALA = ["Alitas de Pollo", "Carne Angus", "Carne de Chicken Hamburguesa", "Carne de Chimi", "Pechuguitas", "Pierna Empacada", "Pollo Empacado", "Caja de Pechuga de Pollo", "Caja de Alas de Pollo", "Jamón de Cerdo", "Jamón de Pavo", "Salami Genoa", "Salami Induveca", "Tocineta", "Queso Cheddar", "Queso Danés", "Crema Empacada", "Huevos", "Margarina Manicera Tarro", "Leche Cardinal", "Leche para Café 3% Grasa", "Leche Listamilk Salsa de Queso", "Salsa Cheddar", "Papas para Freír Libras", "Tortilla Wrap", "Cebolla", "Cereza", "China", "Chinola", "Fresa Empacada", "Guineos Maduros", "Lechosa", "Lechuga Repollada", "Limón", "Lulo", "Mango", "Melón", "Granadillo", "Guanábana", "Piña", "Puerro", "Repollo", "Tomate", "Zanahoria", "Albahaca", "Zapote", "Sandia Limon", "Tamarindo"];
+function migrarAtalaFrio() {
+  if (props().getProperty('MIG_ATALAFRIO_V1')) return;
+  withLock(function () {
+    if (props().getProperty('MIG_ATALAFRIO_V1')) return;
+    var set = {}; FRIO_ATALA.forEach(function (n) { set[normNom(n)] = 1; });
+    readAll('Productos').forEach(function (p) {
+      var a = p.negocios || [];
+      if (a.indexOf('La Barra Atala General') < 0 || !set[normNom(p.nombre)]) return;
+      p.negocios = a.filter(function (x) { return x !== 'La Barra Atala General'; }).concat([ATALA_FRIO]);
+      writeRow('Productos', p._row, p);
+    });
+    var cfg = getConfig(), ng = cfg.negocios || [], t = cfg.turnos || {}, l = cfg.limites || {}, cal = cfg.calendario || {};
+    if (ng.indexOf(ATALA_FRIO) < 0) { var ix = ng.indexOf('La Barra Atala General'); ng.splice(ix > -1 ? ix + 1 : ng.length, 0, ATALA_FRIO); }
+    t[ATALA_FRIO] = ['Semanal']; l[ATALA_FRIO + '|Semanal'] = '23:30'; cal[ATALA_FRIO] = [1];
+    setConfigKey('negocios', ng); setConfigKey('turnos', t); setConfigKey('limites', l); setConfigKey('calendario', cal);
+    props().setProperty('MIG_ATALAFRIO_V1', '1');
     cacheDrop();
   });
 }
