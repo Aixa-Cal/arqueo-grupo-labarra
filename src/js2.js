@@ -13,7 +13,7 @@ function prodsFor(neg){
 }
 function newDraft(){return {negocio:"",turno:"",fecha:today(),vals:{},base:null,id:null,fcat:null,fmode:""}}
 var CIERRE=["Revisé las áreas","Rellené lo necesario","El turno completó sus limpiezas","Dejé los equipos cargando y en orden","Cerré el sistema e hice el cierre de caja","Dejé los baños limpios y los safacones listos"];
-var SOLO_CAL=["Food Shop General","La Barra Atala General","La Barra Atala Cuarto Frío","La Barra Atalaya General","La Barra Miraflores General"];
+var SOLO_CAL=["Food Shop General","Zona Presidente General","La Barra Atala General","La Barra Atala Cuarto Frío","La Barra Atalaya General","La Barra Miraflores General"];
 function conCierre(neg){return !!neg&&INSUMOS.indexOf(neg)<0&&SOLO_CAL.indexOf(neg)<0}
 function conCafe(neg){return (esLB(neg)&&neg!=="La Barra Miraflores")||neg==="Food Shop"}
 function conBano(neg){return neg==="La Barra Atala"||neg==="La Barra Miraflores"}

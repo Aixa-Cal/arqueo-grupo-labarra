@@ -35,7 +35,8 @@ var INSUMOS = ['Car Wash'];
 var GEN_LB = ['La Barra Atala General', 'La Barra Atalaya General', 'La Barra Miraflores General'];   // conteo semanal de almacén de La Barra (Griselda)
 var ATALA_FRIO = 'La Barra Atala Cuarto Frío';   // conteo semanal aparte del cuarto frío del Atala (Griselda, lunes)
 var GEN_LB_ALL = GEN_LB.concat([ATALA_FRIO]);
-var SIN_CIERRE = ['Food Shop General'].concat(GEN_LB_ALL);
+var ZP_GEN = 'Zona Presidente General';   // conteo semanal aparte de Zona Presidente (martes, Griselda)
+var SIN_CIERRE = ['Food Shop General', ZP_GEN].concat(GEN_LB_ALL);
 function SOLO_CONSUMO(n) { return INSUMOS.indexOf(n) > -1 || GEN_LB_ALL.indexOf(n) > -1; }
 var CAT_CONSUMO = 'Insumos para café', CAT_ALMACEN = 'Almacén';   // dentro de ese conteo se controla solo el consumo, sin ventas
 var INSUMOS_PRODUCTOS = [
@@ -598,7 +599,7 @@ function notifsFor(me) {
 function sync(me) {
   migrarInsumos();
   migrarLaBarra();
-  migrarFoodShopT3(); migrarMiller(); migrarFoodShopGeneral(); migrarFsLista(); migrarFsV2(); migrarFsV3(); migrarFsV4(); migrarAtalaFrio(); migrarEmpaques(); migrarLaBarraGeneral(); migrarAlmacen();
+  migrarFoodShopT3(); migrarMiller(); migrarFoodShopGeneral(); migrarFsLista(); migrarFsV2(); migrarFsV3(); migrarFsV4(); migrarAtalaFrio(); migrarZpGeneral(); migrarEmpaques(); migrarLaBarraGeneral(); migrarAlmacen();
   var cfg = getConfig(), negs = visibleNegocios(me, cfg);
   var prods = getProductos().filter(function (r) { return r.activo; }).map(productoOut);
   if (scoped(me)) {
@@ -1023,6 +1024,25 @@ function migrarAtalaFrio() {
     t[ATALA_FRIO] = ['Semanal']; l[ATALA_FRIO + '|Semanal'] = '23:30'; cal[ATALA_FRIO] = [1];
     setConfigKey('negocios', ng); setConfigKey('turnos', t); setConfigKey('limites', l); setConfigKey('calendario', cal);
     props().setProperty('MIG_ATALAFRIO_V1', '1');
+    cacheDrop();
+  });
+}
+/* Una sola vez: conteo semanal aparte de Zona Presidente (martes). Usa los mismos productos de Zona Presidente */
+function migrarZpGeneral() {
+  if (props().getProperty('MIG_ZPGEN_V1')) return;
+  withLock(function () {
+    if (props().getProperty('MIG_ZPGEN_V1')) return;
+    readAll('Productos').forEach(function (p) {
+      var a = p.negocios || [];
+      if (a.indexOf('Zona Presidente') < 0 || a.indexOf(ZP_GEN) > -1) return;
+      p.negocios = a.concat([ZP_GEN]);
+      writeRow('Productos', p._row, p);
+    });
+    var cfg = getConfig(), ng = cfg.negocios || [], t = cfg.turnos || {}, l = cfg.limites || {}, cal = cfg.calendario || {};
+    if (ng.indexOf(ZP_GEN) < 0) { var ix = ng.indexOf('Zona Presidente'); ng.splice(ix > -1 ? ix + 1 : ng.length, 0, ZP_GEN); }
+    t[ZP_GEN] = ['Semanal']; l[ZP_GEN + '|Semanal'] = '23:30'; cal[ZP_GEN] = [2];
+    setConfigKey('negocios', ng); setConfigKey('turnos', t); setConfigKey('limites', l); setConfigKey('calendario', cal);
+    props().setProperty('MIG_ZPGEN_V1', '1');
     cacheDrop();
   });
 }
