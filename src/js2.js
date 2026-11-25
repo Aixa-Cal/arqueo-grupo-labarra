@@ -4,6 +4,8 @@ function isFullDay(neg,fecha){
   var c=S.cfg.calendario&&S.cfg.calendario[neg];if(!Array.isArray(c))return true;
   return c.indexOf(dow(fecha||today()))>-1;
 }
+/* Para contar (no para la agenda): quien tiene el almacén puede hacer el conteo general cualquier día */
+function canFull(neg,fecha){return (almSup()&&SOLO_CAL.indexOf(neg)>-1)||isFullDay(neg,fecha)}
 function turnosFor(neg){return (S.cfg.turnos&&S.cfg.turnos[neg])||[]}
 function turnoDone(neg,turno,fecha){return S.conteos.some(function(c){return c.negocio===neg&&c.turno===turno&&c.fecha===fecha&&c.estado!=="anulado"})}
 function sugTurno(neg,fecha){var ts=turnosFor(neg);for(var i=0;i<ts.length;i++)if(!turnoDone(neg,ts[i],fecha))return ts[i];return ts[0]||""}
@@ -61,11 +63,11 @@ function catsFuera(neg,fecha){
   Object.keys(m).forEach(function(c){if(Array.isArray(m[c])&&m[c].indexOf(dow(fecha||today()))<0&&prodsFor(neg).some(function(p){return (p.cat||"")===c}))out.push(c+" (solo "+m[c].map(function(i){return DIAS_L[i].toLowerCase()}).join(", ")+")")});
   return out;
 }
-function negProducts(){var d=S.draft;return prodsFor(d.negocio).filter(function(p){return (isFullDay(d.negocio,d.fecha)||!!p.critico)&&catHoy(d.negocio,p.cat,d.fecha)})}
+function negProducts(){var d=S.draft;return prodsFor(d.negocio).filter(function(p){return (canFull(d.negocio,d.fecha)||!!p.critico)&&catHoy(d.negocio,p.cat,d.fecha)})}
 function fmtRaw(n){return String(Math.round(n*100)/100)}
 function dueInfo(d){
   if(!d.negocio)return"";
-  var full=isFullDay(d.negocio,d.fecha),list=prodsFor(d.negocio),n=full?list.length:list.filter(function(p){return p.critico}).length;
+  var full=canFull(d.negocio,d.fecha),list=prodsFor(d.negocio),n=full?list.length:list.filter(function(p){return p.critico}).length;
   var fuera=catsFuera(d.negocio,d.fecha);
   return '<p class="hint"><b>'+DIAS_L[dow(d.fecha)]+':</b> '+(full?"conteo completo":"solo productos críticos")+' ('+negProducts().length+' productos).'+(fuera.length?' Hoy no se cuenta: '+esc(fuera.join(", "))+'.':'')+'</p>';
 }
@@ -98,7 +100,7 @@ function elegirHTML(){
   var negs=S.cfg.negocios.map(function(n,i){
     if(n==="Almacén")return "";
     var ts=turnosFor(n),k=ts.filter(function(t){return turnoDone(n,t,d.fecha)}).length;
-    var solo=SOLO_CAL.indexOf(n)>-1&&!isFullDay(n,d.fecha);
+    var solo=SOLO_CAL.indexOf(n)>-1&&!canFull(n,d.fecha);
     return '<button class="neg'+(d.negocio===n?" on":"")+(ts.length&&k===ts.length?" done":"")+'"'+(solo?' disabled':'')+' data-act="neg" data-v="'+i+'">'+esc(n)+'<small>'+(solo?"Solo "+((S.cfg.calendario&&S.cfg.calendario[n]||[]).map(function(x){return ["domingos","lunes","martes","miércoles","jueves","viernes","sábados"][x]}).join(", ")):(ts.length?(k+" de "+ts.length+" hoy"):"Sin conteos"))+'</small></button>';
   }).join("");
   if(!S.cfg.negocios.length)negs='<p class="banner">Todavía no tienes negocios asignados. Pide a administración que te asigne uno en Equipo.</p>';
@@ -108,7 +110,7 @@ function elegirHTML(){
   var nada=(d.negocio&&!ts.length)?'<p class="banner">Este negocio no tiene turnos de conteo configurados.</p>':"";
   var dup=(d.negocio&&d.turno&&turnoDone(d.negocio,d.turno,d.fecha))?'<p class="banner">Ya hay un conteo de este turno hoy. Si hubo un error, pide a administración que lo anule o rectifique.</p>':"";
   var can=d.negocio&&d.turno&&!dup&&prodsFor(d.negocio).length&&!S.starting;
-  var fechaF=isAdmin()?'<div class="field"><label class="lbl" for="fecha">Fecha</label><input id="fecha" type="date" value="'+esc(d.fecha)+'" max="'+esc(today())+'"></div>':"";
+  var fechaF=isAdmin()?'<div class="field"><label class="lbl" for="fecha">Fecha</label><input id="fecha" type="date" value="'+esc(d.fecha)+'" max="'+esc(today())+'"></div>':(almSup()&&d.negocio&&SOLO_CAL.indexOf(d.negocio)>-1?'<div class="field"><label class="lbl" for="fecha">Día del conteo</label><input id="fecha" type="date" value="'+esc(d.fecha)+'" min="'+esc(addDays(today(),-2))+'" max="'+esc(today())+'"><p class="sub">Si se te pasó el día, elige cuándo lo hiciste. Puedes escoger hoy o los 2 días anteriores.</p></div>':"");
   return '<div class="panel"><div><h1>¿Qué vas a contar?</h1><p class="sub">Toca tu tienda y tu turno. Después toca «Empezar conteo». Solo escribes cuántos <b>quedan</b>.</p><button type="button" class="guia-btn" data-act="guia-open">❓ ¿Cómo se hace? Míralo en 4 pasos</button></div>'+
     '<div class="lbl">Negocio</div><div class="negs">'+negs+'</div>'+
     (d.negocio?'<div class="lbl">Turno</div><div class="turnos">'+tchips+'</div>'+dueInfo(d):"")+nada+dup+fechaF+
@@ -149,12 +151,12 @@ async function startCount(){
 function diasConteo(neg){var n=["domingo","lunes","martes","miércoles","jueves","viernes","sábado"],c=S.cfg.calendario&&S.cfg.calendario[neg];return Array.isArray(c)?c.map(function(i){return n[i]}).join(", "):"todos"}
 function contarHTML(){
   var d=S.draft,list=negProducts();
-  if(!list.length)return '<div class="panel"><h2>No hay productos para '+esc(d.negocio)+'</h2><p class="sub">'+(isFullDay(d.negocio,d.fecha)?"Un administrador debe asignarlos en Catálogo.":(INSUMOS.indexOf(d.negocio)>-1?"Hoy no toca contar este negocio. Se cuenta los días: "+diasConteo(d.negocio)+". Si necesitas contar otro día, pídele a administración que cambie el calendario.":"Hoy solo se cuentan los productos críticos y este negocio no tiene ninguno marcado."))+'</p><button class="btn ghost" data-act="back">Volver</button></div>';
+  if(!list.length)return '<div class="panel"><h2>No hay productos para '+esc(d.negocio)+'</h2><p class="sub">'+(canFull(d.negocio,d.fecha)?"Un administrador debe asignarlos en Catálogo.":(INSUMOS.indexOf(d.negocio)>-1?"Hoy no toca contar este negocio. Se cuenta los días: "+diasConteo(d.negocio)+". Si necesitas contar otro día, pídele a administración que cambie el calendario.":"Hoy solo se cuentan los productos críticos y este negocio no tiene ninguno marcado."))+'</p><button class="btn ghost" data-act="back">Volver</button></div>';
   if(d.modo==="uno")return pasoHTML(list);
   var cards="",lastCat=null;
   list.forEach(function(p){var ct=p.cat||"";if(ct!==lastCat){cards+='<h2 class="cat" data-c="'+esc(ct)+'">'+esc(ct||"Productos")+'</h2>';lastCat=ct}cards+=cardHTML(p)});
   return '<div class="bar"><div class="bar-row"><button class="back" data-act="back">← Cambiar</button><span class="sub"><b>'+esc(d.negocio)+'</b> · '+esc(d.turno)+'</span></div>'+
-    '<div class="bar-row"><span class="sub" id="prog"></span><span class="chip">'+(conDoble()?"Contando: al empezar y al terminar":(isFullDay(d.negocio,d.fecha)?"Contando":"Contando · solo los importantes"))+'</span></div><div class="meter"><i id="meter"></i></div></div>'+
+    '<div class="bar-row"><span class="sub" id="prog"></span><span class="chip">'+(conDoble()?"Contando: al empezar y al terminar":(canFull(d.negocio,d.fecha)?"Contando":"Contando · solo los importantes"))+'</span></div><div class="meter"><i id="meter"></i></div></div>'+
  '<button type="button" class="paso-ir" data-act="paso-uno">👆 Contar de uno en uno</button>'+
     '<div class="fbox"><input id="q" class="srch" type="search" placeholder="Buscar producto…" autocomplete="off">'+filtroHTML(list)+'</div>'+
     '<button type="button" class="dic-btn" data-act="dic-open"><span>🎤</span><b>Dime lo que tienes</b><small>Habla y la app llena las cantidades. Tú confirmas.</small></button>'+'<div class="ley"><div class="ley-t"><b>Cómo llenar</b><button type="button" class="linkbtn" data-act="guia-open">¿Cómo se hace?</button></div>'+

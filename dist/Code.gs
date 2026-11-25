@@ -679,7 +679,7 @@ function saveConteo(me, p) {
   var h = hoy();
   if (fecha > fechaMas(h, 1)) fail('datos', 'La fecha no puede ser futura.');
   if (scoped(me) && fecha < fechaMas(h, -2)) fail('datos', 'Solo puedes guardar conteos de hoy. Pide ayuda a administración.');
-  if (SIN_CIERRE.indexOf(neg) > -1 && me.rol !== 'admin') {
+  if (SIN_CIERRE.indexOf(neg) > -1 && me.rol !== 'admin' && !almSoloUser(me)) {
     var calS = cfg.calendario && cfg.calendario[neg];
     if (calS && calS.length && calS.indexOf(new Date(fecha + 'T12:00:00Z').getUTCDay()) < 0) fail('datos', neg + ' solo se cuenta los días programados.');
   }
