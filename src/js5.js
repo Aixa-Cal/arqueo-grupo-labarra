@@ -154,6 +154,7 @@ document.addEventListener("click",function(ev){
     },
     /* resultados */
     "det-open":function(){openDetalle(id)},
+    "det-csv":function(){var c=S.detail&&S.detail.c;if(!c)return;csvDown(c.negocio+" "+c.fecha+".csv",[["Producto","Contado"]].concat(c.items.map(function(it){return [it.nombre,it.fin]})))},
     "det-back":function(){S.detail=null;render();window.scrollTo(0,0)},
     "rect-start":function(){S.detail.edit=true;S.detail.cambios={};S.detail.motivo="";render()},
     "rect-cancel":function(){S.detail.edit=false;render()},

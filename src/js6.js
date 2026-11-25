@@ -2,6 +2,7 @@
 /* ===== Almacén: Maria recibe y saca mercancía; Griselda lo pasa a Citrus; Khristal marca facturas ===== */
 function esVirtual(n){return n==="Almacén"||/ General$/.test(n||"")}
 function almOk(){var r=role();return r==="admin"||r==="supervisor"||r==="gerencia"||(S.cfg&&S.cfg.negocios.indexOf("Almacén")>-1)}
+function almSup(){return role()==="supervisor"&&((S.cfg&&S.cfg.negocios)||[]).indexOf("Almacén")>-1}
 function almSolo(){var n=(S.cfg&&S.cfg.negocios)||[];return n.length>0&&n.every(function(x){return x==="Almacén"})}
 function almVe(){var r=role();return r==="admin"||r==="supervisor"}
 function almPend(){return almVe()?(S.almacen||[]).filter(function(a){return a.estado==="nuevo"}).length:0}

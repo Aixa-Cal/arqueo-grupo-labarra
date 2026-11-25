@@ -194,7 +194,7 @@ function render(){
 function navItems(){
   var r=role();
   if((r==="lider"||r==="colaborador"||r==="supervisor")&&almSolo())return [["alm","Almacén",ICO.recibir,almPend()]];
-  if(r==="supervisor")return [["sem","Mi semana",ICO.sem],["pend","Pendientes",ICO.ventas,S.pend],["alm","Almacén",ICO.recibir,almPend()],["contar","Contar",ICO.contar],["recibir","Movimientos",ICO.recibir,movPend()],["res","Resultados",ICO.res]];
+  if(r==="supervisor")return [["sem","Mi semana",ICO.sem],["pend","Pendientes",ICO.ventas,S.pend],["alm","Almacén",ICO.recibir,almPend()],["contar","Contar",ICO.contar],["recibir","Movimientos",ICO.recibir,movPend()],["res",almSup()?"Mis conteos":"Resultados",ICO.res]];
   if(r==="lider"&&almOk())return [["pend","Pendientes",ICO.ventas,S.pend],["contar","Contar",ICO.contar],["alm","Almacén",ICO.recibir,almPend()],["recibir","Movimientos",ICO.recibir,movPend()],["res","Resultados",ICO.res]];
   if(r==="lider")return [["pend","Pendientes",ICO.ventas,S.pend],["contar","Contar",ICO.contar],["recibir","Movimientos",ICO.recibir,movPend()],["res","Resultados",ICO.res]];
   if(r==="colaborador"||(r==="admin"&&S.campo))return [["contar","Contar",ICO.contar],["recibir","Movimientos",ICO.recibir,movPend()],["mios","Mis conteos",ICO.res]];
@@ -1162,7 +1162,7 @@ function resultadosHTML(){
   var cards=list.length?list.map(function(c){
     return '<button class="pitem" style="width:100%;text-align:left" data-act="det-open" data-id="'+esc(c.id)+'"><div><b>'+esc(c.negocio)+' · '+esc(c.turno)+'</b><small>'+fmtFecha(c.fecha)+' · '+esc(c.resp)+(c.rect?' · rectificado':'')+'</small></div><div class="chips" style="justify-content:flex-end">'+resumenPills(c)+'</div></button>';
   }).join(""):'<div class="panel"><h3>Sin conteos en este período</h3><p class="sub">Cuando los líderes guarden conteos, aparecerán aquí.</p></div>';
-  return '<div><h1>Resultados</h1></div>'+
+  return '<div><h1>'+(almSup()?'Mis conteos':'Resultados')+'</h1></div>'+
     '<div class="row2"><div class="field"><label class="lbl" for="f-neg">Negocio</label><select id="f-neg">'+neg+'</select></div><div class="field"><label class="lbl" for="f-rango">Período</label><select id="f-rango">'+rg+'</select></div></div>'+
     (S.fRango==="custom"?'<div class="row2"><div class="field"><span class="lbl">Desde</span>'+datePick("f-desde",S.fDesde||addDays(today(),-6),today())+'</div><div class="field"><span class="lbl">Hasta</span>'+datePick("f-hasta",S.fHasta||today(),today())+'</div></div>':"")+
     '<div class="field"><label class="lbl" for="f-est">Estado</label><select id="f-est">'+es+'</select></div>'+
@@ -1196,6 +1196,9 @@ function detalleHTML(){
       return '<tr><td>'+esc(x[1])+(x[13]>0?'<small style="display:block;color:var(--muted)">incluye '+fmt(x[13])+' declarados (merma/traspaso)</small>':'')+'</td><td class="n">'+fmt(x[7])+'</td><td class="n">'+fmt(x[8])+'</td><td class="n">'+(x[9]>0?"+":"")+fmt(x[9])+'</td><td>'+pill(x[11])+'</td></tr>'}).join("");
     if(rs.consumo)table='<div class="panel"><div class="tw"><table><thead><tr><th>Producto</th><th class="n">Había</th><th class="n">Entró</th><th class="n">Quedan</th><th class="n">Consumo</th></tr></thead><tbody>'+c.res.map(function(x){return '<tr><td>'+esc(x[1])+'</td><td class="n">'+fmt(x[3])+'</td><td class="n">'+fmt(x[4])+'</td><td class="n">'+fmt(x[5])+'</td><td class="n"><b>'+fmt(x[7])+' '+esc(x[2])+'</b></td></tr>'}).join("")+'</tbody></table></div></div>';
     else table='<div class="panel"><div class="tw"><table><thead><tr><th>Producto</th><th class="n">Salió</th><th class="n">Debía</th><th class="n">Dif.</th><th>Estado</th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="note">Dif. positiva = faltan unidades. «Debía» = ventas × lo que gasta cada venta.</p></div>';
+  }else if(c.turno==="Semanal"){
+    var rows3=c.items.map(function(it){return '<tr><td>'+esc(it.nombre)+'</td><td class="n">'+fmt(it.fin)+'</td></tr>'}).join("");
+    table='<div class="panel"><div class="tw"><table><thead><tr><th>Producto</th><th class="n">Contado</th></tr></thead><tbody>'+rows3+'</tbody></table></div></div><button class="btn ghost" data-act="det-csv">Descargar este conteo (Excel/CSV)</button>';
   }else{
     var rows2=c.items.map(function(it){return '<tr><td>'+esc(it.nombre)+'</td><td class="n">'+fmt(it.ini)+'</td><td class="n">'+fmt(it.ent)+'</td><td class="n">'+fmt(it.fin)+'</td></tr>'}).join("");
     table='<div class="panel"><div class="tw"><table><thead><tr><th>Producto</th><th class="n">Había</th><th class="n">Entró</th><th class="n">Quedan</th></tr></thead><tbody>'+rows2+'</tbody></table></div></div>';
@@ -1393,6 +1396,7 @@ function equipoHTML(){
 /* ===== Almacén: Maria recibe y saca mercancía; Griselda lo pasa a Citrus; Khristal marca facturas ===== */
 function esVirtual(n){return n==="Almacén"||/ General$/.test(n||"")}
 function almOk(){var r=role();return r==="admin"||r==="supervisor"||r==="gerencia"||(S.cfg&&S.cfg.negocios.indexOf("Almacén")>-1)}
+function almSup(){return role()==="supervisor"&&((S.cfg&&S.cfg.negocios)||[]).indexOf("Almacén")>-1}
 function almSolo(){var n=(S.cfg&&S.cfg.negocios)||[];return n.length>0&&n.every(function(x){return x==="Almacén"})}
 function almVe(){var r=role();return r==="admin"||r==="supervisor"}
 function almPend(){return almVe()?(S.almacen||[]).filter(function(a){return a.estado==="nuevo"}).length:0}
@@ -2148,6 +2152,7 @@ document.addEventListener("click",function(ev){
     },
     /* resultados */
     "det-open":function(){openDetalle(id)},
+    "det-csv":function(){var c=S.detail&&S.detail.c;if(!c)return;csvDown(c.negocio+" "+c.fecha+".csv",[["Producto","Contado"]].concat(c.items.map(function(it){return [it.nombre,it.fin]})))},
     "det-back":function(){S.detail=null;render();window.scrollTo(0,0)},
     "rect-start":function(){S.detail.edit=true;S.detail.cambios={};S.detail.motivo="";render()},
     "rect-cancel":function(){S.detail.edit=false;render()},

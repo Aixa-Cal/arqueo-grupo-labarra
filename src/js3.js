@@ -376,7 +376,7 @@ function resultadosHTML(){
   var cards=list.length?list.map(function(c){
     return '<button class="pitem" style="width:100%;text-align:left" data-act="det-open" data-id="'+esc(c.id)+'"><div><b>'+esc(c.negocio)+' · '+esc(c.turno)+'</b><small>'+fmtFecha(c.fecha)+' · '+esc(c.resp)+(c.rect?' · rectificado':'')+'</small></div><div class="chips" style="justify-content:flex-end">'+resumenPills(c)+'</div></button>';
   }).join(""):'<div class="panel"><h3>Sin conteos en este período</h3><p class="sub">Cuando los líderes guarden conteos, aparecerán aquí.</p></div>';
-  return '<div><h1>Resultados</h1></div>'+
+  return '<div><h1>'+(almSup()?'Mis conteos':'Resultados')+'</h1></div>'+
     '<div class="row2"><div class="field"><label class="lbl" for="f-neg">Negocio</label><select id="f-neg">'+neg+'</select></div><div class="field"><label class="lbl" for="f-rango">Período</label><select id="f-rango">'+rg+'</select></div></div>'+
     (S.fRango==="custom"?'<div class="row2"><div class="field"><span class="lbl">Desde</span>'+datePick("f-desde",S.fDesde||addDays(today(),-6),today())+'</div><div class="field"><span class="lbl">Hasta</span>'+datePick("f-hasta",S.fHasta||today(),today())+'</div></div>':"")+
     '<div class="field"><label class="lbl" for="f-est">Estado</label><select id="f-est">'+es+'</select></div>'+
@@ -410,6 +410,9 @@ function detalleHTML(){
       return '<tr><td>'+esc(x[1])+(x[13]>0?'<small style="display:block;color:var(--muted)">incluye '+fmt(x[13])+' declarados (merma/traspaso)</small>':'')+'</td><td class="n">'+fmt(x[7])+'</td><td class="n">'+fmt(x[8])+'</td><td class="n">'+(x[9]>0?"+":"")+fmt(x[9])+'</td><td>'+pill(x[11])+'</td></tr>'}).join("");
     if(rs.consumo)table='<div class="panel"><div class="tw"><table><thead><tr><th>Producto</th><th class="n">Había</th><th class="n">Entró</th><th class="n">Quedan</th><th class="n">Consumo</th></tr></thead><tbody>'+c.res.map(function(x){return '<tr><td>'+esc(x[1])+'</td><td class="n">'+fmt(x[3])+'</td><td class="n">'+fmt(x[4])+'</td><td class="n">'+fmt(x[5])+'</td><td class="n"><b>'+fmt(x[7])+' '+esc(x[2])+'</b></td></tr>'}).join("")+'</tbody></table></div></div>';
     else table='<div class="panel"><div class="tw"><table><thead><tr><th>Producto</th><th class="n">Salió</th><th class="n">Debía</th><th class="n">Dif.</th><th>Estado</th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="note">Dif. positiva = faltan unidades. «Debía» = ventas × lo que gasta cada venta.</p></div>';
+  }else if(c.turno==="Semanal"){
+    var rows3=c.items.map(function(it){return '<tr><td>'+esc(it.nombre)+'</td><td class="n">'+fmt(it.fin)+'</td></tr>'}).join("");
+    table='<div class="panel"><div class="tw"><table><thead><tr><th>Producto</th><th class="n">Contado</th></tr></thead><tbody>'+rows3+'</tbody></table></div></div><button class="btn ghost" data-act="det-csv">Descargar este conteo (Excel/CSV)</button>';
   }else{
     var rows2=c.items.map(function(it){return '<tr><td>'+esc(it.nombre)+'</td><td class="n">'+fmt(it.ini)+'</td><td class="n">'+fmt(it.ent)+'</td><td class="n">'+fmt(it.fin)+'</td></tr>'}).join("");
     table='<div class="panel"><div class="tw"><table><thead><tr><th>Producto</th><th class="n">Había</th><th class="n">Entró</th><th class="n">Quedan</th></tr></thead><tbody>'+rows2+'</tbody></table></div></div>';

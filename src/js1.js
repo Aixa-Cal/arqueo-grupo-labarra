@@ -193,7 +193,7 @@ function render(){
 function navItems(){
   var r=role();
   if((r==="lider"||r==="colaborador"||r==="supervisor")&&almSolo())return [["alm","Almacén",ICO.recibir,almPend()]];
-  if(r==="supervisor")return [["sem","Mi semana",ICO.sem],["pend","Pendientes",ICO.ventas,S.pend],["alm","Almacén",ICO.recibir,almPend()],["contar","Contar",ICO.contar],["recibir","Movimientos",ICO.recibir,movPend()],["res","Resultados",ICO.res]];
+  if(r==="supervisor")return [["sem","Mi semana",ICO.sem],["pend","Pendientes",ICO.ventas,S.pend],["alm","Almacén",ICO.recibir,almPend()],["contar","Contar",ICO.contar],["recibir","Movimientos",ICO.recibir,movPend()],["res",almSup()?"Mis conteos":"Resultados",ICO.res]];
   if(r==="lider"&&almOk())return [["pend","Pendientes",ICO.ventas,S.pend],["contar","Contar",ICO.contar],["alm","Almacén",ICO.recibir,almPend()],["recibir","Movimientos",ICO.recibir,movPend()],["res","Resultados",ICO.res]];
   if(r==="lider")return [["pend","Pendientes",ICO.ventas,S.pend],["contar","Contar",ICO.contar],["recibir","Movimientos",ICO.recibir,movPend()],["res","Resultados",ICO.res]];
   if(r==="colaborador"||(r==="admin"&&S.campo))return [["contar","Contar",ICO.contar],["recibir","Movimientos",ICO.recibir,movPend()],["mios","Mis conteos",ICO.res]];
